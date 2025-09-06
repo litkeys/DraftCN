@@ -40,7 +40,7 @@ The canvas container serves as the main workspace occupying 80% of the viewport 
 The canvas is centered within a scrollable container with a gray background. It maintains a fixed width while allowing vertical scrolling for longer content. The container handles overflow with auto-scrolling and positions the canvas with horizontal centering. The relative positioning system allows blocks to be positioned absolutely within the canvas boundaries.
 
 **Dead Zone Implementation**
-Dead zones appear outside the 20-cell canvas width when the user zooms out far enough. These zones are rendered as semi-transparent red areas to clearly indicate non-droppable regions. The left dead zone extends from the screen edge to the canvas left boundary. The right dead zone extends from the canvas right boundary to the screen edge. The bottom dead zone appears below the calculated canvas height and extends downward. Dead zones are only visible when zoom levels drop below 80% to maintain clarity during normal editing.
+Dead zones appear outside the 20-cell canvas width when the user zooms out far enough. These zones are rendered as semi-transparent red areas to clearly indicate non-droppable regions. The left dead zone extends from the screen edge to the canvas left boundary. The right dead zone extends from the canvas right boundary to the screen edge. The bottom dead zone appears below the calculated canvas height and extends downward.
 
 ---
 
