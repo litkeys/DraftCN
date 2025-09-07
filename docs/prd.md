@@ -12,13 +12,18 @@
 
 ### Background Context
 
-DraftCN addresses the gap between design tools and production-ready web applications by providing a visual website builder that generates clean, maintainable React code. The current landscape shows designers struggling with handoff to developers, while developers spend significant time translating designs into code. This MVP focuses on the core interaction model - drag-and-drop with a 60px grid system - to validate that users can effectively compose layouts using pre-built shadcn/ui components. By intentionally limiting scope (no persistence, no auth, no text editing), the project can quickly prove the viability of the grid-based placement system and freeform block positioning approach that will serve as the foundation for a more comprehensive website building solution.
+DraftCN addresses the gap between design tools and production-ready web applications by providing a visual website builder that generates clean, maintainable React code. The current landscape shows designers struggling with handoff to developers, while developers spend significant time translating designs into code. This MVP focuses on the core interaction model - drag-and-drop with a 60px grid system - to validate that users can effectively compose layouts using pre-built shadcn/ui components.
+
+The architecture employs a **template-based block system** where reusable block templates are developed as standalone TSX files with props interfaces, processed and registered in a central registry, and instantiated with customized props. A global CSS file provides consistent styling across all blocks. This approach enables developer-friendly template creation, reusable block definitions, props-based customization, and a clear path to future inline editing capabilities.
+
+By intentionally limiting scope (no persistence, no auth, no text editing), the project can quickly prove the viability of the grid-based placement system and freeform block positioning approach that will serve as the foundation for a more comprehensive website building solution.
 
 ### Change Log
 
 | Date       | Version | Description                                       | Author    |
 | ---------- | ------- | ------------------------------------------------- | --------- |
 | 2025-01-06 | v1.0    | Initial PRD creation from technical specification | John (PM) |
+| 2025-01-07 | v1.1    | Updated with architecture specifications          | John (PM) |
 
 ## Requirements
 
@@ -33,7 +38,9 @@ DraftCN addresses the gap between design tools and production-ready web applicat
 -   FR7: The system shall support freeform grid placement allowing blocks to overlap with z-index determining stacking order
 -   FR8: Blocks shall be repositionable by dragging to new grid locations within canvas boundaries
 -   FR9: The sidebar shall display available block templates organized by category with thumbnail previews
--   FR10: Dead zones shall appear as semi-transparent red overlays outside the 20-cell canvas width to indicate non-droppable areas
+-   FR10: Block templates shall be loaded from a central registry that processes TSX source files
+-   FR11: Each block instance shall reference a template type and maintain customized props
+-   FR12: Dead zones shall appear as semi-transparent red overlays outside the 20-cell canvas width to indicate non-droppable areas
 
 ### Non Functional
 
@@ -45,6 +52,9 @@ DraftCN addresses the gap between design tools and production-ready web applicat
 -   NFR6: No data persistence is required - all work is lost on tab close or refresh
 -   NFR7: The codebase shall follow a clear modular structure separating components, hooks, state, and block definitions
 -   NFR8: Grid calculations shall use efficient algorithms to minimize performance impact during rapid mouse movements
+-   NFR9: Block templates shall be dynamically loaded using React.lazy for optimal code splitting
+-   NFR10: A global CSS file shall provide consistent styling across all block types
+-   NFR11: Template processing shall extract dependencies, props, and component code from TSX files
 
 ## User Interface Design Goals
 
@@ -96,14 +106,17 @@ Single repository containing the entire Next.js application with clear separatio
 - **No Database**: All data exists in memory only
 - **No Authentication**: Public access, no user accounts
 - **No Cloud Services**: Fully client-side, can be deployed as static site
-- **Code Organization**: Feature-based folder structure as outlined in technical spec
+- **Code Organization**: Feature-based folder structure with separation of templates, blocks, and processing logic
+- **Template System**: TypeScript AST-based processing for extracting template metadata
+- **Component Runtime**: Dynamic component loading with React.lazy and props injection
+- **Style Architecture**: Centralized global CSS with template-specific style references
 - **Performance Target**: 60fps during drag operations through React.memo and optimized re-renders
 
 ## Epic List
 
-**Epic 1: Core Builder with Freeform Drag & Drop** - Implement exact block data model from tech specs with React snippets, enable freeform drag & drop from library panel to canvas (no grid snapping), support block selection/movement/deletion, auto-expand canvas height, and enforce boundaries with dead zone implementation
+**Epic 1: Core Builder with Freeform Drag & Drop** - Implement template-based block system with BlockTemplate and Block instance separation, create template registry and processor for TSX source files, enable freeform drag & drop from library panel to canvas (no grid snapping), support block selection/movement/deletion with props-based customization, auto-expand canvas height, and enforce boundaries with dead zone implementation
 
-**Epic 2: Grid System with Smart Snapping** - Add 60px visible grid overlay to canvas with automatic snapping enabled by default, implement drop zone preview showing which cells will be occupied, enable Alt key bypass for pixel-precise positioning during drag operations
+**Epic 2: Grid System with Smart Snapping** - Add 60px visible grid overlay to canvas with automatic snapping enabled by default, implement drop zone preview showing which cells will be occupied, enable Alt key bypass for pixel-precise positioning during drag operations, integrate grid system with template-based block instantiation
 
 ## Epic 1: Core Builder with Freeform Drag & Drop
 
@@ -123,19 +136,48 @@ so that I have a working foundation with all required dependencies.
 6. Basic layout with logo in top-left, left sidebar (20% width), and main canvas area (80% width) renders correctly
 7. Project runs locally with npm run dev without errors
 
-### Story 1.2: Block Data Model and Registry
+### Story 1.2: Block Data Model and Template System
 As a developer,  
-I want to implement the exact block data model from specifications,  
-so that blocks have consistent structure for all operations.
+I want to implement the template-based block architecture,  
+so that blocks have reusable templates with customizable instances.
 
 **Acceptance Criteria:**
-1. Block interface matches specification exactly (id, type, code, x, y, width, height, z, selected, thumbnail, category, content, styles)
-2. Block registry system created to store available block templates
-3. At least 3 sample blocks created (Hero, Navbar, Footer) with placeholder React snippets
-4. Registry supports retrieving block templates by type
-5. All position values stored in pixels as specified
+1. BlockTemplate interface includes (typeId, name, category, thumbnail, dependencies, defaultProps, componentCode, defaultWidth/Height, minimumWidth/Height)
+2. Block instance interface includes (id, typeId, props, x, y, width, height, z, selected)
+3. Template registry system created to store and manage available templates
+4. Template processor extracts dependencies, props, and code from TSX source files
+5. At least 3 sample templates created (Hero, Navbar, Footer) as TSX files
+6. Registry supports template registration, retrieval by typeId, and instance creation
+7. All position values stored in pixels as specified
 
-### Story 1.3: Canvas Container with Auto-Expansion
+### Story 1.3: Template Processing Pipeline
+As a developer,  
+I want to process TSX template files into BlockTemplate objects,  
+so that templates can be dynamically registered and used.
+
+**Acceptance Criteria:**
+1. Template processor parses TSX source files using TypeScript AST
+2. Extracts import statements to build dependencies array
+3. Extracts props interface to understand template parameters
+4. Extracts default props from component definition
+5. Validates template structure before registration
+6. Processes multiple templates during build/initialization
+7. Error handling for malformed template files
+
+### Story 1.4: Global CSS and Style Management
+As a developer,  
+I want to implement a centralized global CSS system,  
+so that all blocks share consistent styling and theming.
+
+**Acceptance Criteria:**
+1. Global CSS file created with base styles for all blocks
+2. Style imports properly configured in app layout
+3. Template components reference global CSS classes
+4. Consistent theming variables defined (colors, spacing, typography)
+5. Styles properly loaded before block rendering
+6. No style conflicts between different block types
+
+### Story 1.5: Canvas Container with Auto-Expansion
 As a user,  
 I want a canvas that automatically expands as I add content,  
 so that I always have space to work.
@@ -148,33 +190,35 @@ so that I always have space to work.
 5. Scrollable vertically when content exceeds viewport
 6. Canvas re-calculates height when blocks are added/moved/removed
 
-### Story 1.4: Block Library Sidebar
+### Story 1.6: Block Library Sidebar with Template Loading
 As a user,  
 I want to see available blocks in a sidebar,  
 so that I can choose what to add to my design.
 
 **Acceptance Criteria:**
 1. Left sidebar displays at 20% viewport width
-2. Shows all blocks from registry with thumbnails
-3. Blocks organized by category
+2. Shows all templates from registry with thumbnails
+3. Templates organized by category from BlockTemplate data
 4. Sidebar scrollable if content exceeds viewport height
-5. Each block shows name and thumbnail image
-6. Visual hover state indicates blocks are draggable
+5. Each template shows name and thumbnail image
+6. Visual hover state indicates templates are draggable
+7. Templates loaded from registry on component mount
 
-### Story 1.5: Freeform Drag and Drop
+### Story 1.7: Freeform Drag and Drop with Template Instantiation
 As a user,  
 I want to drag blocks from the library to the canvas,  
 so that I can build my layout visually.
 
 **Acceptance Criteria:**
-1. Blocks draggable from sidebar using mouse
-2. Dragged block follows cursor smoothly during drag
-3. Block can be dropped anywhere on canvas (freeform, no grid)
-4. On drop, block created at exact pixel position of mouse
-5. New blocks get sequential z-index (1, 2, 3, etc.)
-6. Drag operation can be cancelled with Escape key
+1. Templates draggable from sidebar using mouse
+2. Dragged template preview follows cursor smoothly during drag
+3. Template can be dropped anywhere on canvas (freeform, no grid)
+4. On drop, block instance created from template with defaultProps
+5. Block instance gets unique ID and references template typeId
+6. New blocks get sequential z-index (1, 2, 3, etc.)
+7. Drag operation can be cancelled with Escape key
 
-### Story 1.6: Dead Zones and Boundary Enforcement
+### Story 1.8: Dead Zones and Boundary Enforcement
 As a user,  
 I want clear visual boundaries for valid drop areas,  
 so that I know where blocks can be placed.
@@ -187,7 +231,7 @@ so that I know where blocks can be placed.
 5. Visual feedback when dragging over invalid areas
 6. Dead zones don't interfere with sidebar interaction
 
-### Story 1.7: Block Selection and Deletion
+### Story 1.9: Block Selection and Deletion
 As a user,  
 I want to select and delete blocks,  
 so that I can refine my design.
@@ -200,7 +244,7 @@ so that I can refine my design.
 5. Backspace or Delete key removes selected block
 6. Deleted block removed from state and canvas updates
 
-### Story 1.8: Block Movement on Canvas
+### Story 1.10: Block Movement on Canvas
 As a user,  
 I want to reposition blocks after placing them,  
 so that I can adjust my layout.
@@ -212,6 +256,7 @@ so that I can adjust my layout.
 4. Movement constrained to canvas boundaries
 5. Z-index maintained during movement
 6. State updates with new position after move
+7. Block maintains reference to template and props during move
 
 ## Epic 2: Grid System with Smart Snapping
 
