@@ -1,8 +1,8 @@
 # Frontend Architecture
 
-## Component Architecture
+### Component Architecture
 
-### Component Organization
+#### Component Organization
 
 ```text
 src/
@@ -29,7 +29,7 @@ src/
 │       └── Layout.tsx          # Main layout wrapper
 ```
 
-### Component Template
+#### Component Template
 
 ```typescript
 // Example component structure
@@ -79,9 +79,9 @@ export const BlockInstance = memo(({
 });
 ```
 
-## State Management Architecture
+### State Management Architecture
 
-### State Structure
+#### State Structure
 
 ```typescript
 interface BuilderState {
@@ -121,16 +121,16 @@ interface BuilderState {
 }
 ```
 
-### State Management Patterns
+#### State Management Patterns
 
 - **Atomic updates** - Each action updates minimal state
 - **Selector patterns** - Components subscribe to specific state slices
 - **Memoization** - Heavy computations cached with useMemo
 - **Optimistic updates** - UI updates immediately, no async waits
 
-## Routing Architecture
+### Routing Architecture
 
-### Route Organization
+#### Route Organization
 
 ```text
 app/
@@ -141,23 +141,23 @@ app/
 
 Since this is a single-page application, there's only one route - the main builder interface.
 
-### Protected Route Pattern
+#### Protected Route Pattern
 
 ```typescript
 // Not needed for MVP - no authentication
 // Future implementation would wrap builder in auth check
 ```
 
-## Frontend Services Layer
+### Frontend Services Layer
 
-### API Client Setup
+#### API Client Setup
 
 ```typescript
 // Not needed for MVP - no backend API
 // Future implementation would use fetch or axios
 ```
 
-### Service Example
+#### Service Example
 
 ```typescript
 // Template loading service (currently static)
@@ -186,3 +186,4 @@ class TemplateService {
 
 export const templateService = new TemplateService();
 ```
+

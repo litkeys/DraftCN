@@ -1,6 +1,6 @@
 # Error Handling Strategy
 
-## Error Flow
+### Error Flow
 
 ```mermaid
 sequenceDiagram
@@ -24,7 +24,7 @@ sequenceDiagram
     end
 ```
 
-## Error Response Format
+### Error Response Format
 
 ```typescript
 interface AppError {
@@ -36,7 +36,7 @@ interface AppError {
 }
 ```
 
-## Frontend Error Handling
+### Frontend Error Handling
 
 ```typescript
 // Error boundary for components
@@ -62,8 +62,9 @@ class BlockErrorBoundary extends Component<Props, State> {
 }
 ```
 
-## Backend Error Handling
+### Backend Error Handling
 
 ```typescript
 // N/A - No backend for MVP
 ```
+

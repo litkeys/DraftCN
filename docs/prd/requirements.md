@@ -1,6 +1,6 @@
 # Requirements
 
-## Functional
+### Functional
 
 -   FR1: The system shall provide a drag-and-drop interface allowing users to drag blocks from the left sidebar library onto the canvas
 -   FR2: The canvas shall enforce a 60-pixel grid system for block placement with visual grid guidelines always visible
@@ -11,11 +11,11 @@
 -   FR7: The system shall support freeform grid placement allowing blocks to overlap with z-index determining stacking order
 -   FR8: Blocks shall be repositionable by dragging to new grid locations within canvas boundaries
 -   FR9: The sidebar shall display available block templates organized by category with thumbnail previews
--   FR10: Block templates shall be loaded from a central registry that processes TSX source files
+-   FR10: Block templates shall be loaded from a central registry containing pre-defined template definitions
 -   FR11: Each block instance shall reference a template type and maintain customized props
 -   FR12: Dead zones shall appear as semi-transparent red overlays outside the 20-cell canvas width to indicate non-droppable areas
 
-## Non Functional
+### Non Functional
 
 -   NFR1: The application shall be built using Next.js 15+ with App Router and React 19 for modern performance optimizations
 -   NFR2: All UI components shall use shadcn/ui library for consistent, accessible, and customizable interface elements
@@ -27,4 +27,5 @@
 -   NFR8: Grid calculations shall use efficient algorithms to minimize performance impact during rapid mouse movements
 -   NFR9: Block templates shall be dynamically loaded using React.lazy for optimal code splitting
 -   NFR10: A global CSS file shall provide consistent styling across all block types
--   NFR11: Template processing shall extract dependencies, props, and component code from TSX files
+-   NFR11: Template registry shall maintain metadata, props interfaces, and component definitions for each template
+

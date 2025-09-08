@@ -14,7 +14,7 @@
 
 DraftCN addresses the gap between design tools and production-ready web applications by providing a visual website builder that generates clean, maintainable React code. The current landscape shows designers struggling with handoff to developers, while developers spend significant time translating designs into code. This MVP focuses on the core interaction model - drag-and-drop with a 60px grid system - to validate that users can effectively compose layouts using pre-built shadcn/ui components.
 
-The architecture employs a **template-based block system** where reusable block templates are developed as standalone TSX files with props interfaces, processed and registered in a central registry, and instantiated with customized props. A global CSS file provides consistent styling across all blocks. This approach enables developer-friendly template creation, reusable block definitions, props-based customization, and a clear path to future inline editing capabilities.
+The architecture employs a **template-based block system** where reusable block templates are manually registered in a central registry with their metadata, props interfaces, and component definitions. Templates are instantiated with customized props, and a global CSS file provides consistent styling across all blocks. This approach enables developer-friendly template creation, reusable block definitions, props-based customization, and a clear path to future inline editing capabilities.
 
 By intentionally limiting scope (no persistence, no auth, no text editing), the project can quickly prove the viability of the grid-based placement system and freeform block positioning approach that will serve as the foundation for a more comprehensive website building solution.
 
@@ -38,7 +38,7 @@ By intentionally limiting scope (no persistence, no auth, no text editing), the 
 -   FR7: The system shall support freeform grid placement allowing blocks to overlap with z-index determining stacking order
 -   FR8: Blocks shall be repositionable by dragging to new grid locations within canvas boundaries
 -   FR9: The sidebar shall display available block templates organized by category with thumbnail previews
--   FR10: Block templates shall be loaded from a central registry that processes TSX source files
+-   FR10: Block templates shall be loaded from a central registry containing pre-defined template definitions
 -   FR11: Each block instance shall reference a template type and maintain customized props
 -   FR12: Dead zones shall appear as semi-transparent red overlays outside the 20-cell canvas width to indicate non-droppable areas
 
@@ -54,7 +54,7 @@ By intentionally limiting scope (no persistence, no auth, no text editing), the 
 -   NFR8: Grid calculations shall use efficient algorithms to minimize performance impact during rapid mouse movements
 -   NFR9: Block templates shall be dynamically loaded using React.lazy for optimal code splitting
 -   NFR10: A global CSS file shall provide consistent styling across all block types
--   NFR11: Template processing shall extract dependencies, props, and component code from TSX files
+-   NFR11: Template registry shall maintain metadata, props interfaces, and component definitions for each template
 
 ## User Interface Design Goals
 
@@ -142,27 +142,27 @@ I want to implement the template-based block architecture,
 so that blocks have reusable templates with customizable instances.
 
 **Acceptance Criteria:**
-1. BlockTemplate interface includes (typeId, name, category, thumbnail, dependencies, defaultProps, componentCode, defaultWidth/Height, minimumWidth/Height)
+1. BlockTemplate interface includes (typeId, name, category, thumbnail, dependencies, defaultProps, component, defaultWidth/Height, minimumWidth/Height)
 2. Block instance interface includes (id, typeId, props, x, y, width, height, z, selected)
 3. Template registry system created to store and manage available templates
-4. Template processor extracts dependencies, props, and code from TSX source files
-5. At least 3 sample templates created (Hero, Navbar, Footer) as TSX files
+4. Manual template registration process defined with clear structure
+5. At least 3 sample templates registered (Hero, Navbar, Footer) with components
 6. Registry supports template registration, retrieval by typeId, and instance creation
 7. All position values stored in pixels as specified
 
-### Story 1.3: Template Processing Pipeline
+### Story 1.3: Template Registration System
 As a developer,  
-I want to process TSX template files into BlockTemplate objects,  
-so that templates can be dynamically registered and used.
+I want to manually register block templates in the registry,  
+so that templates are available for use in the builder.
 
 **Acceptance Criteria:**
-1. Template processor parses TSX source files using TypeScript AST
-2. Extracts import statements to build dependencies array
-3. Extracts props interface to understand template parameters
-4. Extracts default props from component definition
-5. Validates template structure before registration
-6. Processes multiple templates during build/initialization
-7. Error handling for malformed template files
+1. Clear template registration structure defined in registry file
+2. Each template entry includes all required metadata
+3. Component imports properly configured
+4. Props interfaces clearly defined for each template
+5. Default props specified for initial rendering
+6. Templates organized by category for easy management
+7. Registration process documented with examples
 
 ### Story 1.4: Global CSS and Style Management
 As a developer,  

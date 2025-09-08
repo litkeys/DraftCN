@@ -2,7 +2,7 @@
 
 **Goal:** Enhance the builder with a 60px grid system that provides visual guidance and automatic snapping for precise, professional layouts. This epic transforms the freeform builder into a production-ready tool with predictable placement and alignment.
 
-## Story 2.1: Grid Overlay Implementation
+### Story 2.1: Grid Overlay Implementation
 As a user,  
 I want to see a grid overlay on the canvas,  
 so that I have visual guides for aligning blocks.
@@ -15,7 +15,7 @@ so that I have visual guides for aligning blocks.
 5. Grid doesn't interfere with block interactions (pointer-events: none)
 6. Grid remains visible at all times (no toggle in MVP)
 
-## Story 2.2: Grid Snapping on Drop
+### Story 2.2: Grid Snapping on Drop
 As a user,  
 I want blocks to snap to the grid when I drop them,  
 so that my layouts are automatically aligned.
@@ -28,7 +28,7 @@ so that my layouts are automatically aligned.
 5. Snapped position respects canvas boundaries
 6. State stores snapped position in pixels
 
-## Story 2.3: Drop Zone Preview
+### Story 2.3: Drop Zone Preview
 As a user,  
 I want to see which grid cells will be occupied before dropping,  
 so that I can place blocks precisely.
@@ -41,7 +41,7 @@ so that I can place blocks precisely.
 5. Use semi-transparent red overlay for invalid placements (outside canvas)
 6. Highlight disappears when drag ends
 
-## Story 2.4: Grid Snapping for Movement
+### Story 2.4: Grid Snapping for Movement
 As a user,  
 I want blocks to snap to grid when repositioning them,  
 so that all blocks maintain alignment.
@@ -53,7 +53,7 @@ so that all blocks maintain alignment.
 4. Snapping respects block dimensions and canvas boundaries
 5. Z-index preserved during grid-snapped movement
 
-## Story 2.5: Alt Key Grid Bypass
+### Story 2.5: Alt Key Grid Bypass
 As a user,  
 I want to bypass grid snapping with the Alt key,  
 so that I can achieve pixel-perfect positioning when needed.
@@ -65,3 +65,4 @@ so that I can achieve pixel-perfect positioning when needed.
 4. Alt bypass works for both new blocks and repositioning
 5. Visual indicator (cursor change or text) shows bypass mode active
 6. Releasing Alt during drag re-enables snapping preview
+

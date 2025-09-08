@@ -1,10 +1,10 @@
 # Backend Architecture
 
-## No Backend for MVP
+### No Backend for MVP
 
 This is a **client-side only application** with no backend architecture for the MVP phase. All logic runs in the browser, and there is no server-side processing, database, or API endpoints.
 
-## Future Backend Considerations
+### Future Backend Considerations
 
 When a backend is added post-MVP, it would likely use:
 
@@ -14,3 +14,4 @@ When a backend is added post-MVP, it would likely use:
 - **File Storage** - S3 or Vercel Blob for template assets
 
 For now, the application operates entirely client-side with no backend dependencies.
+

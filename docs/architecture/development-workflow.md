@@ -1,8 +1,8 @@
 # Development Workflow
 
-## Local Development Setup
+### Local Development Setup
 
-### Prerequisites
+#### Prerequisites
 
 ```bash
 # Required software
@@ -11,7 +11,7 @@ npm --version   # v10.0.0 or higher
 git --version   # Any recent version
 ```
 
-### Initial Setup
+#### Initial Setup
 
 ```bash
 # Clone repository
@@ -29,7 +29,7 @@ npx shadcn@latest init
 npx shadcn@latest add button badge scroll-area
 ```
 
-### Development Commands
+#### Development Commands
 
 ```bash
 # Start all services
@@ -60,9 +60,9 @@ npm run build      # Create production build
 npm run start      # Run production build locally
 ```
 
-## Environment Configuration
+### Environment Configuration
 
-### Required Environment Variables
+#### Required Environment Variables
 
 ```bash
 # Frontend (.env.local)
@@ -73,3 +73,4 @@ npm run start      # Run production build locally
 # NEXT_PUBLIC_API_URL=http://localhost:3000/api
 # NEXT_PUBLIC_STORAGE_URL=https://storage.example.com
 ```
+

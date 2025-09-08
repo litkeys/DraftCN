@@ -11,11 +11,11 @@ This unified approach combines what would traditionally be separate backend and 
 #### Technical Context
 
 The architecture supports a unique **template-based block system** where:
-- Block templates are developed as standalone TSX files with props interfaces
-- Templates are processed and registered in a central registry
+- Block templates are manually defined and registered in a central registry
+- Each template includes metadata, props interfaces, and React component definitions
 - Instances are created from templates with customized props
 - A global CSS file provides consistent styling across all blocks
-- Future iterations will support inline editing through component transformation
+- Templates are added to the registry by developers as needed
 
 This approach enables:
 - **Developer-friendly template creation** - Write standard React components
@@ -62,7 +62,6 @@ graph TB
         State[Zustand Store]
         Registry[Block Registry]
         Templates[Block Templates]
-        Processor[Template Processor]
         Grid[Grid System Manager]
         Drag[Drag Manager]
     end
@@ -76,7 +75,7 @@ graph TB
     subgraph "Development"
         Next[Next.js 15 App Router]
         Build[Build Process]
-        TSX[Template Source Files]
+        Components[Template Components]
         Thumbs[Template Thumbnails]
     end
     
@@ -89,8 +88,7 @@ graph TB
     
     Registry -->|Provides| Templates
     Templates -->|Instantiates| State
-    Processor -->|Parses| TSX
-    TSX -->|Generates| Templates
+    Components -->|Registered in| Registry
     Thumbs -->|Attached to| Templates
     
     Build -->|Bundles| Static
@@ -150,7 +148,7 @@ This is the **DEFINITIVE** technology selection for the entire project. All deve
 | Package Manager | npm | 10.0+ | Dependency management | Built-in workspaces support |
 | Linting | ESLint | 8.50+ | Code quality | Next.js preset included |
 | Formatting | Prettier | 3.0+ | Code formatting | Consistent code style |
-| Template Processing | TypeScript AST | Built-in | Parse template source files | Extract dependencies and props from TSX files |
+| Template Management | JavaScript Objects | Built-in | Template registry system | Manual registration of block templates |
 | Component Runtime | React.lazy | 19.0+ | Dynamic component loading | Load block templates on demand |
 | Style Management | Global CSS | - | Shared block styles | Centralized styling in globals.css |
 | Asset Management | Base64/URLs | - | Template thumbnails | Simple image handling for previews |
@@ -203,7 +201,7 @@ interface Block {
 - `thumbnail: string` - Base64 or URL for preview image
 - `dependencies: string[]` - Required npm packages/imports extracted from imports
 - `defaultProps: any` - Example content for initial rendering
-- `componentCode: string` - Complete React component code (TSX as string)
+- `component: React.ComponentType<any>` - The React component for rendering
 - `defaultWidth: number` - Initial width in pixels
 - `defaultHeight: number` - Initial height in pixels
 - `minimumWidth: number` - Minimum allowed width for resizing
@@ -233,7 +231,7 @@ interface BlockTemplate {
 
 ### BlockRegistry
 
-**Purpose:** Manages the collection of available block templates and provides template processing utilities.
+**Purpose:** Manages the collection of available block templates and provides template instantiation utilities.
 
 #### TypeScript Interface
 ```typescript
@@ -249,68 +247,73 @@ interface BlockRegistry {
 }
 ```
 
-### TemplateProcessor
+### Template Registration
 
-**Purpose:** Handles the conversion of source code files (like hero1.tsx) into BlockTemplate instances.
+**Purpose:** Manual registration of block templates in the central registry.
 
-#### TypeScript Interface
+#### Registration Structure
 ```typescript
-interface TemplateProcessor {
-  // Extract dependencies from import statements
-  extractDependencies(code: string): string[];
-  
-  // Extract default props from component definition
-  extractDefaultProps(code: string): any;
-  
-  // Get the complete component code
-  extractComponentCode(code: string): string;
-  
-  // Complete processing pipeline
-  processSourceFile(
-    sourceCode: string,
-    thumbnail: string,
-    metadata: {
-      typeId: string;
-      name: string;
-      category: string;
-      defaultWidth: number;
-      defaultHeight: number;
-      minimumWidth: number;
-      minimumHeight: number;
-    }
-  ): BlockTemplate;
-}
+// Example of manually registering a template
+const heroTemplate: BlockTemplate = {
+  typeId: 'hero-1',
+  name: 'Hero Section',
+  category: 'Heroes',
+  thumbnail: '/thumbnails/hero-1.png',
+  dependencies: ['@/components/ui/button'],
+  defaultProps: {
+    title: 'Welcome to Our Site',
+    subtitle: 'Build amazing websites visually',
+    buttonText: 'Get Started'
+  },
+  component: HeroComponent,
+  defaultWidth: 1200,
+  defaultHeight: 400,
+  minimumWidth: 600,
+  minimumHeight: 200
+};
+
+// Register the template
+registry.registerTemplate(heroTemplate);
 ```
 
 ### Methods for Block Template Development
 
-#### 1. Template Registration from Source File
+#### 1. Manual Template Registration
 ```typescript
-async function registerBlockTemplateFromSource(
-  sourceCode: string,
-  thumbnailPath: string,
-  metadata: {
-    typeId: string;
-    name: string;
-    category: string;
-    defaultWidth: number;
-    defaultHeight: number;
-    minimumWidth: number;
-    minimumHeight: number;
-  }
-): Promise<BlockTemplate> {
-  // 1. Process source code to extract template data
-  const template = templateProcessor.processSourceFile(
-    sourceCode,
-    thumbnailPath,
-    metadata
+// Step 1: Create your React component
+import { Button } from '@/components/ui/button';
+
+const HeroComponent = ({ title, subtitle, buttonText }) => {
+  return (
+    <div className="hero-section">
+      <h1>{title}</h1>
+      <p>{subtitle}</p>
+      <Button>{buttonText}</Button>
+    </div>
   );
-  
-  // 2. Register in BlockRegistry
-  blockRegistry.registerTemplate(template);
-  
-  return template;
-}
+};
+
+// Step 2: Register the template in the registry
+const heroTemplate: BlockTemplate = {
+  typeId: 'hero-1',
+  name: 'Hero Section',
+  category: 'Heroes',
+  thumbnail: '/thumbnails/hero-1.png',
+  dependencies: ['@/components/ui/button'],
+  defaultProps: {
+    title: 'Welcome',
+    subtitle: 'Build amazing websites',
+    buttonText: 'Get Started'
+  },
+  component: HeroComponent,
+  defaultWidth: 1200,
+  defaultHeight: 400,
+  minimumWidth: 600,
+  minimumHeight: 200
+};
+
+// Step 3: Add to registry
+blockRegistry.registerTemplate(heroTemplate);
 ```
 
 #### 2. Block Instance Creation
@@ -339,34 +342,83 @@ function createBlockInstance(
 }
 ```
 
-#### 3. Expected Template Source Structure
-Based on hero1.tsx, templates should follow this structure:
+#### 3. Adding New Templates - Step by Step
+
+**Step 1: Create Your Component**
+Create a new React component file in `src/templates/` folder:
 
 ```typescript
-// 1. Import statements (dependencies extracted from here)
-import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+// src/templates/navbar/NavbarComponent.tsx
+import { Button } from '@/components/ui/button';
 
-// 2. Props interface (structure parsed but types simplified to 'any')
-interface Hero1Props {
-  badge?: string;
-  heading: string;
-  description: string;
-  // ... other props
+interface NavbarProps {
+  logo: string;
+  links: Array<{ label: string; href: string; }>;
 }
 
-// 3. Component with default props (defaultProps extracted from here)
-const Hero1 = ({
-  badge = "✨ Your Website Builder",
-  heading = "Blocks Built With Shadcn & Tailwind",
-  // ... default values
-}: Hero1Props) => {
-  // Component JSX
+const NavbarComponent = ({ logo, links }: NavbarProps) => {
+  return (
+    <nav className="navbar">
+      <div className="logo">{logo}</div>
+      <ul className="nav-links">
+        {links.map(link => (
+          <li key={link.href}>
+            <a href={link.href}>{link.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
 };
 
-// 4. Export (component name extracted)
-export { Hero1 };
+export { NavbarComponent };
+```
+
+**Step 2: Add Template to Registry**
+In `src/lib/blocks/registry.ts`, add your template:
+
+```typescript
+import { NavbarComponent } from '@/templates/navbar/NavbarComponent';
+
+const navbarTemplate: BlockTemplate = {
+  typeId: 'navbar-1',
+  name: 'Navigation Bar',
+  category: 'Navigation',
+  thumbnail: '/thumbnails/navbar-1.png',
+  dependencies: ['@/components/ui/button'],
+  defaultProps: {
+    logo: 'MyApp',
+    links: [
+      { label: 'Home', href: '/' },
+      { label: 'About', href: '/about' },
+      { label: 'Contact', href: '/contact' }
+    ]
+  },
+  component: NavbarComponent,
+  defaultWidth: 1200,
+  defaultHeight: 80,
+  minimumWidth: 800,
+  minimumHeight: 60
+};
+
+// Register the template
+registry.registerTemplate(navbarTemplate);
+```
+
+**Step 3: Add Thumbnail**
+Place a preview image at `public/thumbnails/navbar-1.png`
+
+**Step 4: Add Styles (if needed)**
+Add any required styles to `app/globals.css`:
+
+```css
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 1px solid #e5e5e5;
+}
 ```
 
 ### CanvasState
@@ -435,7 +487,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 - `onDragStart(typeId: string)` - Initiate template drag
 - `renderThumbnail(template: BlockTemplate)` - Display template preview
 
-**Dependencies:** Block Registry, Template Processor, Drag Manager
+**Dependencies:** Block Registry, Drag Manager
 
 **Technology Stack:** React 19, shadcn/ui ScrollArea, Zustand for template state
 
@@ -445,7 +497,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 **Key Interfaces:**
 - `renderBlock(block: Block, template: BlockTemplate)` - Render single block
-- `applyProps(componentCode: string, props: any)` - Inject props into component
+- `applyProps(component: React.ComponentType, props: any)` - Render component with props
 - `handleSelection(blockId: string)` - Apply selection styling
 
 **Dependencies:** Block Registry for templates, Global CSS for styling
@@ -480,19 +532,6 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 **Technology Stack:** Pure TypeScript calculations, CSS for grid visualization
 
-### Template Processor
-
-**Responsibility:** Parses TSX source files to extract template data including dependencies, props, and component code.
-
-**Key Interfaces:**
-- `parseSourceFile(code: string)` - Extract template components
-- `extractDependencies(imports: string[])` - Parse import statements  
-- `extractDefaultProps(component: string)` - Get default prop values
-- `validateTemplate(template: Partial<BlockTemplate>)` - Ensure completeness
-
-**Dependencies:** TypeScript AST utilities for parsing
-
-**Technology Stack:** TypeScript compiler API, Regular expressions for parsing
 
 ### Block Registry
 
@@ -504,7 +543,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 - `createInstance(typeId: string, props: any)` - Generate block instance
 - `getCategories()` - List all template categories
 
-**Dependencies:** Template Processor for registration, Local storage for caching (future)
+**Dependencies:** Local storage for caching (future)
 
 **Technology Stack:** TypeScript Map for storage, Singleton pattern
 
@@ -536,7 +575,6 @@ graph TB
         DragMgr[Drag Manager]
         GridMgr[Grid System Manager]
         Registry[Block Registry]
-        Processor[Template Processor]
     end
     
     subgraph "State Layer"
@@ -549,7 +587,6 @@ graph TB
     
     Canvas -->|Render Blocks| Renderer
     Renderer -->|Get Template| Registry
-    Registry -->|Parse Source| Processor
     
     Canvas -->|Grid Display| GridMgr
     Sidebar -->|Get Templates| Registry
@@ -716,27 +753,26 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
-    participant FS as File System
-    participant Processor as Template Processor
+    participant Comp as Component File
+    participant Reg as Registry File
     participant Registry as Block Registry
     participant Store as Zustand Store
 
-    Dev->>FS: Create hero1.tsx with structure
-    Dev->>FS: Create hero1-thumbnail.png
+    Dev->>Comp: Create HeroComponent.tsx
+    Dev->>Dev: Add thumbnail to public/thumbnails/
     
-    Note over Dev: During build/dev time
+    Note over Dev: Manual registration process
     
-    Processor->>FS: Read hero1.tsx
-    FS-->>Processor: Source code string
+    Dev->>Reg: Open registry.ts
+    Dev->>Reg: Import HeroComponent
+    Dev->>Reg: Define template object
+    Reg->>Reg: Set typeId, name, category
+    Reg->>Reg: Set thumbnail path
+    Reg->>Reg: Define defaultProps
+    Reg->>Reg: Reference component
+    Reg->>Reg: Set dimensions
     
-    Processor->>Processor: extractDependencies(code)
-    Processor->>Processor: extractDefaultProps(code)
-    Processor->>Processor: extractComponentCode(code)
-    
-    Processor->>FS: Read hero1-thumbnail.png
-    FS-->>Processor: Base64 or URL
-    
-    Processor->>Registry: registerTemplate(template)
+    Dev->>Registry: Call registerTemplate(template)
     Registry->>Registry: Validate template structure
     Registry->>Registry: Add to templates Map
     Registry->>Store: updateAvailableTemplates()
@@ -1401,7 +1437,7 @@ test('drag block from library to canvas', async ({ page }) => {
 - **Type Safety:** All code must be TypeScript with strict mode enabled
 - **Component Patterns:** Use functional components with hooks, no class components
 - **State Updates:** Never mutate state directly - use Zustand actions only
-- **Block Templates:** Must follow the defined structure with imports, props interface, and export
+- **Block Templates:** Must be manually registered with complete metadata and component reference
 - **Grid Positioning:** All positions in pixels, grid snapping at 60px intervals
 - **Error Handling:** All user actions must have error boundaries
 - **Performance:** Components handling drag must use React.memo
@@ -1541,8 +1577,8 @@ class BlockErrorBoundary extends Component<Props, State> {
 1. **Performance at Scale (Medium)** - Rendering many blocks may impact 60fps target
    - *Mitigation:* React.memo optimization, virtualization for block library
 
-2. **Template Processing Complexity (Low)** - Parsing TSX files requires careful handling
-   - *Mitigation:* Robust error boundaries, validation before registration
+2. **Template Registration Complexity (Low)** - Manual template registration requires consistency
+   - *Mitigation:* Clear documentation, validation during registration
 
 3. **Browser Memory Limits (Low)** - No persistence means all state in memory
    - *Mitigation:* Reasonable block limits, memory monitoring

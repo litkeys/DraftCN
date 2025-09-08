@@ -1,6 +1,6 @@
 # Deployment Architecture
 
-## Deployment Strategy
+### Deployment Strategy
 
 **Frontend Deployment:**
 - **Platform:** Vercel (automatic from GitHub)
@@ -13,7 +13,7 @@
 - **Build Command:** N/A
 - **Deployment Method:** N/A
 
-## CI/CD Pipeline
+### CI/CD Pipeline
 
 ```yaml
 # .github/workflows/deploy.yaml
@@ -92,10 +92,11 @@ jobs:
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 ```
 
-## Environments
+### Environments
 
 | Environment | Frontend URL | Backend URL | Purpose |
 |------------|--------------|-------------|---------|
 | Development | http://localhost:3000 | N/A | Local development |
 | Preview | https://draftcn-[branch]-[org].vercel.app | N/A | PR preview deployments |
 | Production | https://draftcn.vercel.app | N/A | Live environment |
+

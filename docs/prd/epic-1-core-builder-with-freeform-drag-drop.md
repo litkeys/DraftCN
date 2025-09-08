@@ -2,7 +2,7 @@
 
 **Goal:** Establish the foundational builder interface with a working drag-and-drop system that allows users to place, select, move, and delete blocks on a canvas without grid constraints. This epic delivers the core interaction model and proves the viability of the visual builder concept.
 
-## Story 1.1: Project Setup and Basic Layout
+### Story 1.1: Project Setup and Basic Layout
 As a developer,  
 I want to initialize the Next.js project with proper configuration,  
 so that I have a working foundation with all required dependencies.
@@ -16,35 +16,35 @@ so that I have a working foundation with all required dependencies.
 6. Basic layout with logo in top-left, left sidebar (20% width), and main canvas area (80% width) renders correctly
 7. Project runs locally with npm run dev without errors
 
-## Story 1.2: Block Data Model and Template System
+### Story 1.2: Block Data Model and Template System
 As a developer,  
 I want to implement the template-based block architecture,  
 so that blocks have reusable templates with customizable instances.
 
 **Acceptance Criteria:**
-1. BlockTemplate interface includes (typeId, name, category, thumbnail, dependencies, defaultProps, componentCode, defaultWidth/Height, minimumWidth/Height)
+1. BlockTemplate interface includes (typeId, name, category, thumbnail, dependencies, defaultProps, component, defaultWidth/Height, minimumWidth/Height)
 2. Block instance interface includes (id, typeId, props, x, y, width, height, z, selected)
 3. Template registry system created to store and manage available templates
-4. Template processor extracts dependencies, props, and code from TSX source files
-5. At least 3 sample templates created (Hero, Navbar, Footer) as TSX files
+4. Manual template registration process defined with clear structure
+5. At least 3 sample templates registered (Hero, Navbar, Footer) with components
 6. Registry supports template registration, retrieval by typeId, and instance creation
 7. All position values stored in pixels as specified
 
-## Story 1.3: Template Processing Pipeline
+### Story 1.3: Template Registration System
 As a developer,  
-I want to process TSX template files into BlockTemplate objects,  
-so that templates can be dynamically registered and used.
+I want to manually register block templates in the registry,  
+so that templates are available for use in the builder.
 
 **Acceptance Criteria:**
-1. Template processor parses TSX source files using TypeScript AST
-2. Extracts import statements to build dependencies array
-3. Extracts props interface to understand template parameters
-4. Extracts default props from component definition
-5. Validates template structure before registration
-6. Processes multiple templates during build/initialization
-7. Error handling for malformed template files
+1. Clear template registration structure defined in registry file
+2. Each template entry includes all required metadata
+3. Component imports properly configured
+4. Props interfaces clearly defined for each template
+5. Default props specified for initial rendering
+6. Templates organized by category for easy management
+7. Registration process documented with examples
 
-## Story 1.4: Global CSS and Style Management
+### Story 1.4: Global CSS and Style Management
 As a developer,  
 I want to implement a centralized global CSS system,  
 so that all blocks share consistent styling and theming.
@@ -57,7 +57,7 @@ so that all blocks share consistent styling and theming.
 5. Styles properly loaded before block rendering
 6. No style conflicts between different block types
 
-## Story 1.5: Canvas Container with Auto-Expansion
+### Story 1.5: Canvas Container with Auto-Expansion
 As a user,  
 I want a canvas that automatically expands as I add content,  
 so that I always have space to work.
@@ -70,7 +70,7 @@ so that I always have space to work.
 5. Scrollable vertically when content exceeds viewport
 6. Canvas re-calculates height when blocks are added/moved/removed
 
-## Story 1.6: Block Library Sidebar with Template Loading
+### Story 1.6: Block Library Sidebar with Template Loading
 As a user,  
 I want to see available blocks in a sidebar,  
 so that I can choose what to add to my design.
@@ -84,7 +84,7 @@ so that I can choose what to add to my design.
 6. Visual hover state indicates templates are draggable
 7. Templates loaded from registry on component mount
 
-## Story 1.7: Freeform Drag and Drop with Template Instantiation
+### Story 1.7: Freeform Drag and Drop with Template Instantiation
 As a user,  
 I want to drag blocks from the library to the canvas,  
 so that I can build my layout visually.
@@ -98,7 +98,7 @@ so that I can build my layout visually.
 6. New blocks get sequential z-index (1, 2, 3, etc.)
 7. Drag operation can be cancelled with Escape key
 
-## Story 1.8: Dead Zones and Boundary Enforcement
+### Story 1.8: Dead Zones and Boundary Enforcement
 As a user,  
 I want clear visual boundaries for valid drop areas,  
 so that I know where blocks can be placed.
@@ -111,7 +111,7 @@ so that I know where blocks can be placed.
 5. Visual feedback when dragging over invalid areas
 6. Dead zones don't interfere with sidebar interaction
 
-## Story 1.9: Block Selection and Deletion
+### Story 1.9: Block Selection and Deletion
 As a user,  
 I want to select and delete blocks,  
 so that I can refine my design.
@@ -124,7 +124,7 @@ so that I can refine my design.
 5. Backspace or Delete key removes selected block
 6. Deleted block removed from state and canvas updates
 
-## Story 1.10: Block Movement on Canvas
+### Story 1.10: Block Movement on Canvas
 As a user,  
 I want to reposition blocks after placing them,  
 so that I can adjust my layout.
@@ -137,3 +137,4 @@ so that I can adjust my layout.
 5. Z-index maintained during movement
 6. State updates with new position after move
 7. Block maintains reference to template and props during move
+

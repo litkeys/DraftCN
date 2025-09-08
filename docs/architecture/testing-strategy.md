@@ -1,6 +1,6 @@
 # Testing Strategy
 
-## Testing Pyramid
+### Testing Pyramid
 
 ```text
         E2E Tests (Few)
@@ -10,9 +10,9 @@
 Unit Tests (Many)    Component Tests (Many)
 ```
 
-## Test Organization
+### Test Organization
 
-### Frontend Tests
+#### Frontend Tests
 
 ```text
 tests/
@@ -33,13 +33,13 @@ tests/
     └── block-management.test.ts # Add/delete blocks
 ```
 
-### Backend Tests
+#### Backend Tests
 
 ```text
 N/A - No backend for MVP
 ```
 
-### E2E Tests
+#### E2E Tests
 
 ```text
 tests/e2e/
@@ -50,9 +50,9 @@ tests/e2e/
 └── keyboard.spec.ts          # Keyboard shortcuts
 ```
 
-## Test Examples
+### Test Examples
 
-### Frontend Component Test
+#### Frontend Component Test
 
 ```typescript
 // tests/components/BlockInstance.test.tsx
@@ -97,13 +97,13 @@ describe('BlockInstance', () => {
 });
 ```
 
-### Backend API Test
+#### Backend API Test
 
 ```typescript
 // N/A - No backend for MVP
 ```
 
-### E2E Test
+#### E2E Test
 
 ```typescript
 // tests/e2e/drag-drop.spec.ts
@@ -131,3 +131,4 @@ test('drag block from library to canvas', async ({ page }) => {
   expect(boundingBox?.y).toBe(300);
 });
 ```
+

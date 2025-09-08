@@ -1,6 +1,6 @@
 # Core Workflows
 
-## Add Block from Library to Canvas
+### Add Block from Library to Canvas
 
 ```mermaid
 sequenceDiagram
@@ -37,7 +37,7 @@ sequenceDiagram
     DragMgr->>Store: clearDragState()
 ```
 
-## Reposition Existing Block
+### Reposition Existing Block
 
 ```mermaid
 sequenceDiagram
@@ -75,7 +75,7 @@ sequenceDiagram
     DragMgr->>Store: clearDragState()
 ```
 
-## Delete Selected Block
+### Delete Selected Block
 
 ```mermaid
 sequenceDiagram
@@ -105,7 +105,7 @@ sequenceDiagram
     Canvas->>Canvas: Recalculate canvas height
 ```
 
-## Grid Bypass with Alt Key
+### Grid Bypass with Alt Key
 
 ```mermaid
 sequenceDiagram
@@ -139,34 +139,34 @@ sequenceDiagram
     Canvas->>DragMgr: setBypassGrid(false)
 ```
 
-## Template Registration (Development Flow)
+### Template Registration (Development Flow)
 
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
-    participant FS as File System
-    participant Processor as Template Processor
+    participant Comp as Component File
+    participant Reg as Registry File
     participant Registry as Block Registry
     participant Store as Zustand Store
 
-    Dev->>FS: Create hero1.tsx with structure
-    Dev->>FS: Create hero1-thumbnail.png
+    Dev->>Comp: Create HeroComponent.tsx
+    Dev->>Dev: Add thumbnail to public/thumbnails/
     
-    Note over Dev: During build/dev time
+    Note over Dev: Manual registration process
     
-    Processor->>FS: Read hero1.tsx
-    FS-->>Processor: Source code string
+    Dev->>Reg: Open registry.ts
+    Dev->>Reg: Import HeroComponent
+    Dev->>Reg: Define template object
+    Reg->>Reg: Set typeId, name, category
+    Reg->>Reg: Set thumbnail path
+    Reg->>Reg: Define defaultProps
+    Reg->>Reg: Reference component
+    Reg->>Reg: Set dimensions
     
-    Processor->>Processor: extractDependencies(code)
-    Processor->>Processor: extractDefaultProps(code)
-    Processor->>Processor: extractComponentCode(code)
-    
-    Processor->>FS: Read hero1-thumbnail.png
-    FS-->>Processor: Base64 or URL
-    
-    Processor->>Registry: registerTemplate(template)
+    Dev->>Registry: Call registerTemplate(template)
     Registry->>Registry: Validate template structure
     Registry->>Registry: Add to templates Map
     Registry->>Store: updateAvailableTemplates()
     Store-->>Store: Notify UI of new templates
 ```
+

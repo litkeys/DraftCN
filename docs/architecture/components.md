@@ -2,7 +2,7 @@
 
 Based on the architectural patterns, tech stack, and data models, here are the major logical components across the fullstack application.
 
-## Canvas Component
+### Canvas Component
 
 **Responsibility:** Manages the main workspace where blocks are positioned and rendered. Handles grid overlay, drop zones, and block rendering.
 
@@ -16,7 +16,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 **Technology Stack:** React 19, Tailwind CSS for grid styling, Zustand for state
 
-## Block Library Sidebar
+### Block Library Sidebar
 
 **Responsibility:** Displays available block templates organized by category, enables drag initiation from template thumbnails.
 
@@ -25,24 +25,24 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 - `onDragStart(typeId: string)` - Initiate template drag
 - `renderThumbnail(template: BlockTemplate)` - Display template preview
 
-**Dependencies:** Block Registry, Template Processor, Drag Manager
+**Dependencies:** Block Registry, Drag Manager
 
 **Technology Stack:** React 19, shadcn/ui ScrollArea, Zustand for template state
 
-## Block Renderer
+### Block Renderer
 
 **Responsibility:** Dynamically renders block instances with their customized props, handles component code execution and styling.
 
 **Key Interfaces:**
 - `renderBlock(block: Block, template: BlockTemplate)` - Render single block
-- `applyProps(componentCode: string, props: any)` - Inject props into component
+- `applyProps(component: React.ComponentType, props: any)` - Render component with props
 - `handleSelection(blockId: string)` - Apply selection styling
 
 **Dependencies:** Block Registry for templates, Global CSS for styling
 
 **Technology Stack:** React 19 with dynamic component loading, React.lazy for code splitting
 
-## Drag Manager
+### Drag Manager
 
 **Responsibility:** Coordinates all drag-and-drop operations including library-to-canvas and canvas-to-canvas movements.
 
@@ -56,7 +56,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 **Technology Stack:** React 19 event handlers, Zustand for drag state
 
-## Grid System Manager
+### Grid System Manager
 
 **Responsibility:** Handles all grid-related calculations including snapping, grid rendering, and Alt-key bypass logic.
 
@@ -70,21 +70,8 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 **Technology Stack:** Pure TypeScript calculations, CSS for grid visualization
 
-## Template Processor
 
-**Responsibility:** Parses TSX source files to extract template data including dependencies, props, and component code.
-
-**Key Interfaces:**
-- `parseSourceFile(code: string)` - Extract template components
-- `extractDependencies(imports: string[])` - Parse import statements  
-- `extractDefaultProps(component: string)` - Get default prop values
-- `validateTemplate(template: Partial<BlockTemplate>)` - Ensure completeness
-
-**Dependencies:** TypeScript AST utilities for parsing
-
-**Technology Stack:** TypeScript compiler API, Regular expressions for parsing
-
-## Block Registry
+### Block Registry
 
 **Responsibility:** Central repository for all available block templates, manages template lifecycle and instance creation.
 
@@ -94,11 +81,11 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 - `createInstance(typeId: string, props: any)` - Generate block instance
 - `getCategories()` - List all template categories
 
-**Dependencies:** Template Processor for registration, Local storage for caching (future)
+**Dependencies:** Local storage for caching (future)
 
 **Technology Stack:** TypeScript Map for storage, Singleton pattern
 
-## State Manager (Zustand Store)
+### State Manager (Zustand Store)
 
 **Responsibility:** Centralized state management for canvas, blocks, drag operations, and UI state.
 
@@ -112,7 +99,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 **Technology Stack:** Zustand 4.5+, TypeScript for type safety
 
-## Component Diagrams
+### Component Diagrams
 
 ```mermaid
 graph TB
@@ -126,7 +113,6 @@ graph TB
         DragMgr[Drag Manager]
         GridMgr[Grid System Manager]
         Registry[Block Registry]
-        Processor[Template Processor]
     end
     
     subgraph "State Layer"
@@ -139,7 +125,6 @@ graph TB
     
     Canvas -->|Render Blocks| Renderer
     Renderer -->|Get Template| Registry
-    Registry -->|Parse Source| Processor
     
     Canvas -->|Grid Display| GridMgr
     Sidebar -->|Get Templates| Registry
@@ -151,3 +136,4 @@ graph TB
     style Registry fill:#d1c4e9
     style Canvas fill:#c8e6c9
 ```
+

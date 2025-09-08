@@ -2,7 +2,7 @@
 
 This is the **DEFINITIVE** technology selection for the entire project. All development must use these exact versions.
 
-## Technology Stack Table
+### Technology Stack Table
 
 | Category | Technology | Version | Purpose | Rationale |
 |----------|------------|---------|---------|-----------|
@@ -31,7 +31,8 @@ This is the **DEFINITIVE** technology selection for the entire project. All deve
 | Package Manager | npm | 10.0+ | Dependency management | Built-in workspaces support |
 | Linting | ESLint | 8.50+ | Code quality | Next.js preset included |
 | Formatting | Prettier | 3.0+ | Code formatting | Consistent code style |
-| Template Processing | TypeScript AST | Built-in | Parse template source files | Extract dependencies and props from TSX files |
+| Template Management | JavaScript Objects | Built-in | Template registry system | Manual registration of block templates |
 | Component Runtime | React.lazy | 19.0+ | Dynamic component loading | Load block templates on demand |
 | Style Management | Global CSS | - | Shared block styles | Centralized styling in globals.css |
 | Asset Management | Base64/URLs | - | Template thumbnails | Simple image handling for previews |
+

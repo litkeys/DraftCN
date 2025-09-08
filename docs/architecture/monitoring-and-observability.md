@@ -1,13 +1,13 @@
 # Monitoring and Observability
 
-## Monitoring Stack
+### Monitoring Stack
 
 - **Frontend Monitoring:** Vercel Analytics (optional, built-in)
 - **Backend Monitoring:** N/A - No backend
 - **Error Tracking:** Console logging for development
 - **Performance Monitoring:** Browser DevTools Performance tab
 
-## Key Metrics
+### Key Metrics
 
 **Frontend Metrics:**
 - Core Web Vitals (LCP, FID, CLS)
@@ -17,3 +17,4 @@
 
 **Backend Metrics:**
 - N/A - No backend for MVP
+
