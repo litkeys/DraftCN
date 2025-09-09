@@ -1,0 +1,5 @@
+<svg width="240" height="60" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="60" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+  <text x="120" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">Navbar1</text>
+  <text x="120" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#9ca3af">1200x80</text>
+</svg>
