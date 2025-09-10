@@ -57,20 +57,7 @@ so that all blocks share consistent styling and theming.
 5. Styles properly loaded before block rendering
 6. No style conflicts between different block types
 
-### Story 1.5: Canvas Container with Auto-Expansion
-As a user,  
-I want a canvas that automatically expands as I add content,  
-so that I always have space to work.
-
-**Acceptance Criteria:**
-1. Canvas maintains 80% viewport width
-2. Canvas height dynamically calculated based on lowest block position plus 1200px buffer
-3. Minimum height equals viewport height
-4. Canvas centered with gray background container
-5. Scrollable vertically when content exceeds viewport
-6. Canvas re-calculates height when blocks are added/moved/removed
-
-### Story 1.6: Block Library Sidebar with Template Loading
+### Story 1.5: Block Library Sidebar with Template Loading
 As a user,  
 I want to see available blocks in a sidebar,  
 so that I can choose what to add to my design.
@@ -84,7 +71,7 @@ so that I can choose what to add to my design.
 6. Visual hover state indicates templates are draggable
 7. Templates loaded from registry on component mount
 
-### Story 1.7: Freeform Drag and Drop with Template Instantiation
+### Story 1.6: Freeform Drag and Drop with Template Instantiation
 As a user,  
 I want to drag blocks from the library to the canvas,  
 so that I can build my layout visually.
@@ -98,7 +85,7 @@ so that I can build my layout visually.
 6. New blocks get sequential z-index (1, 2, 3, etc.)
 7. Drag operation can be cancelled with Escape key
 
-### Story 1.8: Dead Zones and Boundary Enforcement
+### Story 1.7: Dead Zones and Boundary Enforcement
 As a user,  
 I want clear visual boundaries for valid drop areas,  
 so that I know where blocks can be placed.
@@ -111,7 +98,7 @@ so that I know where blocks can be placed.
 5. Visual feedback when dragging over invalid areas
 6. Dead zones don't interfere with sidebar interaction
 
-### Story 1.9: Block Selection and Deletion
+### Story 1.8: Block Selection and Deletion
 As a user,  
 I want to select and delete blocks,  
 so that I can refine my design.
@@ -124,7 +111,7 @@ so that I can refine my design.
 5. Backspace or Delete key removes selected block
 6. Deleted block removed from state and canvas updates
 
-### Story 1.10: Block Movement on Canvas
+### Story 1.9: Block Movement on Canvas
 As a user,  
 I want to reposition blocks after placing them,  
 so that I can adjust my layout.
@@ -137,4 +124,17 @@ so that I can adjust my layout.
 5. Z-index maintained during movement
 6. State updates with new position after move
 7. Block maintains reference to template and props during move
+
+### Story 1.10: Canvas Container with Auto-Expansion
+As a user,  
+I want a canvas that automatically expands as I add content,  
+so that I always have space to work.
+
+**Acceptance Criteria:**
+1. Canvas maintains 80% viewport width
+2. Canvas height dynamically calculated based on lowest block position plus 1200px buffer
+3. Minimum height equals viewport height
+4. Canvas centered with gray background container
+5. Scrollable vertically when content exceeds viewport
+6. Canvas re-calculates height when blocks are added/moved/removed
 
