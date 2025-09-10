@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { blockRegistry } from '@/lib/blocks/registry'
 import type { BlockTemplate } from '@/types/template'
+import { TemplateCard } from './TemplateCard'
 
 export const BlockLibrary: React.FC = () => {
   const [templates, setTemplates] = useState<BlockTemplate[]>([])
@@ -61,10 +62,7 @@ export const BlockLibrary: React.FC = () => {
             </h3>
             <div className="grid gap-3">
               {categoryTemplates.map((template) => (
-                // TODO: Replace with TemplateCard component in Task 2
-                <div key={template.typeId} className="text-sm">
-                  {template.name}
-                </div>
+                <TemplateCard key={template.typeId} template={template} />
               ))}
             </div>
           </div>
