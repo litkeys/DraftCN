@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { DragSlice, createDragSlice } from './slices/drag'
 
 export interface AppState {
   // Placeholder for future state
@@ -10,12 +11,15 @@ export interface AppActions {
   setInitialized: (initialized: boolean) => void
 }
 
-export type AppStore = AppState & AppActions
+export type AppStore = AppState & AppActions & DragSlice
 
-export const useAppStore = create<AppStore>((set) => ({
+export const useAppStore = create<AppStore>((...args) => ({
   // Initial state
   initialized: true,
   
   // Actions
-  setInitialized: (initialized) => set({ initialized }),
+  setInitialized: (initialized) => args[0]({ initialized }),
+  
+  // Drag slice
+  ...createDragSlice(...args),
 }))

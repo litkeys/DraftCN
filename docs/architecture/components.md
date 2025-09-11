@@ -4,15 +4,23 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 ### Canvas Component
 
-**Responsibility:** Manages the main workspace where blocks are positioned and rendered. Handles grid overlay, drop zones, and block rendering.
+**Responsibility:** Manages the main workspace where blocks are positioned and rendered. Handles drop detection, position calculation, grid overlay, and block rendering.
 
 **Key Interfaces:**
-- `onBlockDrop(block: Block)` - Handle new block placement
+- `onMouseUp(e: MouseEvent)` - Detect drop events and calculate positions
 - `onBlockMove(blockId: string, position: {x, y})` - Handle block repositioning
 - `onBlockSelect(blockId: string)` - Handle block selection
 - `renderGrid()` - Display 60px grid overlay
 
-**Dependencies:** Grid System Manager, Block Renderer, Dead Zone Component
+**Drop Handling Responsibilities:**
+- Detect when mouse is released over canvas
+- Calculate drop coordinates from mouse event
+- Validate drop zone boundaries
+- Create block instances via Block Registry
+- Update block positions in store
+- Call DragManager.endDrag() to clean up drag state
+
+**Dependencies:** Grid System Manager, Block Renderer, Dead Zone Component, Block Registry, Drag Manager
 
 **Technology Stack:** React 19, Tailwind CSS for grid styling, Zustand for state
 
@@ -44,13 +52,17 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 ### Drag Manager
 
-**Responsibility:** Coordinates all drag-and-drop operations including library-to-canvas and canvas-to-canvas movements.
+**Responsibility:** Manages drag state and coordinates drag lifecycle. Follows separation of concerns principle where DragManager handles state management while Canvas handles drop detection and positioning.
 
 **Key Interfaces:**
 - `startDrag(source: 'library' | 'canvas', item: any)` - Begin drag operation
 - `updateDragPosition(x: number, y: number)` - Track mouse movement
-- `endDrag(dropPosition: {x, y})` - Complete drag operation
+- `endDrag()` - Complete drag operation (Canvas determines drop position)
 - `cancelDrag()` - Cancel current drag
+
+**Separation of Concerns:**
+- **DragManager:** Manages drag state, handles Escape key cancellation, notifies store of state changes
+- **Canvas:** Detects drop events, calculates drop positions, validates drop zones, creates block instances
 
 **Dependencies:** Grid System Manager for snapping, Canvas State for boundaries
 

@@ -25,6 +25,7 @@ sequenceDiagram
     Canvas->>Canvas: Show blue highlight
     
     User->>Canvas: Mouse up (drop)
+    Canvas->>Canvas: Detect drop position from event
     Canvas->>GridMgr: snapToGrid(x, y, altPressed)
     GridMgr-->>Canvas: Snapped position
     Canvas->>Registry: generateBlockInstance(typeId, overrideProps?)
@@ -34,6 +35,7 @@ sequenceDiagram
     Store-->>Canvas: State change notification
     Canvas->>Renderer: renderBlock(block)
     Renderer->>Renderer: Execute component code with props
+    Canvas->>DragMgr: endDrag()
     DragMgr->>Store: clearDragState()
 ```
 
@@ -66,12 +68,14 @@ sequenceDiagram
     end
     
     User->>Canvas: Mouse up
+    Canvas->>Canvas: Detect final position from event
     Canvas->>GridMgr: snapToGrid(newX, newY, altPressed)
     GridMgr-->>Canvas: Final position
     Canvas->>Store: updateBlock(blockId, {x, y})
     Store->>Store: Update block position
     Store-->>Canvas: State change notification
     Canvas->>Canvas: Re-render at new position
+    Canvas->>DragMgr: endDrag()
     DragMgr->>Store: clearDragState()
 ```
 
