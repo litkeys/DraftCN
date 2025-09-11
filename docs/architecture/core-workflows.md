@@ -27,8 +27,8 @@ sequenceDiagram
     User->>Canvas: Mouse up (drop)
     Canvas->>GridMgr: snapToGrid(x, y, altPressed)
     GridMgr-->>Canvas: Snapped position
-    Canvas->>Registry: createInstance(typeId, defaultProps)
-    Registry-->>Canvas: New Block instance
+    Canvas->>Registry: generateBlockInstance(typeId, overrideProps?)
+    Registry-->>Canvas: Block instance (or null if not found)
     Canvas->>Store: addBlock(block)
     Store->>Store: Update blocks array
     Store-->>Canvas: State change notification

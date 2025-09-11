@@ -216,7 +216,7 @@ interface BlockTemplate {
   thumbnail: string;
   dependencies: string[];
   defaultProps: any;
-  componentCode: string;
+  component: React.ComponentType<any>;
   defaultWidth: number;
   defaultHeight: number;
   minimumWidth: number;
@@ -329,7 +329,7 @@ function createBlockInstance(
   const props = customProps || template.defaultProps;
   
   return {
-    id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `${typeId}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
     typeId,
     props,
     x: snapToGrid(position.x),
@@ -540,8 +540,10 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Key Interfaces:**
 - `registerTemplate(template: BlockTemplate)` - Add new template
 - `getTemplate(typeId: string)` - Retrieve specific template
-- `createInstance(typeId: string, props: any)` - Generate block instance
+- `generateBlockInstance(typeId: string, overrideProps?: any)` - Generate block instance with merged props (returns null if template not found)
 - `getCategories()` - List all template categories
+- `getAllTemplates()` - Returns all registered templates
+- `getTemplatesByCategory(category: string)` - Filter templates by category
 
 **Dependencies:** Local storage for caching (future)
 
@@ -636,8 +638,8 @@ sequenceDiagram
     User->>Canvas: Mouse up (drop)
     Canvas->>GridMgr: snapToGrid(x, y, altPressed)
     GridMgr-->>Canvas: Snapped position
-    Canvas->>Registry: createInstance(typeId, defaultProps)
-    Registry-->>Canvas: New Block instance
+    Canvas->>Registry: generateBlockInstance(typeId, overrideProps?)
+    Registry-->>Canvas: Block instance (or null if not found)
     Canvas->>Store: addBlock(block)
     Store->>Store: Update blocks array
     Store-->>Canvas: State change notification

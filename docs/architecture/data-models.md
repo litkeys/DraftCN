@@ -61,7 +61,7 @@ interface BlockTemplate {
   thumbnail: string;
   dependencies: string[];
   defaultProps: any;
-  componentCode: string;
+  component: React.ComponentType<any>;
   defaultWidth: number;
   defaultHeight: number;
   minimumWidth: number;
@@ -174,7 +174,7 @@ function createBlockInstance(
   const props = customProps || template.defaultProps;
   
   return {
-    id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `${typeId}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
     typeId,
     props,
     x: snapToGrid(position.x),

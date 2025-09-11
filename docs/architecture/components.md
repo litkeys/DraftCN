@@ -78,8 +78,10 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Key Interfaces:**
 - `registerTemplate(template: BlockTemplate)` - Add new template
 - `getTemplate(typeId: string)` - Retrieve specific template
-- `createInstance(typeId: string, props: any)` - Generate block instance
+- `generateBlockInstance(typeId: string, overrideProps?: any)` - Generate block instance with merged props (returns null if template not found)
 - `getCategories()` - List all template categories
+- `getAllTemplates()` - Returns all registered templates
+- `getTemplatesByCategory(category: string)` - Filter templates by category
 
 **Dependencies:** Local storage for caching (future)
 
