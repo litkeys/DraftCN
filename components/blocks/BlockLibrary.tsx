@@ -4,15 +4,23 @@ import React, { useEffect, useState } from 'react'
 import { blockRegistry } from '@/lib/blocks/registry'
 import type { BlockTemplate } from '@/types/template'
 import { TemplateCard } from './TemplateCard'
+import { Loader2 } from 'lucide-react'
 
 export const BlockLibrary: React.FC = () => {
   const [templates, setTemplates] = useState<BlockTemplate[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const loadTemplates = () => {
+    const loadTemplates = async () => {
       try {
+        setError(null)
+        setLoading(true)
+        
+        // Simulate async loading for better UX
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         const allTemplates = blockRegistry.getAllTemplates()
         const allCategories = blockRegistry.getCategories()
         
@@ -20,6 +28,7 @@ export const BlockLibrary: React.FC = () => {
         setCategories(allCategories)
       } catch (error) {
         console.error('Failed to load templates:', error)
+        setError(error instanceof Error ? error.message : 'Failed to load templates')
       } finally {
         setLoading(false)
       }
@@ -30,16 +39,46 @@ export const BlockLibrary: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-4">
-        <div className="text-sm text-muted-foreground">Loading templates...</div>
+      <div className="p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Loading block templates...</span>
+        </div>
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-32 bg-muted rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 space-y-3">
+        <div className="text-sm font-medium text-destructive">
+          Error loading templates
+        </div>
+        <div className="text-xs text-muted-foreground">{error}</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-xs text-primary hover:underline"
+        >
+          Reload page
+        </button>
       </div>
     )
   }
 
   if (templates.length === 0) {
     return (
-      <div className="p-4">
-        <div className="text-sm text-muted-foreground">No templates available</div>
+      <div className="p-4 space-y-3">
+        <div className="text-sm font-medium">No templates available</div>
+        <div className="text-xs text-muted-foreground">
+          Templates will appear here once they are registered in the system.
+        </div>
       </div>
     )
   }
@@ -48,26 +87,41 @@ export const BlockLibrary: React.FC = () => {
     <div className="p-4 space-y-6">
       <h2 className="text-lg font-semibold">Block Library</h2>
       
-      {categories.map((category) => {
-        const categoryTemplates = blockRegistry.getTemplatesByCategory(category)
-        
-        if (categoryTemplates.length === 0) {
-          return null
-        }
+      {categories.length === 0 ? (
+        <div className="text-sm text-muted-foreground">
+          No categories available. Templates need to be organized into categories.
+        </div>
+      ) : (
+        categories.map((category) => {
+          const categoryTemplates = blockRegistry.getTemplatesByCategory(category)
+          
+          if (categoryTemplates.length === 0) {
+            return (
+              <div key={category} className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  {category}
+                </h3>
+                <div className="text-xs text-muted-foreground italic">
+                  No templates in this category yet
+                </div>
+              </div>
+            )
+          }
 
-        return (
-          <div key={category} className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              {category}
-            </h3>
-            <div className="grid gap-3">
-              {categoryTemplates.map((template) => (
-                <TemplateCard key={template.typeId} template={template} />
-              ))}
+          return (
+            <div key={category} className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {category}
+              </h3>
+              <div className="grid gap-3">
+                {categoryTemplates.map((template) => (
+                  <TemplateCard key={template.typeId} template={template} />
+                ))}
+              </div>
             </div>
-          </div>
-        )
-      })}
+          )
+        })
+      )}
     </div>
   )
 }

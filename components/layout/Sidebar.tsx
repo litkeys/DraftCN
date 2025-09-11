@@ -1,6 +1,7 @@
 import React from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { BlockLibrary } from '@/components/blocks/BlockLibrary'
+import { BlockLibraryErrorBoundary } from '@/components/blocks/BlockLibraryErrorBoundary'
 
 export function Sidebar() {
   return (
@@ -10,7 +11,9 @@ export function Sidebar() {
         If layout structure changes, revisit this height calculation 
       */}
       <ScrollArea className="h-full">
-        <BlockLibrary />
+        <BlockLibraryErrorBoundary>
+          <BlockLibrary />
+        </BlockLibraryErrorBoundary>
       </ScrollArea>
     </aside>
   )
