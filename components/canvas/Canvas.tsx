@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React, { useRef, useCallback } from 'react'
 import { useAppStore } from '@/store'
@@ -15,11 +15,12 @@ import type { BlockTemplate } from '@/types/template'
  */
 export const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null)
-  
+
   // Get state and actions from store
   const isDragging = useAppStore(dragSelectors.isDragging)
   const draggedItem = useAppStore(dragSelectors.getDraggedItem)
   const sourceType = useAppStore(dragSelectors.getDragSource)
+  const offset = useAppStore(dragSelectors.getDragOffset)
   const clearDragState = useAppStore((state) => state.clearDragState)
   const addBlock = useAppStore((state) => state.addBlock)
   const getHighestZIndex = useAppStore((state) => state.getHighestZIndex)
@@ -28,76 +29,92 @@ export const Canvas: React.FC = () => {
   /**
    * Handle drop on canvas
    */
-  const handleDrop = useCallback((e: React.MouseEvent) => {
-    // Only handle drop if actively dragging
-    if (!isDragging || !draggedItem) {
-      return
-    }
+  const handleDrop = useCallback(
+    (e: React.MouseEvent) => {
+      // Only handle drop if actively dragging
+      if (!isDragging || !draggedItem) {
+        return
+      }
 
-    // Check if cursor is over the canvas element
-    if (!canvasRef.current) {
-      return
-    }
+      // Check if cursor is over the canvas element
+      if (!canvasRef.current) {
+        return
+      }
 
-    const rect = canvasRef.current.getBoundingClientRect()
-    const isOverCanvas = 
-      e.clientX >= rect.left &&
-      e.clientX <= rect.right &&
-      e.clientY >= rect.top &&
-      e.clientY <= rect.bottom
+      const rect = canvasRef.current.getBoundingClientRect()
+      const isOverCanvas =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
 
-    if (!isOverCanvas) {
-      // Not dropped on canvas, cancel drag
-      dragManager.cancelDrag()
-      clearDragState()
-      return
-    }
-
-    // Handle drop based on source type
-    if (sourceType === 'library') {
-      // Create new block from template
-      const template = draggedItem as BlockTemplate
-      const newBlock = blockRegistry.generateBlockInstance(template.typeId)
-      
-      if (!newBlock) {
-        console.error(`Failed to create block instance for template: ${template.typeId}`)
+      if (!isOverCanvas) {
+        // Not dropped on canvas, cancel drag
         dragManager.cancelDrag()
         clearDragState()
         return
       }
 
-      // Calculate drop position relative to canvas
-      const dropX = e.clientX - rect.left
-      const dropY = e.clientY - rect.top
+      // Handle drop based on source type
+      if (sourceType === 'library') {
+        // Create new block from template
+        const template = draggedItem as BlockTemplate
+        const newBlock = blockRegistry.generateBlockInstance(template.typeId)
 
-      // Update block position to drop coordinates
-      newBlock.x = dropX
-      newBlock.y = dropY
+        if (!newBlock) {
+          console.error(
+            `Failed to create block instance for template: ${template.typeId}`
+          )
+          dragManager.cancelDrag()
+          clearDragState()
+          return
+        }
 
-      // Calculate next z-index (sequential)
-      const highestZ = getHighestZIndex()
-      newBlock.z = highestZ + 1
+        // Calculate drop position relative to canvas, accounting for click offset
+        const dropX = e.clientX - rect.left - (offset?.x || 0)
+        const dropY = e.clientY - rect.top - (offset?.y || 0)
 
-      // Add new block to store
-      addBlock(newBlock)
-    } else if (sourceType === 'canvas') {
-      // Moving existing block (will be implemented in future stories)
-      console.log('Canvas drag not implemented in this story')
-    }
+        // Update block position to drop coordinates
+        newBlock.x = dropX
+        newBlock.y = dropY
 
-    // End drag operation
-    dragManager.endDrag()
-    clearDragState()
-  }, [isDragging, draggedItem, sourceType, clearDragState, addBlock, getHighestZIndex])
+        // Calculate next z-index (sequential)
+        const highestZ = getHighestZIndex()
+        newBlock.z = highestZ + 1
+
+        // Add new block to store
+        addBlock(newBlock)
+      } else if (sourceType === 'canvas') {
+        // Moving existing block (will be implemented in future stories)
+        console.log('Canvas drag not implemented in this story')
+      }
+
+      // End drag operation
+      dragManager.endDrag()
+      clearDragState()
+    },
+    [
+      isDragging,
+      draggedItem,
+      sourceType,
+      offset,
+      clearDragState,
+      addBlock,
+      getHighestZIndex,
+    ]
+  )
 
   /**
    * Handle mouse up on canvas
    */
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (isDragging) {
-      handleDrop(e)
-    }
-  }, [isDragging, handleDrop])
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      if (isDragging) {
+        handleDrop(e)
+      }
+    },
+    [isDragging, handleDrop]
+  )
 
   /**
    * Handle mouse enter to track when cursor enters canvas

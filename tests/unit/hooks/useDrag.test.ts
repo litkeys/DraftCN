@@ -386,13 +386,34 @@ describe('useDrag', () => {
     it('should clean up on unmount if dragging', () => {
       (dragManager.isDragging as any).mockReturnValue(true);
       
-      const { unmount } = renderHook(() => 
+      const { result, unmount } = renderHook(() => 
         useDrag({ 
           sourceType: 'library', 
           item: mockTemplate 
         })
       );
 
+      // Start a drag to set isDraggingRef.current to true
+      const mockEvent = {
+        preventDefault: vi.fn(),
+        clientX: 100,
+        clientY: 200,
+        currentTarget: {
+          getBoundingClientRect: () => ({
+            left: 50,
+            top: 100,
+            right: 150,
+            bottom: 200,
+          }),
+        },
+        nativeEvent: {},
+      } as unknown as React.MouseEvent;
+
+      act(() => {
+        result.current.handleMouseDown(mockEvent);
+      });
+
+      // Now unmount while dragging
       unmount();
 
       expect(dragManager.cancelDrag).toHaveBeenCalled();

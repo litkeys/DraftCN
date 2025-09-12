@@ -90,6 +90,7 @@ describe('Canvas', () => {
           isDragging: false,
           getDraggedItem: null,
           getDragSource: null,
+          getDragOffset: { x: 0, y: 0 },
           blocks: [],
           clearDragState: mockClearDragState,
           addBlock: mockAddBlock,
@@ -151,6 +152,7 @@ describe('Canvas', () => {
             isDragging: true,
             getDraggedItem: mockTemplate,
             getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
             blocks: [],
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
@@ -178,6 +180,7 @@ describe('Canvas', () => {
             isDragging: true,
             getDraggedItem: mockTemplate,
             getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
             blocks: [],
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
@@ -233,6 +236,7 @@ describe('Canvas', () => {
             isDragging: true,
             getDraggedItem: mockTemplate,
             getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
             blocks: [],
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
@@ -270,6 +274,7 @@ describe('Canvas', () => {
             isDragging: true,
             getDraggedItem: mockTemplate,
             getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
             blocks: [],
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
@@ -315,6 +320,7 @@ describe('Canvas', () => {
             isDragging: true,
             getDraggedItem: mockTemplate,
             getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
             blocks: [],
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
@@ -380,6 +386,7 @@ describe('Canvas', () => {
             isDragging: true,
             getDraggedItem: null,
             getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
             blocks: [],
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
@@ -407,6 +414,7 @@ describe('Canvas', () => {
             isDragging: true,
             getDraggedItem: mockTemplate,
             getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
             blocks: [],
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
@@ -432,6 +440,7 @@ describe('Canvas', () => {
             isDragging: true,
             getDraggedItem: mockTemplate,
             getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
             blocks: [],
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
@@ -497,6 +506,179 @@ describe('Canvas', () => {
 
       render(<Canvas />)
       expect(screen.queryByTestId(`block-${mockBlock.id}`)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Offset-Aware Drop Positioning', () => {
+    it('should apply drag offset when dropping from library', () => {
+      const generatedBlock = { ...mockBlock }
+      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(generatedBlock)
+      mockGetHighestZIndex.mockReturnValue(0)
+
+      // Set up drag state with offset
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: true,
+            getDraggedItem: mockTemplate,
+            getDragSource: 'library',
+            getDragOffset: { x: 30, y: 20 }, // User clicked 30px from left, 20px from top of template
+            blocks: [],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+      
+      const mockRect = {
+        left: 0, top: 0, right: 1000, bottom: 800,
+        width: 1000, height: 800,
+      }
+      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
+
+      // Drop at cursor position (400, 300)
+      fireEvent.mouseUp(canvas, { clientX: 400, clientY: 300 })
+      
+      // Should subtract offset from cursor position
+      expect(mockAddBlock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          x: 370, // 400 - 30
+          y: 280, // 300 - 20
+        })
+      )
+    })
+
+    it('should handle zero offset gracefully', () => {
+      const generatedBlock = { ...mockBlock }
+      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(generatedBlock)
+      mockGetHighestZIndex.mockReturnValue(0)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: true,
+            getDraggedItem: mockTemplate,
+            getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+      
+      const mockRect = {
+        left: 0, top: 0, right: 1000, bottom: 800,
+        width: 1000, height: 800,
+      }
+      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
+
+      fireEvent.mouseUp(canvas, { clientX: 400, clientY: 300 })
+      
+      expect(mockAddBlock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          x: 400, // No offset applied
+          y: 300, // No offset applied
+        })
+      )
+    })
+
+    it('should handle undefined offset safely', () => {
+      const generatedBlock = { ...mockBlock }
+      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(generatedBlock)
+      mockGetHighestZIndex.mockReturnValue(0)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: true,
+            getDraggedItem: mockTemplate,
+            getDragSource: 'library',
+            getDragOffset: undefined, // Simulating undefined offset
+            blocks: [],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+      
+      const mockRect = {
+        left: 0, top: 0, right: 1000, bottom: 800,
+        width: 1000, height: 800,
+      }
+      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
+
+      fireEvent.mouseUp(canvas, { clientX: 400, clientY: 300 })
+      
+      // Should treat undefined as zero offset
+      expect(mockAddBlock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          x: 400,
+          y: 300,
+        })
+      )
+    })
+
+    it('should correctly position block with canvas offset and drag offset', () => {
+      const generatedBlock = { ...mockBlock }
+      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(generatedBlock)
+      mockGetHighestZIndex.mockReturnValue(0)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: true,
+            getDraggedItem: mockTemplate,
+            getDragSource: 'library',
+            getDragOffset: { x: 50, y: 25 },
+            blocks: [],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+      
+      // Canvas is offset from viewport
+      const mockRect = {
+        left: 100, top: 50, right: 1100, bottom: 850,
+        width: 1000, height: 800,
+      }
+      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
+
+      // Drop at absolute position (500, 400)
+      fireEvent.mouseUp(canvas, { clientX: 500, clientY: 400 })
+      
+      // Should calculate: (clientX - canvas.left) - offset.x
+      expect(mockAddBlock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          x: 350, // (500 - 100) - 50
+          y: 325, // (400 - 50) - 25
+        })
+      )
     })
   })
 })

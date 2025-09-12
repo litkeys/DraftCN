@@ -1,37 +1,39 @@
-import { Block, BlockTemplate } from '../../types';
-import { Hero1 } from '../../templates/hero1';
-import { Navbar1 } from '../../templates/navbar1';
-import { Footer2 } from '../../templates/footer2';
+import { Block, BlockTemplate } from '../../types'
+import { Hero1 } from '../../templates/hero1'
+import { Navbar1 } from '../../templates/navbar1'
+import { Footer2 } from '../../templates/footer2'
 
 export class BlockRegistry {
-  private templates: Map<string, BlockTemplate> = new Map();
+  private templates: Map<string, BlockTemplate> = new Map()
 
   registerTemplate(template: BlockTemplate): void {
-    this.templates.set(template.typeId, template);
+    this.templates.set(template.typeId, template)
   }
 
   getTemplate(typeId: string): BlockTemplate | undefined {
-    return this.templates.get(typeId);
+    return this.templates.get(typeId)
   }
 
   getTemplatesByCategory(category: string): BlockTemplate[] {
     return Array.from(this.templates.values()).filter(
-      template => template.category === category
-    );
+      (template) => template.category === category
+    )
   }
 
   generateBlockInstance(
-    typeId: string, 
+    typeId: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     overrideProps: any = {}
   ): Block | null {
-    const template = this.getTemplate(typeId);
+    const template = this.getTemplate(typeId)
     if (!template) {
-      return null;
+      return null
     }
 
-    const uniqueId = `${typeId}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-    
+    const uniqueId = `${typeId}-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 11)}`
+
     return {
       id: uniqueId,
       typeId: template.typeId,
@@ -43,38 +45,38 @@ export class BlockRegistry {
       height: template.defaultHeight,
       z: 0,
       selected: false,
-    };
+    }
   }
 
   getAllTemplates(): BlockTemplate[] {
-    return Array.from(this.templates.values());
+    return Array.from(this.templates.values())
   }
 
   getCategories(): string[] {
-    const categories = new Set<string>();
-    this.templates.forEach(template => categories.add(template.category));
-    return Array.from(categories);
+    const categories = new Set<string>()
+    this.templates.forEach((template) => categories.add(template.category))
+    return Array.from(categories)
   }
 
   hasTemplate(typeId: string): boolean {
-    return this.templates.has(typeId);
+    return this.templates.has(typeId)
   }
 
   removeTemplate(typeId: string): boolean {
-    return this.templates.delete(typeId);
+    return this.templates.delete(typeId)
   }
 
   clear(): void {
-    this.templates.clear();
+    this.templates.clear()
   }
 
   getTemplateCount(): number {
-    return this.templates.size;
+    return this.templates.size
   }
 }
 
 // Export a singleton instance
-export const blockRegistry = new BlockRegistry();
+export const blockRegistry = new BlockRegistry()
 
 // Template Registration
 // Manual registration of all available block templates with complete metadata
@@ -92,7 +94,8 @@ const hero1Template: BlockTemplate = {
   defaultProps: {
     badge: '✨ Your Website Builder',
     heading: 'Blocks Built With Shadcn & Tailwind',
-    description: 'Finely crafted components built with React, Tailwind and Shadcn UI. Developers can copy and paste these blocks directly into their project.',
+    description:
+      'Finely crafted components built with React, Tailwind and Shadcn UI. Developers can copy and paste these blocks directly into their project.',
     buttons: {
       primary: {
         text: 'Discover all components',
@@ -107,14 +110,14 @@ const hero1Template: BlockTemplate = {
       src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg',
       alt: 'Hero section demo image showing interface components',
     },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any,
   component: Hero1,
   defaultWidth: 1200, // 60px × 20
-  defaultHeight: 600,  // 60px × 10
-  minimumWidth: 300,   // 60px × 5
-  minimumHeight: 240,  // 60px × 4
-};
+  defaultHeight: 600, // 60px × 10
+  minimumWidth: 300, // 60px × 5
+  minimumHeight: 240, // 60px × 4
+}
 
 /**
  * Navbar1 Template Registration
@@ -125,7 +128,12 @@ const navbar1Template: BlockTemplate = {
   name: 'Navigation Bar 1',
   category: 'navigation',
   thumbnail: '/thumbnails/navbar1.svg',
-  dependencies: ['lucide-react', '@radix-ui/react-accordion', '@radix-ui/react-navigation-menu', '@radix-ui/react-dialog'],
+  dependencies: [
+    'lucide-react',
+    '@radix-ui/react-accordion',
+    '@radix-ui/react-navigation-menu',
+    '@radix-ui/react-dialog',
+  ],
   defaultProps: {
     logo: {
       url: 'https://www.shadcnblocks.com',
@@ -157,14 +165,14 @@ const navbar1Template: BlockTemplate = {
       login: { title: 'Login', url: '#' },
       signup: { title: 'Sign up', url: '#' },
     },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any,
   component: Navbar1,
   defaultWidth: 1200, // 60px × 20
-  defaultHeight: 120,  // 60px × 2
-  minimumWidth: 300,   // 60px × 5
-  minimumHeight: 60,   // 60px × 1
-};
+  defaultHeight: 60, // 60px × 1
+  minimumWidth: 300, // 60px × 5
+  minimumHeight: 60, // 60px × 1
+}
 
 /**
  * Footer2 Template Registration
@@ -207,16 +215,16 @@ const footer2Template: BlockTemplate = {
       { text: 'Terms and Conditions', url: '#' },
       { text: 'Privacy Policy', url: '#' },
     ],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any,
   component: Footer2,
   defaultWidth: 1200, // 60px × 20
-  defaultHeight: 420,  // 60px × 7
-  minimumWidth: 300,   // 60px × 5
-  minimumHeight: 240,  // 60px × 4
-};
+  defaultHeight: 480, // 60px × 8
+  minimumWidth: 300, // 60px × 5
+  minimumHeight: 240, // 60px × 4
+}
 
 // Register all templates with the singleton registry
-blockRegistry.registerTemplate(hero1Template);
-blockRegistry.registerTemplate(navbar1Template);
-blockRegistry.registerTemplate(footer2Template);
+blockRegistry.registerTemplate(hero1Template)
+blockRegistry.registerTemplate(navbar1Template)
+blockRegistry.registerTemplate(footer2Template)

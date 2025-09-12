@@ -50,7 +50,7 @@ export const DropPreview: React.FC = () => {
           }}
           data-testid="drop-preview"
         >
-          <div className="border-2 border-dashed border-primary/50 rounded-lg bg-background/90 shadow-2xl">
+          <div className="border-2 border-dashed border-primary/50 rounded-lg bg-background/90 shadow-2xl h-full w-full overflow-hidden">
             {Component ? (
               <Component {...(template.defaultProps || {})} />
             ) : (
@@ -83,7 +83,7 @@ export const DropPreview: React.FC = () => {
           }}
           data-testid="drop-preview"
         >
-          <div className="border-2 border-dashed border-primary/50 rounded-lg bg-background/90 shadow-2xl">
+          <div className="border-2 border-dashed border-primary/50 rounded-lg bg-background/90 shadow-2xl h-full w-full overflow-hidden">
             {block.component ? (
               <block.component {...(block.props || {})} />
             ) : (
