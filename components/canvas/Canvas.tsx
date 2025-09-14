@@ -26,6 +26,7 @@ export const Canvas: React.FC = () => {
   const getHighestZIndex = useAppStore((state) => state.getHighestZIndex)
   const blocks = useAppStore(blocksSelectors.getAllBlocks)
   const selectBlock = useAppStore((state) => state.selectBlock)
+  const clearSelection = useAppStore((state) => state.clearSelection)
 
   /**
    * Handle click on block
@@ -36,6 +37,19 @@ export const Canvas: React.FC = () => {
       selectBlock(blockId) // BlocksSlice handles deselection of others and sync
     },
     [selectBlock]
+  )
+
+  /**
+   * Handle click on canvas
+   */
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        // Only if clicking canvas itself
+        clearSelection() // BlocksSlice clears selectedBlockIds and syncs all blocks
+      }
+    },
+    [clearSelection]
   )
 
   /**
@@ -150,6 +164,7 @@ export const Canvas: React.FC = () => {
     <div
       ref={canvasRef}
       className="relative w-full h-full bg-slate-50 overflow-auto"
+      onClick={handleCanvasClick}
       onMouseUp={handleMouseUp}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
