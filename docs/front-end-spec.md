@@ -139,21 +139,31 @@ graph TD
 
 ```mermaid
 graph TD
-    A[User clicks on block] --> B[Block shows selection highlight]
-    B --> C[Blue border indicates selection]
-    C --> D[User presses Delete or Backspace]
-    D --> E[Block removed from array]
-    E --> F[Visual removal from canvas]
-    F --> G[Selection state cleared]
+    A[Block has no border by default] --> B[User hovers over block]
+    B --> C[Blue border appears on hover]
+    B --> D[User clicks on block]
+    D --> E[Block selected with blue border]
+    E --> F[Blue border persists when selected]
+    D --> G[Clicking one block deselects others]
+    H[User clicks on canvas] --> I[All blocks deselected]
+    E --> J[User presses Delete or Backspace]
+    J --> K[Block removed from array]
+    K --> L[Visual removal from canvas]
+    L --> M[Selection state cleared]
 ```
 
 #### Edge Cases & Error Handling:
 
--   Multiple blocks can be selected (future enhancement)
+-   Blocks have no visible border by default
+-   Only one block can be selected at a time
+-   Clicking on one block automatically deselects all other blocks
+-   Click on canvas deselects all blocks
+-   Hovering shows blue border (same style as selected)
+-   Blue border persists when block is selected
 -   Deleting non-existent selection does nothing
 -   No confirmation dialog - deletion is immediate (no persistence means low risk)
 
-**Notes:** Selection visual feedback is critical for user confidence
+**Notes:** Selection visual feedback is critical for user confidence with hover and selection states using the same blue border style
 
 ### Flow: Grid Bypass with Alt Key
 
@@ -243,9 +253,9 @@ graph TD
 
 **Key Elements:**
 
--   Default state: Block rendered with no additional styling
--   Hover state: Subtle shadow or border to indicate interactivity
--   Selected state: Blue border with semi-transparent overlay
+-   Default state: Block rendered with no border or additional styling
+-   Hover state: Blue border to indicate interactivity (same style as selected)
+-   Selected state: Blue border that persists when block is selected
 -   Dragging state: Reduced opacity with cursor following
 
 **Interaction Notes:** States provide clear feedback for user actions, selected blocks respond to keyboard commands

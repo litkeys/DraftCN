@@ -16,15 +16,12 @@ draftcn/
 │   │   ├── scroll-area.tsx
 │   │   └── ...
 │   ├── canvas/                # Canvas components
-│   │   ├── Canvas.tsx
-│   │   ├── Grid.tsx
-│   │   ├── DeadZones.tsx
-│   │   ├── DropPreview.tsx
-│   │   └── BlockRenderer.tsx
+│   │   ├── Canvas.tsx         # Main canvas with integrated block rendering
+│   │   └── DropPreview.tsx    # Drag preview visualization
 │   ├── blocks/                # Block-related components
-│   │   ├── BlockInstance.tsx
-│   │   ├── BlockWrapper.tsx
-│   │   └── BlockLibrary.tsx
+│   │   ├── BlockLibrary.tsx   # Template library sidebar
+│   │   ├── BlockLibraryErrorBoundary.tsx  # Error handling
+│   │   └── TemplateCard.tsx   # Template thumbnail card
 │   └── layout/               # Layout components
 │       ├── Header.tsx
 │       └── Sidebar.tsx
@@ -42,11 +39,9 @@ draftcn/
 │   └── utils.ts             # General utilities
 ├── store/                    # State management
 │   ├── index.ts             # Main Zustand store
-│   ├── slices/              # Store slices
-│   │   ├── canvas.ts        # Canvas state
-│   │   ├── blocks.ts        # Blocks state
-│   │   └── drag.ts          # Drag state
-│   └── selectors.ts        # Reusable selectors
+│   └── slices/              # Store slices
+│       ├── blocks.ts        # BlocksSlice - blocks state and actions
+│       └── drag.ts          # DragSlice - drag state and actions
 ├── templates/               # Block templates
 │   ├── hero/               # Hero templates
 │   │   ├── hero1.tsx       # Hero template source

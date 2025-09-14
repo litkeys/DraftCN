@@ -34,6 +34,7 @@ No starter templates or existing projects are mentioned in the PRD or front-end 
 | Date       | Version | Description                    | Author           |
 | ---------- | ------- | ------------------------------ | ---------------- |
 | 2025-01-06 | v1.0    | Initial architecture document  | Winston (Architect) |
+| 2025-01-13 | v1.1    | Updated to match implementation reality | Winston (Architect) |
 
 ## High Level Architecture
 
@@ -168,7 +169,7 @@ This is the **DEFINITIVE** technology selection for the entire project. All deve
 - `width: number` - Block width in pixels
 - `height: number` - Block height in pixels
 - `z: number` - Stacking order (1 = first block added)
-- `selected: boolean` - Whether block is currently selected
+- `selected: boolean` - Whether the block is currently selected
 
 #### TypeScript Interface
 ```typescript
@@ -189,6 +190,13 @@ interface Block {
 - References a BlockTemplate via typeId
 - Props must conform to template's interface structure
 - Z-index determines visual stacking when blocks overlap
+
+#### Selection Architecture Note
+The `selected` field in Block is initialized as `false` when blocks are created but is **not actively maintained**. Selection state is managed by the SelectionSlice which maintains a `selectedBlockIds` array. This approach:
+- Avoids updating every block when selection changes (performance)
+- Keeps selection logic centralized in SelectionSlice
+- Allows for efficient multi-select operations
+- The `selected` field exists for potential future use or serialization
 
 ### BlockTemplate
 
@@ -336,8 +344,7 @@ function createBlockInstance(
     y: snapToGrid(position.y),
     width: template.defaultWidth,
     height: template.defaultHeight,
-    z: getNextZIndex(),
-    selected: false
+    z: getNextZIndex()
   };
 }
 ```
@@ -430,7 +437,7 @@ interface CanvasState {
   height: number;
   gridSize: number;
   showGrid: boolean;
-  isDragging: boolean;
+  isActive: boolean; // Drag state
   draggedItem?: {
     type: 'template' | 'block';
     typeId?: string;
@@ -509,10 +516,16 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Responsibility:** Coordinates all drag-and-drop operations including library-to-canvas and canvas-to-canvas movements.
 
 **Key Interfaces:**
-- `startDrag(source: 'library' | 'canvas', item: any)` - Begin drag operation
-- `updateDragPosition(x: number, y: number)` - Track mouse movement
-- `endDrag(dropPosition: {x, y})` - Complete drag operation
-- `cancelDrag()` - Cancel current drag
+- `setDragState(state: Partial<DragState>)` - Update drag state with new values
+- `updateDragPosition(x: number, y: number)` - Update current drag position
+- `clearDragState()` - Reset all drag state to initial values
+
+**State Properties:**
+- `isActive: boolean` - Whether a drag operation is currently active
+- `sourceType: 'library' | 'canvas' | null` - Origin of the dragged item
+- `draggedItem: any` - The item being dragged (block template or existing block)
+- `position: { x: number; y: number }` - Current drag position
+- `offset: { x: number; y: number }` - Offset from drag start point
 
 **Dependencies:** Grid System Manager for snapping, Canvas State for boundaries
 
@@ -628,7 +641,7 @@ sequenceDiagram
     Sidebar->>Registry: getTemplate(typeId)
     Registry-->>Sidebar: BlockTemplate
     Sidebar->>DragMgr: startDrag('library', template)
-    DragMgr->>Store: setDragState({active: true, sourceType: 'library'})
+    DragMgr->>Store: setDragState({isActive: true, sourceType: 'library'})
     
     User->>Canvas: Drag over canvas
     Canvas->>GridMgr: calculateDropPreview(x, y)
@@ -666,7 +679,7 @@ sequenceDiagram
     
     User->>Block: Mouse down and drag
     Block->>DragMgr: startDrag('canvas', blockId)
-    DragMgr->>Store: setDragState({active: true, sourceType: 'canvas'})
+    DragMgr->>Store: setDragState({isActive: true, sourceType: 'canvas'})
     
     loop During drag
         User->>Canvas: Mouse move
@@ -696,24 +709,38 @@ sequenceDiagram
     participant Store as Zustand Store
     participant Renderer as Block Renderer
 
+    Note over Block: Block has no border by default
+    
+    User->>Block: Hover over block
+    Block->>Block: Show blue border on hover
+    
     User->>Block: Click to select
     Block->>Store: selectBlock(blockId)
+    Store->>Store: Deselect all other blocks
     Store-->>Block: Update selected: true
-    Block->>Block: Show blue selection border
+    Block->>Block: Show persistent blue border
     
-    User->>User: Press Delete/Backspace key
-    User->>Canvas: Keyboard event
-    Canvas->>Canvas: Check for selected block
-    Canvas->>Store: getSelectedBlock()
-    Store-->>Canvas: Selected blockId
-    
-    Canvas->>Store: deleteBlock(blockId)
-    Store->>Store: Remove from blocks array
-    Store->>Store: Clear selection
-    Store-->>Canvas: State change notification
-    Canvas->>Renderer: Remove block from DOM
-    Renderer-->>Canvas: Block removed
-    Canvas->>Canvas: Recalculate canvas height
+    alt Click on canvas
+        User->>Canvas: Click on canvas
+        Canvas->>Store: selectBlock(null)
+        Store->>Store: Deselect all blocks
+        Store-->>Block: Update selected: false
+        Block->>Block: Remove blue border
+    else Press Delete/Backspace
+        User->>User: Press Delete/Backspace key
+        User->>Canvas: Keyboard event
+        Canvas->>Canvas: Check for selected block
+        Canvas->>Store: getSelectedBlock()
+        Store-->>Canvas: Selected blockId
+        
+        Canvas->>Store: deleteBlock(blockId)
+        Store->>Store: Remove from blocks array
+        Store->>Store: Clear selection
+        Store-->>Canvas: State change notification
+        Canvas->>Renderer: Remove block from DOM
+        Renderer-->>Canvas: Block removed
+        Canvas->>Canvas: Recalculate canvas height
+    end
 ```
 
 ### Grid Bypass with Alt Key
@@ -727,7 +754,7 @@ sequenceDiagram
     participant Store as Zustand Store
 
     User->>Canvas: Start dragging block
-    DragMgr->>Store: setDragState({active: true})
+    DragMgr->>Store: setDragState({isActive: true})
     
     User->>User: Hold Alt key
     User->>Canvas: Alt key down event
@@ -822,7 +849,7 @@ src/
 │   ├── blocks/
 │   │   ├── BlockRenderer.tsx  # Dynamic block rendering
 │   │   ├── BlockWrapper.tsx   # Selection/positioning wrapper
-│   │   └── BlockInstance.tsx  # Individual block instance
+│   │   └── (No BlockInstance - Canvas renders blocks directly)
 │   ├── sidebar/
 │   │   ├── BlockLibrary.tsx   # Template library sidebar
 │   │   ├── TemplateCard.tsx   # Template thumbnail card
@@ -840,46 +867,41 @@ import { memo, useCallback } from 'react';
 import { useStore } from '@/store';
 import { Block } from '@/types';
 
-interface BlockInstanceProps {
-  block: Block;
-  template: BlockTemplate;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
-  onMove: (id: string, position: { x: number; y: number }) => void;
-}
-
-export const BlockInstance = memo(({ 
-  block, 
-  template, 
-  isSelected,
-  onSelect,
-  onMove 
-}: BlockInstanceProps) => {
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onSelect(block.id);
-    // Initiate drag logic
-  }, [block.id, onSelect]);
-
+// Canvas Direct Rendering Pattern - No BlockInstance component
+// Canvas component renders blocks directly:
+export const Canvas: React.FC = () => {
+  const blocks = useAppStore(blocksSelectors.getAllBlocks);
+  
   return (
-    <div
-      className={cn(
-        "absolute",
-        isSelected && "ring-2 ring-blue-500"
-      )}
-      style={{
-        left: block.x,
-        top: block.y,
-        width: block.width,
-        height: block.height,
-        zIndex: block.z
-      }}
-      onMouseDown={handleMouseDown}
-    >
-      {/* Render block content */}
+    <div className="relative w-full h-full bg-slate-50 overflow-auto">
+      {blocks.map((block) => {
+        const template = blockRegistry.getTemplate(block.typeId);
+        if (!template) return null;
+        
+        const Component = template.component;
+        if (!Component) return null;
+        
+        return (
+          <div
+            key={block.id}
+            className="absolute border border-gray-300 rounded"
+            style={{
+              left: block.x,
+              top: block.y,
+              width: block.width,
+              height: block.height,
+              zIndex: block.z,
+            }}
+            data-block-id={block.id}
+            data-testid={`block-${block.id}`}
+          >
+            <Component {...block.props} />
+          </div>
+        );
+      })}
     </div>
   );
-});
+};
 ```
 
 ### State Management Architecture
@@ -887,40 +909,64 @@ export const BlockInstance = memo(({
 #### State Structure
 
 ```typescript
-interface BuilderState {
-  // Canvas state
-  canvas: {
-    width: number;
-    height: number;
-    gridSize: number;
-    showGrid: boolean;
-  };
-  
-  // Blocks state
+// Actual Zustand store structure with slices
+type AppStore = AppState & AppActions & BlocksSlice & DragSlice & SelectionSlice;
+
+// BlocksSlice - manages blocks
+interface BlocksSlice {
+  // State
   blocks: Block[];
-  selectedBlockId: string | null;
-  
-  // Drag state
-  drag: {
-    isActive: boolean;
-    sourceType: 'library' | 'canvas' | null;
-    draggedItem: any;
-    position: { x: number; y: number };
-    offset: { x: number; y: number };
-  };
-  
-  // Templates state
-  templates: Map<string, BlockTemplate>;
-  categories: string[];
   
   // Actions
   addBlock: (block: Block) => void;
   updateBlock: (id: string, updates: Partial<Block>) => void;
-  deleteBlock: (id: string) => void;
-  selectBlock: (id: string | null) => void;
-  startDrag: (source: 'library' | 'canvas', item: any) => void;
+  removeBlock: (id: string) => void;  // Note: not deleteBlock
+  clearBlocks: () => void;
+  getHighestZIndex: () => number;
+}
+
+// DragSlice - manages drag operations
+interface DragSlice {
+  // State
+  isActive: boolean;
+  sourceType: 'library' | 'canvas' | null;
+  draggedItem: any; // The item being dragged
+  position: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null;
+
+  // Actions
+  setDragState: (state: Partial<DragState>) => void;
   updateDragPosition: (x: number, y: number) => void;
-  endDrag: () => void;
+  clearDragState: () => void;
+}
+
+// SelectionSlice - manages selection state
+interface SelectionSlice {
+  // State - using array for persistence compatibility
+  selectedBlockIds: string[]; // Array for JSON serialization
+  lastSelectedBlockId: string | null;
+
+  // Actions
+  selectBlock: (blockId: string, mode?: 'replace' | 'add' | 'toggle') => void;
+  deselectBlock: (blockId: string) => void;
+  clearSelection: () => void;
+  selectMultiple: (blockIds: string[]) => void;
+  selectRange: (fromBlockId: string, toBlockId: string) => void;
+  selectAll: () => void;
+  selectWithinBounds: (bounds: { x: number; y: number; width: number; height: number }) => void;
+}
+
+// AppState - global app state
+interface AppState {
+  initialized: boolean;
+}
+
+interface AppActions {
+  setInitialized: (initialized: boolean) => void;
 }
 ```
 
@@ -1031,7 +1077,7 @@ draftcn/
 │   │   ├── DropPreview.tsx
 │   │   └── BlockRenderer.tsx
 │   ├── blocks/                # Block-related components
-│   │   ├── BlockInstance.tsx
+│   │   ├── (No BlockInstance - Canvas renders directly)
 │   │   ├── BlockWrapper.tsx
 │   │   └── BlockLibrary.tsx
 │   └── layout/               # Layout components
@@ -1326,7 +1372,7 @@ tests/
 │       └── canvas.test.ts     # Canvas state
 ├── components/
 │   ├── Canvas.test.tsx        # Canvas component
-│   ├── BlockInstance.test.tsx # Block rendering
+│   ├── Canvas.test.tsx        # Canvas with block rendering
 │   └── BlockLibrary.test.tsx  # Sidebar tests
 └── e2e/
     ├── drag-drop.test.ts      # Drag and drop flow
@@ -1355,11 +1401,11 @@ tests/e2e/
 #### Frontend Component Test
 
 ```typescript
-// tests/components/BlockInstance.test.tsx
+// tests/unit/components/canvas/Canvas.test.tsx
 import { render, fireEvent } from '@testing-library/react';
-import { BlockInstance } from '@/components/blocks/BlockInstance';
+import { Canvas } from '@/components/canvas/Canvas';
 
-describe('BlockInstance', () => {
+describe('Canvas', () => {
   const mockBlock = {
     id: 'test-1',
     typeId: 'hero-1',
@@ -1368,31 +1414,52 @@ describe('BlockInstance', () => {
     y: 200,
     width: 300,
     height: 400,
-    z: 1,
-    selected: false
+    z: 1
   };
 
   it('renders at correct position', () => {
     const { container } = render(
-      <BlockInstance block={mockBlock} />
+      <Canvas />
     );
     
-    const element = container.firstChild as HTMLElement;
-    expect(element.style.left).toBe('100px');
-    expect(element.style.top).toBe('200px');
+    // Add block to store
+    useAppStore.getState().addBlock(mockBlock);
+    
+    // Check block renders at correct position
+    const blockElement = container.querySelector('[data-block-id="test-1"]');
+    expect(blockElement?.style.left).toBe('100px');
+    expect(blockElement?.style.top).toBe('200px');
   });
 
-  it('shows selection state when selected', () => {
-    const { container, rerender } = render(
-      <BlockInstance block={mockBlock} />
+  it('renders blocks with gray border', () => {
+    const { container } = render(
+      <Canvas />
     );
     
-    rerender(
-      <BlockInstance block={{...mockBlock, selected: true}} />
+    // Add block to store
+    useAppStore.getState().addBlock(mockBlock);
+    
+    const blockElement = container.querySelector('[data-block-id="test-1"]');
+    expect(blockElement?.classList.contains('border-gray-300')).toBe(true);
+  });
+
+  it('handles drop events correctly', () => {
+    const { container } = render(
+      <Canvas />
     );
     
-    const element = container.firstChild as HTMLElement;
-    expect(element.classList.contains('ring-2')).toBe(true);
+    // Simulate drag state
+    useAppStore.getState().setDragState({
+      isActive: true,
+      draggedItem: mockTemplate,
+      sourceType: 'library'
+    });
+    
+    // Simulate drop
+    fireEvent.mouseUp(container.firstChild);
+    
+    // Check block was added
+    expect(useAppStore.getState().blocks.length).toBe(1);
   });
 });
 ```
@@ -1449,7 +1516,7 @@ test('drag block from library to canvas', async ({ page }) => {
 
 | Element | Frontend | Backend | Example |
 |---------|----------|---------|---------|
-| Components | PascalCase | - | `BlockInstance.tsx` |
+| Components | PascalCase | - | `Canvas.tsx` |
 | Hooks | camelCase with 'use' | - | `useDrag.ts` |
 | Functions | camelCase | - | `snapToGrid()` |
 | Types/Interfaces | PascalCase | - | `BlockTemplate` |

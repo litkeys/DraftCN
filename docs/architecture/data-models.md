@@ -13,7 +13,7 @@
 - `width: number` - Block width in pixels
 - `height: number` - Block height in pixels
 - `z: number` - Stacking order (1 = first block added)
-- `selected: boolean` - Whether block is currently selected
+- `selected: boolean` - Whether the block is currently selected
 
 #### TypeScript Interface
 ```typescript
@@ -34,6 +34,13 @@ interface Block {
 - References a BlockTemplate via typeId
 - Props must conform to template's interface structure
 - Z-index determines visual stacking when blocks overlap
+
+#### Selection Architecture Note
+The `selected` field in Block is initialized as `false` when blocks are created but is **not actively maintained**. Selection state is managed by the SelectionSlice which maintains a `selectedBlockIds` array. This approach:
+- Avoids updating every block when selection changes (performance)
+- Keeps selection logic centralized in SelectionSlice
+- Allows for efficient multi-select operations
+- The `selected` field exists for potential future use or serialization
 
 ### BlockTemplate
 
@@ -181,8 +188,7 @@ function createBlockInstance(
     y: snapToGrid(position.y),
     width: template.defaultWidth,
     height: template.defaultHeight,
-    z: getNextZIndex(),
-    selected: false
+    z: getNextZIndex()
   };
 }
 ```
@@ -190,10 +196,10 @@ function createBlockInstance(
 #### 3. Adding New Templates - Step by Step
 
 **Step 1: Create Your Component**
-Create a new React component file in `src/templates/` folder:
+Create a new React component file in `templates/` folder:
 
 ```typescript
-// src/templates/navbar/NavbarComponent.tsx
+// templates/navbar/NavbarComponent.tsx
 import { Button } from '@/components/ui/button';
 
 interface NavbarProps {
@@ -220,7 +226,7 @@ export { NavbarComponent };
 ```
 
 **Step 2: Add Template to Registry**
-In `src/lib/blocks/registry.ts`, add your template:
+In `lib/blocks/registry.ts`, add your template:
 
 ```typescript
 import { NavbarComponent } from '@/templates/navbar/NavbarComponent';
@@ -266,25 +272,126 @@ Add any required styles to `app/globals.css`:
 }
 ```
 
-### CanvasState
+### Store Architecture - Sliced Pattern
+
+The application uses Zustand with a sliced pattern for state management, separating concerns into distinct slices:
+
+#### BlocksSlice
 
 ```typescript
-interface CanvasState {
+// State
+interface BlocksState {
   blocks: Block[];
-  width: number;
-  height: number;
-  gridSize: number;
-  showGrid: boolean;
-  isDragging: boolean;
-  draggedItem?: {
-    type: 'template' | 'block';
-    typeId?: string;
-    blockId?: string;
-    startX: number;
-    startY: number;
-    offsetX: number;
-    offsetY: number;
+}
+
+// Actions
+interface BlocksActions {
+  addBlock: (block: Block) => void;
+  updateBlock: (id: string, updates: Partial<Block>) => void;
+  removeBlock: (id: string) => void;
+  clearBlocks: () => void;
+  getHighestZIndex: () => number;
+}
+
+// Combined type
+type BlocksSlice = BlocksState & BlocksActions;
+```
+
+#### DragSlice
+
+```typescript
+// State
+interface DragState {
+  isActive: boolean;
+  sourceType: 'library' | 'canvas' | null;
+  draggedItem: any; // The item being dragged (block template or existing block)
+  position: {
+    x: number;
+    y: number;
+  };
+  offset: {
+    x: number;
+    y: number;
   };
 }
+
+// Actions
+interface DragActions {
+  setDragState: (state: Partial<DragState>) => void;
+  updateDragPosition: (x: number, y: number) => void;
+  clearDragState: () => void;
+}
+
+// Combined type
+type DragSlice = DragState & DragActions;
+
+// Helper selectors
+const dragSelectors = {
+  isDragging: (state: DragSlice) => state.isActive,
+  getDraggedItem: (state: DragSlice) => state.draggedItem,
+  getDragPosition: (state: DragSlice) => state.position,
+  getDragOffset: (state: DragSlice) => state.offset,
+  getDragSource: (state: DragSlice) => state.sourceType,
+};
 ```
+
+#### AppStore (Combined Store)
+
+```typescript
+interface AppState {
+  initialized: boolean;
+}
+
+interface AppActions {
+  setInitialized: (initialized: boolean) => void;
+}
+
+type AppStore = AppState & AppActions & DragSlice & BlocksSlice & SelectionSlice;
+```
+
+#### SelectionSlice
+
+**Purpose:** Centralized management of block selection state, supporting both single and multi-select operations.
+
+```typescript
+// State
+interface SelectionState {
+  selectedBlockIds: string[]; // Array for persistence/serialization
+  lastSelectedBlockId: string | null; // For shift-click range selection
+  // Internal: Use Set for O(1) lookups in selectors
+  _selectedSet?: Set<string>; // Derived from array in selectors
+}
+
+// Actions
+interface SelectionActions {
+  // Core selection operations
+  selectBlock: (blockId: string, mode?: 'replace' | 'add' | 'toggle') => void;
+  deselectBlock: (blockId: string) => void;
+  clearSelection: () => void;
+
+  // Multi-select operations
+  selectMultiple: (blockIds: string[]) => void;
+  selectRange: (fromBlockId: string, toBlockId: string) => void;
+  selectAll: () => void;
+
+  // Rectangle selection
+  selectWithinBounds: (bounds: { x: number; y: number; width: number; height: number }) => void;
+
+}
+
+// Combined type
+type SelectionSlice = SelectionState & SelectionActions;
+```
+
+#### Selection Patterns
+
+1. **Single Selection**
+   - Click on block: Replace current selection
+   - Click on canvas: Clear selection
+
+2. **Multi-Selection**
+   - Ctrl/Cmd + Click: Toggle individual block
+   - Shift + Click: Select range between last and current
+   - Ctrl/Cmd + A: Select all blocks
+   - Drag rectangle: Select blocks within bounds
 

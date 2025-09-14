@@ -15,7 +15,7 @@
 
 | Element | Frontend | Backend | Example |
 |---------|----------|---------|---------|
-| Components | PascalCase | - | `BlockInstance.tsx` |
+| Components | PascalCase | - | `Canvas.tsx` |
 | Hooks | camelCase with 'use' | - | `useDrag.ts` |
 | Functions | camelCase | - | `snapToGrid()` |
 | Types/Interfaces | PascalCase | - | `BlockTemplate` |

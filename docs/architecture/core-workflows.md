@@ -51,9 +51,10 @@ sequenceDiagram
     participant Store as Zustand Store
 
     User->>Block: Click on block
-    Block->>Store: selectBlock(blockId)
-    Store-->>Block: Update selected state
-    Block->>Block: Show selection highlight
+    Block->>SelectMgr: handleBlockClick(blockId, event)
+    SelectMgr->>Store: selectBlock(blockId, 'replace')
+    Store-->>Canvas: Update selection state
+    Canvas->>Block: Show selection highlight
     
     User->>Block: Mouse down and drag
     Block->>DragMgr: startDrag('canvas', blockId)
@@ -79,7 +80,7 @@ sequenceDiagram
     DragMgr->>Store: clearDragState()
 ```
 
-### Delete Selected Block
+### Delete Selected Blocks (Single or Multiple)
 
 ```mermaid
 sequenceDiagram
@@ -87,25 +88,35 @@ sequenceDiagram
     participant Canvas
     participant Block
     participant Store as Zustand Store
+    participant SelectMgr as SelectionSlice
     participant Renderer as Block Renderer
 
-    User->>Block: Click to select
-    Block->>Store: selectBlock(blockId)
-    Store-->>Block: Update selected: true
+    alt Single Selection
+        User->>Block: Click to select
+        SelectMgr->>Store: selectBlock(blockId, 'replace')
+    else Multiple Selection
+        User->>Block: Ctrl+Click multiple blocks
+        SelectMgr->>Store: selectBlock(blockId, 'toggle')
+    end
+
+    SelectMgr-->>Block: Update selection state
     Block->>Block: Show blue selection border
-    
+
     User->>User: Press Delete/Backspace key
     User->>Canvas: Keyboard event
-    Canvas->>Canvas: Check for selected block
-    Canvas->>Store: getSelectedBlock()
-    Store-->>Canvas: Selected blockId
-    
-    Canvas->>Store: deleteBlock(blockId)
-    Store->>Store: Remove from blocks array
-    Store->>Store: Clear selection
+    Canvas->>SelectMgr: getSelectedBlockIds()
+    SelectMgr-->>Canvas: Array of selected blockIds
+
+    loop For each selected block
+        Canvas->>Store: removeBlock(blockId)
+        Store->>Store: Remove from blocks array
+    end
+
+    Canvas->>SelectMgr: clearSelection()
+    SelectMgr-->>Canvas: Selection cleared
     Store-->>Canvas: State change notification
-    Canvas->>Renderer: Remove block from DOM
-    Renderer-->>Canvas: Block removed
+    Canvas->>Renderer: Remove blocks from DOM
+    Renderer-->>Canvas: Blocks removed
     Canvas->>Canvas: Recalculate canvas height
 ```
 
@@ -141,6 +152,124 @@ sequenceDiagram
     
     User->>User: Release Alt key
     Canvas->>DragMgr: setBypassGrid(false)
+```
+
+### Multi-Select with Keyboard Modifiers
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Canvas
+    participant Block
+    participant SelectMgr as SelectionSlice
+    participant Store as Zustand Store
+
+    Note over User: Ctrl/Cmd + Click Flow
+    User->>Block: Ctrl+Click on block A
+    SelectMgr->>Store: selectBlock(blockA, 'toggle')
+    Store->>Store: Add to selectedBlockIds
+    SelectMgr-->>Block: Show selection
+
+    User->>Block: Ctrl+Click on block B
+    SelectMgr->>Store: selectBlock(blockB, 'toggle')
+    Store->>Store: Add to selectedBlockIds
+    SelectMgr-->>Block: Show selection
+
+    Note over User: Shift + Click Flow (Range)
+    User->>Block: Click on block A (without modifier)
+    SelectMgr->>Store: selectBlock(blockA, 'replace')
+    Store->>Store: Set as lastSelectedBlockId
+
+    User->>Block: Shift+Click on block C
+    SelectMgr->>Store: selectRange(blockA, blockC)
+    Store->>Store: Calculate blocks between A and C
+    Store->>Store: Select all blocks in range
+    SelectMgr-->>Canvas: Update all blocks in range
+```
+
+### Rectangle Selection (Drag to Select)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Canvas
+    participant SelectMgr as SelectionSlice
+    participant Store as Zustand Store
+
+    User->>Canvas: Mouse down on empty canvas
+    Canvas->>Canvas: Start selection rectangle
+    Canvas->>Canvas: Store start position
+
+    loop During drag
+        User->>Canvas: Mouse move
+        Canvas->>Canvas: Update rectangle size
+        Canvas->>Canvas: Render selection overlay
+        Canvas->>Canvas: Calculate blocks within bounds
+        Canvas->>Canvas: Preview selected blocks
+    end
+
+    User->>Canvas: Mouse up
+    Canvas->>Canvas: Calculate final bounds
+    Canvas->>SelectMgr: selectWithinBounds(bounds)
+    SelectMgr->>Store: Get all blocks
+    SelectMgr->>SelectMgr: Filter blocks within bounds
+    SelectMgr->>SelectMgr: Update selectedBlockIds
+    SelectMgr-->>Canvas: Selection updated
+    Canvas->>Canvas: Hide selection rectangle
+    Canvas->>Canvas: Show selected blocks
+```
+
+### Select All Blocks (Ctrl/Cmd + A)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Canvas
+    participant SelectMgr as SelectionSlice
+    participant Store as Zustand Store
+
+    User->>User: Press Ctrl/Cmd + A
+    User->>Canvas: Keyboard event
+    Canvas->>Canvas: Detect selectAll shortcut
+    Canvas->>SelectMgr: selectAll()
+    SelectMgr->>Store: Get all block IDs
+    SelectMgr->>SelectMgr: Set selectedBlockIds to all blocks
+    SelectMgr-->>Canvas: All blocks selected
+    Canvas->>Canvas: Update all block visuals
+    Canvas->>Canvas: Show selection count in UI
+```
+
+### Bulk Move Operation
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Canvas
+    participant SelectMgr as SelectionSlice
+    participant DragMgr as Drag Manager
+    participant Store as Zustand Store
+
+    Note over User: Multiple blocks selected
+    User->>Canvas: Mouse down on selected block
+    Canvas->>SelectMgr: getSelectedBlockIds()
+    SelectMgr-->>Canvas: Array of selected IDs
+    Canvas->>DragMgr: startDrag('canvas', selectedBlockIds)
+    DragMgr->>DragMgr: Store drag offset for each block
+
+    loop During drag
+        User->>Canvas: Mouse move
+        Canvas->>Canvas: Calculate delta from start
+        Canvas->>Canvas: Update all selected block positions
+        Canvas->>Canvas: Maintain relative positions
+    end
+
+    User->>Canvas: Mouse up
+    Canvas->>Canvas: Calculate final positions
+    loop For each selected block
+        Canvas->>Store: updateBlock(blockId, {x, y})
+    end
+    Canvas->>DragMgr: endDrag()
+    DragMgr->>Store: clearDragState()
 ```
 
 ### Template Registration (Development Flow)
