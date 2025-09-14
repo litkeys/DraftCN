@@ -7,6 +7,7 @@ import { blocksSelectors } from '@/store/slices/blocks'
 import { blockRegistry } from '@/lib/blocks/registry'
 import { dragManager } from '@/lib/drag/manager'
 import { DropPreview } from './DropPreview'
+import { useKeyboard } from '@/hooks/useKeyboard'
 import type { BlockTemplate } from '@/types/template'
 
 /**
@@ -15,6 +16,9 @@ import type { BlockTemplate } from '@/types/template'
  */
 export const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null)
+
+  // Setup keyboard event handling
+  useKeyboard()
 
   // Get state and actions from store
   const isDragging = useAppStore(dragSelectors.isDragging)

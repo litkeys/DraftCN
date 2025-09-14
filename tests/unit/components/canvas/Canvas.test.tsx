@@ -27,6 +27,11 @@ vi.mock('@/components/canvas/DropPreview', () => ({
   DropPreview: () => null,
 }))
 
+// Mock useKeyboard hook
+vi.mock('@/hooks/useKeyboard', () => ({
+  useKeyboard: vi.fn(),
+}))
+
 // Mock blocks selectors
 vi.mock('@/store/slices/blocks', () => ({
   blocksSelectors: {
@@ -1053,6 +1058,32 @@ describe('Canvas', () => {
       canvas.dispatchEvent(clickEvent)
 
       expect(mockClearSelection).toHaveBeenCalled()
+    })
+  })
+
+  describe('Keyboard Event Handling', () => {
+    it('should initialize useKeyboard hook', async () => {
+      const { useKeyboard } = await import('@/hooks/useKeyboard')
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+
+      expect(useKeyboard).toHaveBeenCalled()
     })
   })
 })
