@@ -35,6 +35,7 @@ No starter templates or existing projects are mentioned in the PRD or front-end 
 | ---------- | ------- | ------------------------------ | ---------------- |
 | 2025-01-06 | v1.0    | Initial architecture document  | Winston (Architect) |
 | 2025-01-13 | v1.1    | Updated to match implementation reality | Winston (Architect) |
+| 2025-01-14 | v1.2    | Corrected Zustand state management to match actual implementation | Winston (Architect) |
 
 ## High Level Architecture
 
@@ -192,11 +193,11 @@ interface Block {
 - Z-index determines visual stacking when blocks overlap
 
 #### Selection Architecture Note
-The `selected` field in Block is initialized as `false` when blocks are created but is **not actively maintained**. Selection state is managed by the SelectionSlice which maintains a `selectedBlockIds` array. This approach:
-- Avoids updating every block when selection changes (performance)
-- Keeps selection logic centralized in SelectionSlice
-- Allows for efficient multi-select operations
-- The `selected` field exists for potential future use or serialization
+The `selected` field in Block is initialized as `false` when blocks are created. In the current implementation:
+- Selection is tracked via the boolean `selected` field in each Block object
+- No separate SelectionSlice exists yet (planned for future stories)
+- Selection operations will be handled by updating the block's `selected` field via `updateBlock`
+- Multi-select and advanced selection features are not yet implemented
 
 ### BlockTemplate
 
@@ -428,26 +429,25 @@ Add any required styles to `app/globals.css`:
 }
 ```
 
-### CanvasState
+### Canvas and Store State Types
 
 ```typescript
-interface CanvasState {
+// Canvas State Type (from types/canvas.ts)
+export interface CanvasState {
   blocks: Block[];
-  width: number;
-  height: number;
-  gridSize: number;
-  showGrid: boolean;
-  isActive: boolean; // Drag state
-  draggedItem?: {
-    type: 'template' | 'block';
-    typeId?: string;
-    blockId?: string;
-    startX: number;
-    startY: number;
-    offsetX: number;
-    offsetY: number;
-  };
+  selectedBlockIds: string[];
+  canvasWidth: number;
+  canvasHeight: number;
+  zoom: number;
+  panX: number;
+  panY: number;
 }
+
+// Note: The actual implementation currently manages canvas state differently:
+// - Blocks are stored in BlocksSlice
+// - Selection is tracked via Block.selected field (selectedBlockIds not yet implemented)
+// - Canvas dimensions, zoom, and pan are not yet implemented
+// - Drag state is managed in DragSlice
 ```
 
 ## API Specification
@@ -515,17 +515,19 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 **Responsibility:** Coordinates all drag-and-drop operations including library-to-canvas and canvas-to-canvas movements.
 
-**Key Interfaces:**
-- `setDragState(state: Partial<DragState>)` - Update drag state with new values
-- `updateDragPosition(x: number, y: number)` - Update current drag position
-- `clearDragState()` - Reset all drag state to initial values
+**Implementation:** Managed via DragSlice in the Zustand store
 
-**State Properties:**
-- `isActive: boolean` - Whether a drag operation is currently active
-- `sourceType: 'library' | 'canvas' | null` - Origin of the dragged item
-- `draggedItem: any` - The item being dragged (block template or existing block)
-- `position: { x: number; y: number }` - Current drag position
-- `offset: { x: number; y: number }` - Offset from drag start point
+**Key Interfaces:**
+- `setDragState(state: Partial<DragState>)` - Update any part of drag state
+- `updateDragPosition(x: number, y: number)` - Update cursor position during drag
+- `clearDragState()` - Reset to initial state after drag ends
+
+**State Properties (from DragSlice):**
+- `isActive: boolean` - Whether a drag is in progress
+- `sourceType: 'library' | 'canvas' | null` - Where the drag originated
+- `draggedItem: any` - The template or block being dragged
+- `position: { x: number; y: number }` - Current mouse position
+- `offset: { x: number; y: number }` - Click offset within dragged item
 
 **Dependencies:** Grid System Manager for snapping, Canvas State for boundaries
 
@@ -564,17 +566,24 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 ### State Manager (Zustand Store)
 
-**Responsibility:** Centralized state management for canvas, blocks, drag operations, and UI state.
+**Responsibility:** Centralized state management for blocks and drag operations.
+
+**Store Structure:**
+- `store/index.ts` - Main store combining all slices
+- `store/slices/blocks.ts` - Block management slice with selectors
+- `store/slices/drag.ts` - Drag operation slice with selectors
 
 **Key Interfaces:**
 - `addBlock(block: Block)` - Add new block to canvas
-- `updateBlock(id: string, updates: Partial<Block>)` - Modify block
-- `deleteBlock(id: string)` - Remove block
-- `setDragState(state: DragState)` - Update drag operation
+- `updateBlock(id: string, updates: Partial<Block>)` - Modify block properties
+- `removeBlock(id: string)` - Remove block from canvas
+- `clearBlocks()` - Remove all blocks
+- `setDragState(state: Partial<DragState>)` - Update drag state
+- `clearDragState()` - Reset drag to initial state
 
 **Dependencies:** None - top of state hierarchy
 
-**Technology Stack:** Zustand 4.5+, TypeScript for type safety
+**Technology Stack:** Zustand 4.5+, TypeScript with StateCreator pattern
 
 ### Component Diagrams
 
@@ -661,7 +670,7 @@ sequenceDiagram
     DragMgr->>Store: clearDragState()
 ```
 
-### Reposition Existing Block
+### Reposition Existing Block (Future Story)
 
 ```mermaid
 sequenceDiagram
@@ -669,37 +678,31 @@ sequenceDiagram
     participant Canvas
     participant Block
     participant DragMgr as Drag Manager
-    participant GridMgr as Grid Manager
     participant Store as Zustand Store
 
-    User->>Block: Click on block
-    Block->>Store: selectBlock(blockId)
-    Store-->>Block: Update selected state
-    Block->>Block: Show selection highlight
-    
-    User->>Block: Mouse down and drag
-    Block->>DragMgr: startDrag('canvas', blockId)
-    DragMgr->>Store: setDragState({isActive: true, sourceType: 'canvas'})
-    
-    loop During drag
+    Note over Canvas: Canvas-to-canvas drag not yet implemented
+    Note over Canvas: Current story only supports library-to-canvas
+
+    User->>Block: Mouse down on block (future)
+    Block->>DragMgr: startDrag('canvas', block)
+    DragMgr->>Store: setDragState({isActive: true, sourceType: 'canvas', draggedItem: block})
+
+    loop During drag (future)
         User->>Canvas: Mouse move
-        Canvas->>Block: Update position (follows cursor)
-        Canvas->>GridMgr: calculateDropPreview(x, y)
-        GridMgr-->>Canvas: Grid cells preview
-        Canvas->>Canvas: Show snap preview
+        Canvas->>Canvas: Update preview position
     end
-    
-    User->>Canvas: Mouse up
-    Canvas->>GridMgr: snapToGrid(newX, newY, altPressed)
-    GridMgr-->>Canvas: Final position
-    Canvas->>Store: updateBlock(blockId, {x, y})
+
+    User->>Canvas: Mouse up (future)
+    Canvas->>Store: updateBlock(blockId, {x: newX, y: newY})
     Store->>Store: Update block position
     Store-->>Canvas: State change notification
     Canvas->>Canvas: Re-render at new position
     DragMgr->>Store: clearDragState()
+
+    Note over Canvas: Full implementation in future stories
 ```
 
-### Delete Selected Block
+### Delete Selected Block (Future Story)
 
 ```mermaid
 sequenceDiagram
@@ -707,74 +710,46 @@ sequenceDiagram
     participant Canvas
     participant Block
     participant Store as Zustand Store
-    participant Renderer as Block Renderer
 
-    Note over Block: Block has no border by default
-    
-    User->>Block: Hover over block
-    Block->>Block: Show blue border on hover
-    
-    User->>Block: Click to select
-    Block->>Store: selectBlock(blockId)
-    Store->>Store: Deselect all other blocks
-    Store-->>Block: Update selected: true
-    Block->>Block: Show persistent blue border
-    
-    alt Click on canvas
-        User->>Canvas: Click on canvas
-        Canvas->>Store: selectBlock(null)
-        Store->>Store: Deselect all blocks
-        Store-->>Block: Update selected: false
-        Block->>Block: Remove blue border
-    else Press Delete/Backspace
-        User->>User: Press Delete/Backspace key
-        User->>Canvas: Keyboard event
-        Canvas->>Canvas: Check for selected block
-        Canvas->>Store: getSelectedBlock()
-        Store-->>Canvas: Selected blockId
-        
-        Canvas->>Store: deleteBlock(blockId)
-        Store->>Store: Remove from blocks array
-        Store->>Store: Clear selection
-        Store-->>Canvas: State change notification
-        Canvas->>Renderer: Remove block from DOM
-        Renderer-->>Canvas: Block removed
-        Canvas->>Canvas: Recalculate canvas height
-    end
+    Note over Block: Selection not yet implemented
+    Note over Block: Story 1.7 focuses on drag & drop only
+
+    User->>Block: Click to select (future)
+    Block->>Store: updateBlock(id, {selected: true}) (future)
+    Store-->>Block: Update selected field
+
+    User->>User: Press Delete key (future)
+    Canvas->>Store: Find block with selected: true
+    Canvas->>Store: removeBlock(blockId)
+    Store->>Store: Remove from blocks array
+    Store-->>Canvas: State change notification
+    Canvas->>Canvas: Re-render without deleted block
+
+    Note over Canvas: Full selection workflow in future stories
 ```
 
-### Grid Bypass with Alt Key
+### Grid System (Future Story)
 
 ```mermaid
 sequenceDiagram
     participant User
     participant Canvas
-    participant DragMgr as Drag Manager
     participant GridMgr as Grid Manager
     participant Store as Zustand Store
 
-    User->>Canvas: Start dragging block
-    DragMgr->>Store: setDragState({isActive: true})
-    
-    User->>User: Hold Alt key
-    User->>Canvas: Alt key down event
-    Canvas->>DragMgr: setBypassGrid(true)
-    DragMgr->>Canvas: Disable grid preview
-    
-    loop While Alt held
-        User->>Canvas: Mouse move
-        Canvas->>Canvas: Follow cursor exactly
-        Note over Canvas: No grid snapping preview
-    end
-    
-    User->>Canvas: Mouse up (with Alt)
-    Canvas->>GridMgr: snapToGrid(x, y, bypass=true)
-    GridMgr-->>Canvas: Exact pixel position (no snapping)
-    Canvas->>Store: updateBlock(blockId, {x: exactX, y: exactY})
-    Store-->>Canvas: State updated
-    
-    User->>User: Release Alt key
-    Canvas->>DragMgr: setBypassGrid(false)
+    Note over Canvas: Grid snapping not yet implemented
+    Note over Canvas: Blocks currently position at exact pixel coordinates
+
+    User->>Canvas: Drop block (current implementation)
+    Canvas->>Canvas: Position at exact mouse coordinates
+    Canvas->>Store: addBlock({x: exactX, y: exactY, ...})
+    Store-->>Canvas: Block added at exact position
+
+    Note over Canvas: Future stories will add:
+    Note over Canvas: - 60px grid snapping
+    Note over Canvas: - Alt key to bypass grid
+    Note over Canvas: - Visual grid overlay
+    Note over Canvas: - Snap preview indicators
 ```
 
 ### Template Registration (Development Flow)
@@ -862,25 +837,29 @@ src/
 #### Component Template
 
 ```typescript
-// Example component structure
-import { memo, useCallback } from 'react';
-import { useStore } from '@/store';
-import { Block } from '@/types';
+// Example component structure with actual store usage
+import { useCallback } from 'react';
+import { useAppStore } from '@/store';
+import { dragSelectors } from '@/store/slices/drag';
+import { blocksSelectors } from '@/store/slices/blocks';
 
-// Canvas Direct Rendering Pattern - No BlockInstance component
-// Canvas component renders blocks directly:
+// Canvas Direct Rendering Pattern
+// The Canvas component renders blocks directly without a BlockInstance wrapper:
 export const Canvas: React.FC = () => {
+  // Access store using selectors for optimal performance
   const blocks = useAppStore(blocksSelectors.getAllBlocks);
-  
+  const isDragging = useAppStore(dragSelectors.isDragging);
+
   return (
     <div className="relative w-full h-full bg-slate-50 overflow-auto">
+      {/* Render each block directly */}
       {blocks.map((block) => {
         const template = blockRegistry.getTemplate(block.typeId);
         if (!template) return null;
-        
+
         const Component = template.component;
         if (!Component) return null;
-        
+
         return (
           <div
             key={block.id}
@@ -899,6 +878,13 @@ export const Canvas: React.FC = () => {
           </div>
         );
       })}
+
+      {/* Drag indicator overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="w-full h-full border-2 border-dashed border-primary/20" />
+        </div>
+      )}
     </div>
   );
 };
@@ -909,73 +895,66 @@ export const Canvas: React.FC = () => {
 #### State Structure
 
 ```typescript
-// Actual Zustand store structure with slices
-type AppStore = AppState & AppActions & BlocksSlice & DragSlice & SelectionSlice;
+// Actual Zustand store structure - simplified slices pattern
+export type AppStore = AppState & AppActions & DragSlice & BlocksSlice;
 
-// BlocksSlice - manages blocks
-interface BlocksSlice {
+// AppState - global app state
+export interface AppState {
+  initialized: boolean;
+}
+
+export interface AppActions {
+  setInitialized: (initialized: boolean) => void;
+}
+
+// BlocksSlice - manages all block operations
+export interface BlocksSlice {
   // State
   blocks: Block[];
-  
+
   // Actions
   addBlock: (block: Block) => void;
   updateBlock: (id: string, updates: Partial<Block>) => void;
-  removeBlock: (id: string) => void;  // Note: not deleteBlock
+  removeBlock: (id: string) => void;
   clearBlocks: () => void;
   getHighestZIndex: () => number;
 }
 
-// DragSlice - manages drag operations
-interface DragSlice {
-  // State
+// DragSlice - manages drag and drop operations
+export interface DragSlice extends DragState, DragActions {}
+
+export interface DragState {
   isActive: boolean;
   sourceType: 'library' | 'canvas' | null;
-  draggedItem: any; // The item being dragged
+  draggedItem: any; // The template or block being dragged
   position: {
     x: number;
     y: number;
-    width: number;
-    height: number;
-  } | null;
+  };
+  offset: {
+    x: number;
+    y: number;
+  };
+}
 
-  // Actions
+export interface DragActions {
   setDragState: (state: Partial<DragState>) => void;
   updateDragPosition: (x: number, y: number) => void;
   clearDragState: () => void;
 }
 
-// SelectionSlice - manages selection state
-interface SelectionSlice {
-  // State - using array for persistence compatibility
-  selectedBlockIds: string[]; // Array for JSON serialization
-  lastSelectedBlockId: string | null;
-
-  // Actions
-  selectBlock: (blockId: string, mode?: 'replace' | 'add' | 'toggle') => void;
-  deselectBlock: (blockId: string) => void;
-  clearSelection: () => void;
-  selectMultiple: (blockIds: string[]) => void;
-  selectRange: (fromBlockId: string, toBlockId: string) => void;
-  selectAll: () => void;
-  selectWithinBounds: (bounds: { x: number; y: number; width: number; height: number }) => void;
-}
-
-// AppState - global app state
-interface AppState {
-  initialized: boolean;
-}
-
-interface AppActions {
-  setInitialized: (initialized: boolean) => void;
-}
+// Note: Selection is currently handled via the 'selected' boolean field in each Block.
+// No separate SelectionSlice exists in the current implementation.
+// Future stories may introduce more sophisticated selection management.
 ```
 
 #### State Management Patterns
 
-- **Atomic updates** - Each action updates minimal state
-- **Selector patterns** - Components subscribe to specific state slices
-- **Memoization** - Heavy computations cached with useMemo
-- **Optimistic updates** - UI updates immediately, no async waits
+- **Slice Pattern** - Store split into logical slices using StateCreator
+- **Selector Functions** - Helper selectors exported from each slice for common queries
+- **Atomic Updates** - Each action updates minimal state
+- **Direct State Access** - Components use `useAppStore` with selectors
+- **No Async Actions** - All state updates are synchronous (no backend)
 
 ### Routing Architecture
 
@@ -999,41 +978,51 @@ Since this is a single-page application, there's only one route - the main build
 
 ### Frontend Services Layer
 
-#### API Client Setup
+#### Block Registry Service
 
 ```typescript
-// Not needed for MVP - no backend API
-// Future implementation would use fetch or axios
-```
-
-#### Service Example
-
-```typescript
-// Template loading service (currently static)
-class TemplateService {
+// The BlockRegistry manages all templates (lib/blocks/registry.ts)
+export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map();
-  
-  async loadTemplates(): Promise<void> {
-    // In MVP: Load bundled templates
-    // Future: Fetch from API
-    
-    const templates = await import('@/templates');
-    templates.forEach(template => {
-      this.templates.set(template.typeId, template);
-    });
+
+  registerTemplate(template: BlockTemplate): void {
+    this.templates.set(template.typeId, template);
   }
-  
+
   getTemplate(typeId: string): BlockTemplate | undefined {
     return this.templates.get(typeId);
   }
-  
-  getTemplatesByCategory(category: string): BlockTemplate[] {
-    return Array.from(this.templates.values())
-      .filter(t => t.category === category);
+
+  generateBlockInstance(typeId: string, overrideProps?: any): Block | null {
+    const template = this.getTemplate(typeId);
+    if (!template) return null;
+
+    return {
+      id: `${typeId}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+      typeId: template.typeId,
+      props: { ...template.defaultProps, ...overrideProps },
+      x: 0,
+      y: 0,
+      width: template.defaultWidth,
+      height: template.defaultHeight,
+      z: 0,
+      selected: false,
+    };
+  }
+
+  getAllTemplates(): BlockTemplate[] {
+    return Array.from(this.templates.values());
+  }
+
+  getCategories(): string[] {
+    const categories = new Set<string>();
+    this.templates.forEach((template) => categories.add(template.category));
+    return Array.from(categories);
   }
 }
 
-export const templateService = new TemplateService();
+// Singleton instance
+export const blockRegistry = new BlockRegistry();
 ```
 
 ## Backend Architecture
@@ -1071,15 +1060,10 @@ draftcn/
 │   │   ├── scroll-area.tsx
 │   │   └── ...
 │   ├── canvas/                # Canvas components
-│   │   ├── Canvas.tsx
-│   │   ├── Grid.tsx
-│   │   ├── DeadZones.tsx
-│   │   ├── DropPreview.tsx
-│   │   └── BlockRenderer.tsx
+│   │   ├── Canvas.tsx         # Main canvas with direct block rendering
+│   │   └── DropPreview.tsx    # Drag preview overlay
 │   ├── blocks/                # Block-related components
-│   │   ├── (No BlockInstance - Canvas renders directly)
-│   │   ├── BlockWrapper.tsx
-│   │   └── BlockLibrary.tsx
+│   │   └── BlockLibrary.tsx   # Template library sidebar
 │   └── layout/               # Layout components
 │       ├── Header.tsx
 │       └── Sidebar.tsx
@@ -1096,20 +1080,15 @@ draftcn/
 │   │   └── constants.ts     # Grid constants (60px)
 │   └── utils.ts             # General utilities
 ├── store/                    # State management
-│   ├── index.ts             # Main Zustand store
-│   ├── slices/              # Store slices
-│   │   ├── canvas.ts        # Canvas state
-│   │   ├── blocks.ts        # Blocks state
-│   │   └── drag.ts          # Drag state
-│   └── selectors.ts        # Reusable selectors
-├── templates/               # Block templates
-│   ├── hero/               # Hero templates
-│   │   ├── hero1.tsx       # Hero template source
-│   │   ├── hero1.png       # Hero thumbnail
-│   │   └── index.ts        # Hero exports
-│   ├── navigation/         # Navigation templates
-│   │   └── ...
-│   └── index.ts           # Template registry initialization
+│   ├── index.ts             # Main Zustand store combining slices
+│   └── slices/              # Store slices with built-in selectors
+│       ├── blocks.ts        # Blocks state and actions
+│       └── drag.ts          # Drag state and actions
+├── templates/               # Block template components
+│   ├── hero1.tsx           # Hero section template
+│   ├── navbar1.tsx         # Navigation bar template
+│   ├── footer2.tsx         # Footer template
+│   └── ...                 # Additional templates
 ├── types/                  # TypeScript definitions
 │   ├── block.ts           # Block interfaces
 │   ├── template.ts        # Template interfaces
@@ -1364,19 +1343,25 @@ Unit Tests (Many)    Component Tests (Many)
 tests/
 ├── unit/
 │   ├── lib/
-│   │   ├── grid.test.ts       # Grid calculations
-│   │   ├── drag.test.ts       # Drag manager logic
-│   │   └── processor.test.ts  # Template processor
-│   └── store/
-│       ├── blocks.test.ts     # Block state management
-│       └── canvas.test.ts     # Canvas state
-├── components/
-│   ├── Canvas.test.tsx        # Canvas component
-│   ├── Canvas.test.tsx        # Canvas with block rendering
-│   └── BlockLibrary.test.tsx  # Sidebar tests
+│   │   ├── blocks/
+│   │   │   └── registry.test.ts  # Block registry tests
+│   │   ├── drag/
+│   │   │   └── manager.test.ts   # Drag manager tests
+│   │   └── grid/
+│   │       └── calculator.test.ts # Grid calculations
+│   ├── store/
+│   │   ├── index.test.ts      # Main store tests
+│   │   └── slices/
+│   │       ├── blocks.test.ts # Blocks slice tests
+│   │       └── drag.test.ts   # Drag slice tests
+│   ├── components/
+│   │   ├── Canvas.test.tsx    # Canvas component
+│   │   └── BlockLibrary.test.tsx # Template library
+│   └── types/
+│       └── interfaces.test.ts # Type validation
 └── e2e/
-    ├── drag-drop.test.ts      # Drag and drop flow
-    └── block-management.test.ts # Add/delete blocks
+    ├── drag-drop.spec.ts      # Full drag-drop flow
+    └── block-placement.spec.ts # Block placement
 ```
 
 #### Backend Tests
@@ -1404,62 +1389,72 @@ tests/e2e/
 // tests/unit/components/canvas/Canvas.test.tsx
 import { render, fireEvent } from '@testing-library/react';
 import { Canvas } from '@/components/canvas/Canvas';
+import { useAppStore } from '@/store';
 
 describe('Canvas', () => {
   const mockBlock = {
     id: 'test-1',
-    typeId: 'hero-1',
-    props: { heading: 'Test' },
+    typeId: 'hero1',
+    props: { heading: 'Test Hero' },
     x: 100,
     y: 200,
-    width: 300,
-    height: 400,
-    z: 1
+    width: 1200,
+    height: 600,
+    z: 1,
+    selected: false
   };
 
-  it('renders at correct position', () => {
-    const { container } = render(
-      <Canvas />
-    );
-    
+  beforeEach(() => {
+    // Clear store before each test
+    useAppStore.getState().clearBlocks();
+    useAppStore.getState().clearDragState();
+  });
+
+  it('renders blocks at correct position', () => {
+    const { container } = render(<Canvas />);
+
     // Add block to store
     useAppStore.getState().addBlock(mockBlock);
-    
+
     // Check block renders at correct position
     const blockElement = container.querySelector('[data-block-id="test-1"]');
-    expect(blockElement?.style.left).toBe('100px');
-    expect(blockElement?.style.top).toBe('200px');
+    expect(blockElement).toHaveStyle({
+      left: '100px',
+      top: '200px',
+      width: '1200px',
+      height: '600px'
+    });
   });
 
   it('renders blocks with gray border', () => {
-    const { container } = render(
-      <Canvas />
-    );
-    
+    const { container } = render(<Canvas />);
+
     // Add block to store
     useAppStore.getState().addBlock(mockBlock);
-    
+
     const blockElement = container.querySelector('[data-block-id="test-1"]');
-    expect(blockElement?.classList.contains('border-gray-300')).toBe(true);
+    expect(blockElement).toHaveClass('border', 'border-gray-300');
   });
 
-  it('handles drop events correctly', () => {
-    const { container } = render(
-      <Canvas />
-    );
-    
-    // Simulate drag state
+  it('handles drop from library correctly', () => {
+    const { container } = render(<Canvas />);
+
+    // Simulate drag state from library
     useAppStore.getState().setDragState({
       isActive: true,
       draggedItem: mockTemplate,
-      sourceType: 'library'
+      sourceType: 'library',
+      offset: { x: 50, y: 50 }
     });
-    
-    // Simulate drop
-    fireEvent.mouseUp(container.firstChild);
-    
+
+    // Simulate drop on canvas
+    const canvas = container.querySelector('[data-testid="canvas"]');
+    fireEvent.mouseUp(canvas, { clientX: 300, clientY: 400 });
+
     // Check block was added
-    expect(useAppStore.getState().blocks.length).toBe(1);
+    const blocks = useAppStore.getState().blocks;
+    expect(blocks.length).toBe(1);
+    expect(blocks[0].typeId).toBe(mockTemplate.typeId);
   });
 });
 ```
