@@ -54,6 +54,7 @@ describe('Canvas', () => {
   const mockClearDragState = vi.fn()
   const mockAddBlock = vi.fn()
   const mockGetHighestZIndex = vi.fn()
+  const mockSelectBlock = vi.fn()
 
   const mockTemplate: BlockTemplate = {
     typeId: 'test-template',
@@ -95,6 +96,7 @@ describe('Canvas', () => {
           clearDragState: mockClearDragState,
           addBlock: mockAddBlock,
           getHighestZIndex: mockGetHighestZIndex,
+          selectBlock: mockSelectBlock,
         }
         return selector(state)
       }
@@ -135,6 +137,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -157,6 +160,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -185,6 +189,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -241,6 +246,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -279,6 +285,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -325,6 +332,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -364,6 +372,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -391,6 +400,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -419,6 +429,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -445,6 +456,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -471,6 +483,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -498,6 +511,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -527,6 +541,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -570,6 +585,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -611,6 +627,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -653,6 +670,7 @@ describe('Canvas', () => {
             clearDragState: mockClearDragState,
             addBlock: mockAddBlock,
             getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
           }
           return selector(state)
         }
@@ -679,6 +697,168 @@ describe('Canvas', () => {
           y: 325, // (400 - 50) - 25
         })
       )
+    })
+  })
+
+  describe('Block Selection', () => {
+    it('should call selectBlock when clicking on a block', () => {
+      const mockBlockWithTemplate = { ...mockBlock, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [mockBlockWithTemplate],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      fireEvent.click(blockElement)
+
+      expect(mockSelectBlock).toHaveBeenCalledWith(mockBlock.id)
+    })
+
+    it('should apply selected styling when block is selected', () => {
+      const selectedBlock = { ...mockBlock, selected: true }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [selectedBlock],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      expect(blockElement).toHaveClass('border-blue-500')
+      expect(blockElement).not.toHaveClass('border-transparent')
+    })
+
+    it('should apply hover styling when block is not selected', () => {
+      const unselectedBlock = { ...mockBlock, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [unselectedBlock],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      expect(blockElement).toHaveClass('border-transparent')
+      expect(blockElement).toHaveClass('hover:border-blue-500')
+      expect(blockElement).not.toHaveClass('border-blue-500')
+    })
+
+    it('should add data-selected attribute based on selection state', () => {
+      const selectedBlock = { ...mockBlock, selected: true }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [selectedBlock],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      expect(blockElement).toHaveAttribute('data-selected', 'true')
+    })
+
+    it('should stop propagation when clicking on block', () => {
+      const mockBlockWithTemplate = { ...mockBlock, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [mockBlockWithTemplate],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      const clickEvent = new MouseEvent('click', { bubbles: true })
+      const stopPropagationSpy = vi.spyOn(clickEvent, 'stopPropagation')
+
+      blockElement.dispatchEvent(clickEvent)
+
+      expect(stopPropagationSpy).toHaveBeenCalled()
+    })
+
+    it('should render blocks with cursor pointer style', () => {
+      const mockBlockWithTemplate = { ...mockBlock, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [mockBlockWithTemplate],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      expect(blockElement).toHaveClass('cursor-pointer')
     })
   })
 })

@@ -25,6 +25,18 @@ export const Canvas: React.FC = () => {
   const addBlock = useAppStore((state) => state.addBlock)
   const getHighestZIndex = useAppStore((state) => state.getHighestZIndex)
   const blocks = useAppStore(blocksSelectors.getAllBlocks)
+  const selectBlock = useAppStore((state) => state.selectBlock)
+
+  /**
+   * Handle click on block
+   */
+  const handleBlockClick = useCallback(
+    (blockId: string, e: React.MouseEvent) => {
+      e.stopPropagation() // Prevent canvas click
+      selectBlock(blockId) // BlocksSlice handles deselection of others and sync
+    },
+    [selectBlock]
+  )
 
   /**
    * Handle drop on canvas
@@ -162,7 +174,11 @@ export const Canvas: React.FC = () => {
         return (
           <div
             key={block.id}
-            className="absolute border border-gray-300 rounded"
+            className={`absolute rounded cursor-pointer transition-colors border-2 ${
+              block.selected
+                ? 'border-blue-500'
+                : 'border-transparent hover:border-blue-500'
+            }`}
             style={{
               left: block.x,
               top: block.y,
@@ -170,7 +186,9 @@ export const Canvas: React.FC = () => {
               height: block.height,
               zIndex: block.z,
             }}
+            onClick={(e) => handleBlockClick(block.id, e)}
             data-block-id={block.id}
+            data-selected={block.selected}
             data-testid={`block-${block.id}`}
           >
             <Component {...block.props} />
