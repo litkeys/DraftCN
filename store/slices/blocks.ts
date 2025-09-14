@@ -6,6 +6,7 @@ import type { Block } from '@/types';
  */
 export interface BlocksState {
   blocks: Block[];
+  selectedBlockIds: string[];
 }
 
 /**
@@ -17,6 +18,8 @@ export interface BlocksActions {
   removeBlock: (id: string) => void;
   clearBlocks: () => void;
   getHighestZIndex: () => number;
+  selectBlock: (blockId: string) => void;
+  clearSelection: () => void;
 }
 
 /**
@@ -29,6 +32,7 @@ export type BlocksSlice = BlocksState & BlocksActions;
  */
 const initialBlocksState: BlocksState = {
   blocks: [],
+  selectedBlockIds: [],
 };
 
 /**
@@ -41,7 +45,7 @@ export const createBlocksSlice: StateCreator<BlocksSlice> = (set, get) => ({
   // Actions
   addBlock: (block) =>
     set((state) => ({
-      blocks: [...state.blocks, block],
+      blocks: [...state.blocks, { ...block, selected: false }],
     })),
 
   updateBlock: (id, updates) =>
@@ -54,11 +58,13 @@ export const createBlocksSlice: StateCreator<BlocksSlice> = (set, get) => ({
   removeBlock: (id) =>
     set((state) => ({
       blocks: state.blocks.filter((block) => block.id !== id),
+      selectedBlockIds: state.selectedBlockIds.filter((blockId) => blockId !== id),
     })),
 
   clearBlocks: () =>
     set(() => ({
       blocks: [],
+      selectedBlockIds: [],
     })),
 
   getHighestZIndex: () => {
@@ -66,6 +72,28 @@ export const createBlocksSlice: StateCreator<BlocksSlice> = (set, get) => ({
     if (state.blocks.length === 0) return 0;
     return Math.max(...state.blocks.map((block) => block.z));
   },
+
+  selectBlock: (blockId) =>
+    set((state) => {
+      const newSelectedIds = [blockId];
+      const updatedBlocks = state.blocks.map((block) => ({
+        ...block,
+        selected: block.id === blockId,
+      }));
+      return {
+        selectedBlockIds: newSelectedIds,
+        blocks: updatedBlocks,
+      };
+    }),
+
+  clearSelection: () =>
+    set((state) => ({
+      selectedBlockIds: [],
+      blocks: state.blocks.map((block) => ({
+        ...block,
+        selected: false,
+      })),
+    })),
 });
 
 /**
@@ -78,4 +106,8 @@ export const blocksSelectors = {
   getBlockCount: (state: BlocksSlice) => state.blocks.length,
   getBlocksByZIndex: (state: BlocksSlice) =>
     [...state.blocks].sort((a, b) => a.z - b.z),
+  getSelectedBlockIds: (state: BlocksSlice) => state.selectedBlockIds,
+  hasSelection: (state: BlocksSlice) => state.selectedBlockIds.length > 0,
+  isBlockSelected: (state: BlocksSlice, blockId: string) =>
+    state.selectedBlockIds.includes(blockId),
 };
