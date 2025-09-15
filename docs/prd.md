@@ -216,7 +216,6 @@ so that I can build my layout visually.
 4. On drop, block instance created from template with defaultProps
 5. Block instance gets unique ID and references template typeId
 6. New blocks get sequential z-index (1, 2, 3, etc.)
-7. Drag operation can be cancelled with Escape key
 
 ### Story 1.8: Dead Zones and Boundary Enforcement
 As a user,  

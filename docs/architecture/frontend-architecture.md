@@ -219,7 +219,6 @@ export const Canvas: React.FC = () => {
     },
     'Escape': () => {
       clearSelection();
-      if (isActive) clearDragState();
     },
     'Ctrl+A': (e) => {
       e.preventDefault();

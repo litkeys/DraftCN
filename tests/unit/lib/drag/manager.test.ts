@@ -61,13 +61,6 @@ describe('DragManager', () => {
       expect(state.offset).toEqual(initialPosition);
     });
 
-    it('should add escape key listener', () => {
-      const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
-      manager.startDrag('library', {});
-      
-      expect(addEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
-    });
-
     it('should notify state change', () => {
       const callback = vi.fn();
       manager.onStateChange(callback);
@@ -115,14 +108,6 @@ describe('DragManager', () => {
       expect(state.offset).toEqual({ x: 0, y: 0 });
     });
 
-    it('should remove escape key listener', () => {
-      const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
-      manager.startDrag('library', {});
-      manager.endDrag();
-      
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
-    });
-
     it('should notify state change', () => {
       const callback = vi.fn();
       manager.onStateChange(callback);
@@ -150,14 +135,6 @@ describe('DragManager', () => {
       expect(state.draggedItem).toBe(null);
     });
 
-    it('should remove escape key listener', () => {
-      const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
-      manager.startDrag('canvas', {});
-      manager.cancelDrag();
-      
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
-    });
-
     it('should notify state change', () => {
       const callback = vi.fn();
       manager.onStateChange(callback);
@@ -168,37 +145,6 @@ describe('DragManager', () => {
       expect(callback).toHaveBeenCalledWith(expect.objectContaining({
         isActive: false,
       }));
-    });
-  });
-
-  describe('Escape Key Handling', () => {
-    it('should cancel drag on Escape key press', () => {
-      manager.startDrag('library', { typeId: 'test' });
-      expect(manager.isDragging()).toBe(true);
-      
-      // Simulate Escape key press
-      const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
-      document.dispatchEvent(escapeEvent);
-      
-      expect(manager.isDragging()).toBe(false);
-    });
-
-    it('should not cancel drag on other key press', () => {
-      manager.startDrag('library', { typeId: 'test' });
-      expect(manager.isDragging()).toBe(true);
-      
-      // Simulate Enter key press
-      const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
-      document.dispatchEvent(enterEvent);
-      
-      expect(manager.isDragging()).toBe(true);
-    });
-
-    it('should not throw error if escape is pressed when not dragging', () => {
-      expect(() => {
-        const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
-        document.dispatchEvent(escapeEvent);
-      }).not.toThrow();
     });
   });
 

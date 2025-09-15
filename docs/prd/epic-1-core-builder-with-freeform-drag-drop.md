@@ -95,7 +95,6 @@ so that I can build my layout visually.
 4. On drop, block instance created from template with defaultProps
 5. Block instance gets unique ID and references template typeId
 6. New blocks get sequential z-index (1, 2, 3, etc.)
-7. Drag operation can be cancelled with Escape key
 
 ### Story 1.7: Block Selection and Deletion
 
@@ -123,13 +122,12 @@ so that I can adjust my layout.
 
 **Acceptance Criteria:**
 
-1. Selected blocks can be dragged to new position
-2. Block follows cursor during movement
-3. Block position updates on mouse release
-4. Movement constrained to canvas boundaries
-5. Z-index maintained during movement
-6. State updates with new position after move
-7. Block maintains reference to template and props during move
+1. Blocks can be dragged to new position
+2. Blocks are automatically selected on drag start
+3. Block position updates on drag
+4. No previews or ghosts during drag
+5. State updates with new position after move
+6. Only one block can be dragged at a time
 
 ### Story 1.9: Dead Zones and Boundary Enforcement
 

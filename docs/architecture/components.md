@@ -73,7 +73,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 - `offset: { x: number; y: number }` - Offset from drag start point
 
 **Separation of Concerns:**
-- **DragManager:** Manages drag state, handles Escape key cancellation, notifies store of state changes
+- **DragManager:** Manages drag state, notifies store of state changes
 - **Canvas:** Detects drop events, calculates drop positions, validates drop zones, creates block instances
 
 **Dependencies:** Grid System Manager for snapping, Canvas State for boundaries

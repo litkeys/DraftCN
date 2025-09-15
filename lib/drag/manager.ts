@@ -15,7 +15,6 @@ export class DragManager {
     offset: { x: 0, y: 0 },
   };
 
-  private escapeKeyListener: ((e: KeyboardEvent) => void) | null = null;
   private updateCallback: ((state: typeof this.dragState) => void) | null = null;
 
   private constructor() {}
@@ -55,13 +54,6 @@ export class DragManager {
       offset: initialPosition || { x: 0, y: 0 },
     };
 
-    // Add Escape key listener
-    this.escapeKeyListener = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        this.cancelDrag();
-      }
-    };
-    document.addEventListener('keydown', this.escapeKeyListener);
 
     // Notify state change
     this.notifyStateChange();
@@ -116,12 +108,6 @@ export class DragManager {
    * Clean up drag state and listeners
    */
   private cleanup(): void {
-    // Remove Escape key listener
-    if (this.escapeKeyListener) {
-      document.removeEventListener('keydown', this.escapeKeyListener);
-      this.escapeKeyListener = null;
-    }
-
     // Reset drag state
     this.dragState = {
       isActive: false,
