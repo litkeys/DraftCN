@@ -1935,4 +1935,356 @@ describe('Canvas', () => {
       expect(draggedBlock.y).toBe(150)
     })
   })
+
+  describe('Multi-Block Drag Prevention (Task 4)', () => {
+    it('should only allow dragging one block at a time', () => {
+      const block1 = { ...mockBlock, id: 'block-1', selected: false }
+      const block2 = { ...mockBlock, id: 'block-2', x: 200, y: 100, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(dragManager.isDragging as any).mockReturnValueOnce(false).mockReturnValue(true)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            getDraggedItem: null,
+            getDragSource: null,
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [block1, block2],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const firstBlock = screen.getByTestId('block-block-1')
+      const secondBlock = screen.getByTestId('block-block-2')
+
+      // Start dragging first block
+      fireEvent.mouseDown(firstBlock, { clientX: 100, clientY: 50 })
+      expect(dragManager.startDrag).toHaveBeenCalledTimes(1)
+
+      // Try to drag second block while first is being dragged
+      fireEvent.mouseDown(secondBlock, { clientX: 200, clientY: 100 })
+
+      // Should not start a new drag since already dragging
+      expect(dragManager.startDrag).toHaveBeenCalledTimes(1) // Still only 1 call
+    })
+
+    it('should clear multi-selection when starting drag', () => {
+      const block1 = { ...mockBlock, id: 'block-1', selected: true }
+      const block2 = { ...mockBlock, id: 'block-2', x: 200, y: 100, selected: true }
+      const block3 = { ...mockBlock, id: 'block-3', x: 300, y: 150, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(dragManager.isDragging as any).mockReturnValue(false)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            getDraggedItem: null,
+            getDragSource: null,
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [block1, block2, block3],
+            selectedBlockIds: ['block-1', 'block-2'], // Multi-selection
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const secondBlock = screen.getByTestId('block-block-2')
+
+      // Start dragging second block (which is part of multi-selection)
+      fireEvent.mouseDown(secondBlock, { clientX: 200, clientY: 100 })
+
+      // Should select only the dragged block (clearing multi-selection)
+      expect(mockSelectBlock).toHaveBeenCalledWith('block-2')
+
+      // selectBlock in BlocksSlice automatically deselects all other blocks
+      // so we're confirming it was called, which handles the multi-selection clearing
+    })
+
+    it('should prevent drag initiation if dragManager.isDragging returns true', () => {
+      const block1 = { ...mockBlock, id: 'block-1', selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(dragManager.isDragging as any).mockReturnValue(true) // Already dragging
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: true,
+            getDraggedItem: block1,
+            getDragSource: 'canvas',
+            getDragOffset: { x: 10, y: 10 },
+            blocks: [block1],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const block = screen.getByTestId('block-block-1')
+
+      // Try to start drag when already dragging
+      fireEvent.mouseDown(block, { clientX: 100, clientY: 50 })
+
+      // Should not call any drag-related functions
+      expect(dragManager.startDrag).not.toHaveBeenCalled()
+      expect(mockSelectBlock).not.toHaveBeenCalled()
+      expect(mockSetDragState).not.toHaveBeenCalled()
+    })
+
+    it('should only select the dragged block when multiple blocks exist', () => {
+      const block1 = { ...mockBlock, id: 'block-1', selected: false }
+      const block2 = { ...mockBlock, id: 'block-2', x: 200, y: 100, selected: false }
+      const block3 = { ...mockBlock, id: 'block-3', x: 300, y: 150, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(dragManager.isDragging as any).mockReturnValue(false)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            getDraggedItem: null,
+            getDragSource: null,
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [block1, block2, block3],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const middleBlock = screen.getByTestId('block-block-2')
+
+      // Start dragging the middle block
+      fireEvent.mouseDown(middleBlock, { clientX: 200, clientY: 100 })
+
+      // Should select only block-2
+      expect(mockSelectBlock).toHaveBeenCalledWith('block-2')
+      expect(mockSelectBlock).toHaveBeenCalledTimes(1)
+
+      // Should start drag for only this block
+      expect(dragManager.startDrag).toHaveBeenCalledWith(
+        'canvas',
+        expect.objectContaining({ id: 'block-2' }),
+        expect.any(Object)
+      )
+    })
+  })
+
+  describe('Edge Cases (Task 5)', () => {
+    it('should clear drag state when mouse leaves canvas during canvas drag', () => {
+      const draggedBlock = { ...mockBlock, id: 'dragged-block', selected: true }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'canvas',
+        draggedItem: draggedBlock,
+        isActive: true,
+      })
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: true,
+            getDraggedItem: draggedBlock,
+            getDragSource: 'canvas',
+            getDragOffset: { x: 10, y: 10 },
+            blocks: [draggedBlock],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+
+      // Simulate mouse leave during canvas drag
+      fireEvent.mouseLeave(canvas)
+
+      // Should end drag and clear state
+      expect(dragManager.endDrag).toHaveBeenCalled()
+      expect(mockClearDragState).toHaveBeenCalled()
+    })
+
+    it('should not clear drag state when mouse leaves canvas during library drag', () => {
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: true,
+            getDraggedItem: mockTemplate,
+            getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+
+      // Simulate mouse leave during library drag
+      fireEvent.mouseLeave(canvas)
+
+      // Should NOT end drag for library drags (they can continue outside canvas)
+      expect(dragManager.endDrag).not.toHaveBeenCalled()
+      expect(mockClearDragState).not.toHaveBeenCalled()
+    })
+
+    it('should remove drag-over class when mouse leaves canvas', () => {
+      ;(dragManager.isDragging as any).mockReturnValue(false)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            getDraggedItem: null,
+            getDragSource: null,
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+
+      // Add drag-over class manually to test removal
+      canvas.classList.add('drag-over')
+      expect(canvas.classList.contains('drag-over')).toBe(true)
+
+      // Simulate mouse leave
+      fireEvent.mouseLeave(canvas)
+
+      // Should remove drag-over class
+      expect(canvas.classList.contains('drag-over')).toBe(false)
+    })
+
+    it('should apply user-select: none to prevent text selection during drag', () => {
+      const block = { ...mockBlock, id: 'block-1' }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            getDraggedItem: null,
+            getDragSource: null,
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [block],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId('block-block-1')
+
+      // Check that user-select: none is applied
+      const style = window.getComputedStyle(blockElement)
+      expect(blockElement.style.userSelect).toBe('none')
+    })
+
+    it('should handle mouse leave when not dragging', () => {
+      ;(dragManager.isDragging as any).mockReturnValue(false)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            getDraggedItem: null,
+            getDragSource: null,
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+
+      // Simulate mouse leave when not dragging
+      fireEvent.mouseLeave(canvas)
+
+      // Should not call any drag-related functions
+      expect(dragManager.endDrag).not.toHaveBeenCalled()
+      expect(mockClearDragState).not.toHaveBeenCalled()
+    })
+  })
 })

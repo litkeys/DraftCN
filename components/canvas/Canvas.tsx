@@ -242,7 +242,18 @@ export const Canvas: React.FC = () => {
     if (canvasRef.current) {
       canvasRef.current.classList.remove('drag-over')
     }
-  }, [])
+
+    // Clear drag state if dragging when mouse leaves canvas
+    if (dragManager.isDragging()) {
+      const { sourceType } = dragManager.getDragState()
+
+      // Only clear drag state for canvas drags (not library drags)
+      if (sourceType === 'canvas') {
+        dragManager.endDrag()
+        clearDragState()
+      }
+    }
+  }, [clearDragState])
 
   return (
     <div
