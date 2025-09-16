@@ -108,9 +108,9 @@ export const Canvas: React.FC = () => {
   )
 
   /**
-   * Handle drop on canvas
+   * Handle drop from library
    */
-  const handleDrop = useCallback(
+  const handleLibraryDrop = useCallback(
     (e: React.MouseEvent) => {
       // Only handle drop if actively dragging
       if (!isDragging || !draggedItem) {
@@ -136,39 +136,33 @@ export const Canvas: React.FC = () => {
         return
       }
 
-      // Handle drop based on source type
-      if (sourceType === 'library') {
-        // Create new block from template
-        const template = draggedItem as BlockTemplate
-        const newBlock = blockRegistry.generateBlockInstance(template.typeId)
+      // Create new block from template
+      const template = draggedItem as BlockTemplate
+      const newBlock = blockRegistry.generateBlockInstance(template.typeId)
 
-        if (!newBlock) {
-          console.error(
-            `Failed to create block instance for template: ${template.typeId}`
-          )
-          dragManager.cancelDrag()
-          clearDragState()
-          return
-        }
-
-        // Calculate drop position relative to canvas, accounting for click offset
-        const dropX = e.clientX - rect.left - (offset?.x || 0)
-        const dropY = e.clientY - rect.top - (offset?.y || 0)
-
-        // Update block position to drop coordinates
-        newBlock.x = dropX
-        newBlock.y = dropY
-
-        // Calculate next z-index (sequential)
-        const highestZ = getHighestZIndex()
-        newBlock.z = highestZ + 1
-
-        // Add new block to store
-        addBlock(newBlock)
-      } else if (sourceType === 'canvas') {
-        // Moving existing block (will be implemented in future stories)
-        console.log('Canvas drag not implemented in this story')
+      if (!newBlock) {
+        console.error(
+          `Failed to create block instance for template: ${template.typeId}`
+        )
+        dragManager.cancelDrag()
+        clearDragState()
+        return
       }
+
+      // Calculate drop position relative to canvas, accounting for click offset
+      const dropX = e.clientX - rect.left - (offset?.x || 0)
+      const dropY = e.clientY - rect.top - (offset?.y || 0)
+
+      // Update block position to drop coordinates
+      newBlock.x = dropX
+      newBlock.y = dropY
+
+      // Calculate next z-index (sequential)
+      const highestZ = getHighestZIndex()
+      newBlock.z = highestZ + 1
+
+      // Add new block to store
+      addBlock(newBlock)
 
       // End drag operation
       dragManager.endDrag()
@@ -177,7 +171,6 @@ export const Canvas: React.FC = () => {
     [
       isDragging,
       draggedItem,
-      sourceType,
       offset,
       clearDragState,
       addBlock,
@@ -186,15 +179,27 @@ export const Canvas: React.FC = () => {
   )
 
   /**
-   * Handle mouse up on canvas
+   * Handle mouse up on canvas - routes between drop types
    */
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
-      if (isDragging) {
-        handleDrop(e)
+      // Check if we're dragging
+      if (!dragManager.isDragging()) return
+
+      const { sourceType: dragSourceType } = dragManager.getDragState()
+
+      if (dragSourceType === 'canvas') {
+        // Canvas block drag completion - just end the drag
+        // Position is already updated in real-time, no final update needed
+        // Block remains selected after drag
+        dragManager.endDrag()
+        clearDragState()
+      } else if (dragSourceType === 'library') {
+        // Library drop - handle drop to create new block
+        handleLibraryDrop(e)
       }
     },
-    [isDragging, handleDrop]
+    [clearDragState, handleLibraryDrop]
   )
 
   /**
