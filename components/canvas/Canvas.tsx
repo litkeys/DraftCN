@@ -288,7 +288,9 @@ export const Canvas: React.FC = () => {
             className={`absolute rounded cursor-pointer transition-colors border-2 ${
               block.selected
                 ? 'border-blue-500'
-                : 'border-transparent hover:border-blue-500'
+                : `border-transparent ${
+                    !isDragging ? 'hover:border-blue-500' : ''
+                  }`
             }`}
             style={{
               left: block.x,

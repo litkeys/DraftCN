@@ -71,6 +71,7 @@ describe('Canvas', () => {
     typeId: 'test-template',
     name: 'Test Template',
     category: 'Test',
+    thumbnail: '/thumbnails/test.svg',
     component: () => <div>Test Component</div>,
     defaultProps: {},
     defaultWidth: 200,
@@ -198,6 +199,12 @@ describe('Canvas', () => {
       ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
         generatedBlock
       )
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -261,6 +268,12 @@ describe('Canvas', () => {
       ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
         generatedBlock
       )
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -306,6 +319,12 @@ describe('Canvas', () => {
 
     it('should cancel drag if block generation fails', () => {
       ;(blockRegistry.generateBlockInstance as any).mockReturnValue(null)
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -361,6 +380,12 @@ describe('Canvas', () => {
       ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
         generatedBlock
       )
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -580,6 +605,12 @@ describe('Canvas', () => {
         generatedBlock
       )
       mockGetHighestZIndex.mockReturnValue(0)
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
 
       // Set up drag state with offset
       ;(useAppStore as any).mockImplementation((selector: any) => {
@@ -634,6 +665,12 @@ describe('Canvas', () => {
         generatedBlock
       )
       mockGetHighestZIndex.mockReturnValue(0)
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -684,6 +721,12 @@ describe('Canvas', () => {
         generatedBlock
       )
       mockGetHighestZIndex.mockReturnValue(0)
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -735,6 +778,12 @@ describe('Canvas', () => {
         generatedBlock
       )
       mockGetHighestZIndex.mockReturnValue(0)
+      ;(dragManager.isDragging as any).mockReturnValue(true)
+      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
+        sourceType: 'library',
+        draggedItem: mockTemplate,
+        isActive: true,
+      })
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -1939,9 +1988,17 @@ describe('Canvas', () => {
   describe('Multi-Block Drag Prevention (Task 4)', () => {
     it('should only allow dragging one block at a time', () => {
       const block1 = { ...mockBlock, id: 'block-1', selected: false }
-      const block2 = { ...mockBlock, id: 'block-2', x: 200, y: 100, selected: false }
+      const block2 = {
+        ...mockBlock,
+        id: 'block-2',
+        x: 200,
+        y: 100,
+        selected: false,
+      }
       ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
-      ;(dragManager.isDragging as any).mockReturnValueOnce(false).mockReturnValue(true)
+      ;(dragManager.isDragging as any)
+        .mockReturnValueOnce(false)
+        .mockReturnValue(true)
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -1980,8 +2037,20 @@ describe('Canvas', () => {
 
     it('should clear multi-selection when starting drag', () => {
       const block1 = { ...mockBlock, id: 'block-1', selected: true }
-      const block2 = { ...mockBlock, id: 'block-2', x: 200, y: 100, selected: true }
-      const block3 = { ...mockBlock, id: 'block-3', x: 300, y: 150, selected: false }
+      const block2 = {
+        ...mockBlock,
+        id: 'block-2',
+        x: 200,
+        y: 100,
+        selected: true,
+      }
+      const block3 = {
+        ...mockBlock,
+        id: 'block-3',
+        x: 300,
+        y: 150,
+        selected: false,
+      }
       ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
       ;(dragManager.isDragging as any).mockReturnValue(false)
       ;(useAppStore as any).mockImplementation((selector: any) => {
@@ -2058,8 +2127,20 @@ describe('Canvas', () => {
 
     it('should only select the dragged block when multiple blocks exist', () => {
       const block1 = { ...mockBlock, id: 'block-1', selected: false }
-      const block2 = { ...mockBlock, id: 'block-2', x: 200, y: 100, selected: false }
-      const block3 = { ...mockBlock, id: 'block-3', x: 300, y: 150, selected: false }
+      const block2 = {
+        ...mockBlock,
+        id: 'block-2',
+        x: 200,
+        y: 100,
+        selected: false,
+      }
+      const block3 = {
+        ...mockBlock,
+        id: 'block-3',
+        x: 300,
+        y: 150,
+        selected: false,
+      }
       ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
       ;(dragManager.isDragging as any).mockReturnValue(false)
       ;(useAppStore as any).mockImplementation((selector: any) => {
@@ -2285,6 +2366,70 @@ describe('Canvas', () => {
       // Should not call any drag-related functions
       expect(dragManager.endDrag).not.toHaveBeenCalled()
       expect(mockClearDragState).not.toHaveBeenCalled()
+    })
+
+    it('should disable hover effects on blocks when dragging', () => {
+      const unselectedBlock = { ...mockBlock, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: true, // Currently dragging
+            getDraggedItem: mockTemplate,
+            getDragSource: 'library',
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [unselectedBlock],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      // Should not have hover class when dragging
+      expect(blockElement).toHaveClass('border-transparent')
+      expect(blockElement).not.toHaveClass('hover:border-blue-500')
+    })
+
+    it('should enable hover effects on blocks when not dragging', () => {
+      const unselectedBlock = { ...mockBlock, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false, // Not dragging
+            getDraggedItem: null,
+            getDragSource: null,
+            getDragOffset: { x: 0, y: 0 },
+            blocks: [unselectedBlock],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      // Should have hover class when not dragging
+      expect(blockElement).toHaveClass('border-transparent')
+      expect(blockElement).toHaveClass('hover:border-blue-500')
     })
   })
 })
