@@ -31,6 +31,40 @@ export const Canvas: React.FC = () => {
   const blocks = useAppStore(blocksSelectors.getAllBlocks)
   const selectBlock = useAppStore((state) => state.selectBlock)
   const clearSelection = useAppStore((state) => state.clearSelection)
+  const updateBlock = useAppStore((state) => state.updateBlock)
+  const setDragState = useAppStore((state) => state.setDragState)
+
+  /**
+   * Handle mouse down on block (for drag initiation)
+   */
+  const handleBlockMouseDown = useCallback(
+    (blockId: string, e: React.MouseEvent) => {
+      e.stopPropagation() // Prevent canvas deselection
+
+      // Check if already dragging
+      if (dragManager.isDragging()) return
+
+      // Get the block
+      const block = blocks.find((b) => b.id === blockId)
+      if (!block) return
+
+      // Always select only this block (clears multi-selection)
+      selectBlock(blockId)
+
+      // Calculate offset from mouse to block origin
+      const mouseOffset = {
+        x: e.clientX - block.x,
+        y: e.clientY - block.y,
+      }
+
+      // Start drag
+      dragManager.startDrag('canvas', block, { x: e.clientX, y: e.clientY })
+
+      // Store offset in drag state for accurate dragging
+      setDragState({ offset: mouseOffset })
+    },
+    [blocks, selectBlock, setDragState]
+  )
 
   /**
    * Handle click on block
@@ -38,6 +72,10 @@ export const Canvas: React.FC = () => {
   const handleBlockClick = useCallback(
     (blockId: string, e: React.MouseEvent) => {
       e.stopPropagation() // Prevent canvas click
+
+      // Safety check: don't handle click if dragging
+      if (dragManager.isDragging()) return
+
       selectBlock(blockId) // BlocksSlice handles deselection of others and sync
     },
     [selectBlock]
@@ -204,8 +242,10 @@ export const Canvas: React.FC = () => {
               width: block.width,
               height: block.height,
               zIndex: block.z,
+              userSelect: 'none', // Prevent text selection during drag
             }}
             onClick={(e) => handleBlockClick(block.id, e)}
+            onMouseDown={(e) => handleBlockMouseDown(block.id, e)}
             data-block-id={block.id}
             data-selected={block.selected}
             data-testid={`block-${block.id}`}
