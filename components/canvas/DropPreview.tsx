@@ -17,8 +17,8 @@ export const DropPreview: React.FC = () => {
   const offset = useAppStore(dragSelectors.getDragOffset)
   const sourceType = useAppStore(dragSelectors.getDragSource)
 
-  // Don't render if not dragging
-  if (!isActive || !draggedItem) {
+  // Don't render if not dragging or if dragging from canvas
+  if (!isActive || !draggedItem || sourceType === 'canvas') {
     return null
   }
 

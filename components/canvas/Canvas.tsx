@@ -51,17 +51,30 @@ export const Canvas: React.FC = () => {
       // Always select only this block (clears multi-selection)
       selectBlock(blockId)
 
-      // Calculate offset from mouse to block origin
+      // Get canvas bounds for coordinate system conversion
+      if (!canvasRef.current) return
+      const rect = canvasRef.current.getBoundingClientRect()
+
+      // Convert mouse position to canvas-relative coordinates
+      const canvasMouseX = e.clientX - rect.left
+      const canvasMouseY = e.clientY - rect.top
+
+      // Calculate offset from mouse to block origin (both in canvas coordinates)
       const mouseOffset = {
-        x: e.clientX - block.x,
-        y: e.clientY - block.y,
+        x: canvasMouseX - block.x,
+        y: canvasMouseY - block.y,
       }
 
       // Start drag
       dragManager.startDrag('canvas', block, { x: e.clientX, y: e.clientY })
 
-      // Store offset in drag state for accurate dragging
-      setDragState({ offset: mouseOffset })
+      // Store offset and complete drag state in Zustand store for accurate dragging
+      setDragState({
+        offset: mouseOffset,
+        isActive: true,
+        sourceType: 'canvas',
+        draggedItem: block,
+      })
     },
     [blocks, selectBlock, setDragState]
   )
@@ -185,6 +198,30 @@ export const Canvas: React.FC = () => {
   )
 
   /**
+   * Handle mouse move for drag tracking
+   */
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      // Check if dragging and source is canvas
+      if (dragManager.isDragging() && sourceType === 'canvas') {
+        // Get canvas bounds for relative positioning
+        if (!canvasRef.current) return
+        const rect = canvasRef.current.getBoundingClientRect()
+
+        // Calculate new block position based on mouse position minus stored offset
+        const newX = e.clientX - rect.left - (offset?.x || 0)
+        const newY = e.clientY - rect.top - (offset?.y || 0)
+
+        // Update the dragged block's position in real-time
+        if (draggedItem?.id) {
+          updateBlock(draggedItem.id, { x: newX, y: newY })
+        }
+      }
+    },
+    [sourceType, offset, draggedItem, updateBlock]
+  )
+
+  /**
    * Handle mouse enter to track when cursor enters canvas
    */
   const handleMouseEnter = useCallback(() => {
@@ -208,6 +245,7 @@ export const Canvas: React.FC = () => {
       className="relative w-full h-full bg-slate-50 overflow-auto"
       onClick={handleCanvasClick}
       onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       data-testid="canvas"

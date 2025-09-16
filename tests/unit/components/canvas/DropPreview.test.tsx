@@ -71,7 +71,7 @@ describe('DropPreview', () => {
       expect(container.firstChild).toBeNull()
     })
 
-    it('should render when actively dragging an item', () => {
+    it('should render when actively dragging an item from library', () => {
       ;(useAppStore as any).mockImplementation((selector: any) => {
         const state = {
           isDragging: true,
@@ -85,6 +85,30 @@ describe('DropPreview', () => {
 
       render(<DropPreview />)
       expect(screen.getByTestId('drop-preview')).toBeInTheDocument()
+    })
+
+    it('should NOT render when dragging from canvas (Task 2 requirement)', () => {
+      const mockBlock = {
+        id: 'block-1',
+        typeId: 'test-block',
+        width: 400,
+        height: 200,
+        props: { content: 'Block content' },
+      }
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        const state = {
+          isDragging: true,
+          getDraggedItem: mockBlock,
+          getDragPosition: { x: 100, y: 100 },
+          getDragOffset: { x: 10, y: 10 },
+          getDragSource: 'canvas', // Dragging from canvas
+        }
+        return selector(state)
+      })
+
+      const { container } = render(<DropPreview />)
+      expect(container.firstChild).toBeNull() // Should not render preview for canvas drags
     })
   })
 
@@ -167,57 +191,6 @@ describe('DropPreview', () => {
     })
   })
 
-  describe('Canvas Block Preview', () => {
-    it('should render block preview when dragging from canvas', () => {
-      const mockBlock = {
-        id: 'block-1',
-        typeId: 'test-block',
-        width: 400,
-        height: 200,
-        props: { content: 'Block content' },
-      }
-
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        const state = {
-          isDragging: true,
-          getDraggedItem: mockBlock,
-          getDragPosition: { x: 250, y: 300 },
-          getDragOffset: { x: 25, y: 30 },
-          getDragSource: 'canvas',
-        }
-        return selector(state)
-      })
-
-      render(<DropPreview />)
-      const preview = screen.getByTestId('drop-preview')
-      expect(preview).toBeInTheDocument()
-      expect(preview.style.width).toBe('400px')
-      expect(preview.style.height).toBe('200px')
-    })
-
-    it('should render fallback for canvas blocks without component', () => {
-      const mockBlock = {
-        id: 'block-1',
-        typeId: 'test-block',
-        component: null,
-      }
-
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        const state = {
-          isDragging: true,
-          getDraggedItem: mockBlock,
-          getDragPosition: { x: 100, y: 100 },
-          getDragOffset: { x: 0, y: 0 },
-          getDragSource: 'canvas',
-        }
-        return selector(state)
-      })
-
-      render(<DropPreview />)
-      expect(screen.getByText('Block')).toBeInTheDocument()
-      expect(screen.getByText('test-block')).toBeInTheDocument()
-    })
-  })
 
   describe('Positioning', () => {
     it('should position preview at cursor minus offset', () => {
