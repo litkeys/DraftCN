@@ -1,6 +1,6 @@
 # Epic 1: Core Builder with Freeform Drag & Drop
 
-**Goal:** Establish the foundational builder interface with a working drag-and-drop system that allows users to place, select, move, and delete blocks on a canvas without grid constraints. This epic delivers the core interaction model and proves the viability of the visual builder concept.
+**Goal:** Establish the foundational builder interface with a working drag-and-drop system that allows users to place, select, move, and delete blocks on a fixed-width canvas without grid constraints. This epic delivers the core interaction model with a predictable 1200px workspace and proves the viability of the visual builder concept.
 
 ### Story 1.1: Project Setup and Basic Layout
 
@@ -15,8 +15,9 @@ so that I have a working foundation with all required dependencies.
 3. Tailwind CSS installed and configured for styling
 4. shadcn/ui initialized with base components
 5. Zustand installed for state management
-6. Basic layout with logo in top-left, left sidebar (20% width), and main canvas area (80% width) renders correctly
-7. Project runs locally with npm run dev without errors
+6. Basic layout with logo in top-left, left sidebar (20% width), and main canvas container (80% width) renders correctly
+7. Canvas container holds a centered 1200px-wide canvas with visual distinction from container background
+8. Project runs locally with npm run dev without errors
 
 ### Story 1.2: Block Data Model and Template System
 
@@ -129,32 +130,20 @@ so that I can adjust my layout.
 5. State updates with new position after move
 6. Only one block can be dragged at a time
 
-### Story 1.9: Dead Zones and Boundary Enforcement
+### Story 1.9: Fixed-Width Canvas with Container and Auto-Expansion
 
 As a user,  
-I want clear visual boundaries for valid drop areas,  
-so that I know where blocks can be placed.
+I want a fixed-width canvas that is clearly distinguished from its container and expands automatically as I add content,  
+so that I have a predictable workspace with unlimited vertical space.
 
 **Acceptance Criteria:**
 
-1. Semi-transparent red overlays show dead zones outside canvas width
-2. Dead zones visible on left, right, and bottom of canvas
-3. Blocks cannot be dropped in dead zones
-4. Blocks cannot be moved outside canvas boundaries
-5. Visual feedback when dragging over invalid areas
-6. Dead zones don't interfere with sidebar interaction
-
-### Story 1.10: Canvas Container with Auto-Expansion
-
-As a user,  
-I want a canvas that automatically expands as I add content,  
-so that I always have space to work.
-
-**Acceptance Criteria:**
-
-1. Canvas maintains 80% viewport width
-2. Canvas height dynamically calculated based on lowest block position plus 1200px buffer
-3. Minimum height equals viewport height
-4. Canvas centered with gray background container
-5. Scrollable vertically when content exceeds viewport
-6. Canvas re-calculates height when blocks are added/moved/removed
+1. Canvas container takes 80% viewport width with distinct background color
+2. Canvas itself is exactly 1200px wide and horizontally centered within container
+3. Canvas has minimum height of 1200px
+4. Canvas height dynamically calculated based on lowest block position plus 1200px buffer
+5. Canvas visually distinguished from container (different background color, subtle border/shadow)
+6. Canvas background is white, container background is light gray
+7. Blocks can only be dropped within the 1200px canvas boundaries (dead zones are container areas outside canvas)
+8. Canvas re-calculates height when blocks are added/moved/removed
+9. Scrollable vertically when canvas content exceeds viewport height
