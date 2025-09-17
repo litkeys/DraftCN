@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useCallback } from 'react'
+import React, { useRef, useCallback, useMemo } from 'react'
 import { useAppStore } from '@/store'
 import { dragSelectors } from '@/store/slices/drag'
 import { blocksSelectors } from '@/store/slices/blocks'
@@ -33,6 +33,21 @@ export const Canvas: React.FC = () => {
   const clearSelection = useAppStore((state) => state.clearSelection)
   const updateBlock = useAppStore((state) => state.updateBlock)
   const setDragState = useAppStore((state) => state.setDragState)
+
+  /**
+   * Calculate the required canvas height based on block positions
+   */
+  const calculateCanvasHeight = useMemo(() => {
+    if (blocks.length === 0) {
+      return 1200 // Minimum height when empty
+    }
+
+    // Find the lowest point of all blocks
+    const lowestPoint = Math.max(...blocks.map((block) => block.y + block.height))
+
+    // Return minimum of 1200px or lowest point + 1200px buffer
+    return Math.max(1200, lowestPoint + 1200)
+  }, [blocks])
 
   /**
    * Handle mouse down on block (for drag initiation)
@@ -216,8 +231,8 @@ export const Canvas: React.FC = () => {
           const block = blocks.find(b => b.id === draggedItem.id)
           if (block) {
             // Apply position constraints to ensure block stays within canvas
-            let correctedX = Math.max(0, Math.min(block.x, 1200 - block.width))
-            let correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
+            const correctedX = Math.max(0, Math.min(block.x, 1200 - block.width))
+            const correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
 
             // Update to corrected position if needed
             if (correctedX !== block.x || correctedY !== block.y) {
@@ -267,7 +282,7 @@ export const Canvas: React.FC = () => {
    */
   const handleMouseEnter = useCallback(() => {
     // Removed drag-over class to prevent background color change
-  }, [isDragging])
+  }, [])
 
   /**
    * Handle mouse leave to track when cursor leaves canvas
@@ -284,8 +299,8 @@ export const Canvas: React.FC = () => {
           const block = blocks.find(b => b.id === draggedItem.id)
           if (block) {
             // Apply position constraints to ensure block stays within canvas
-            let correctedX = Math.max(0, Math.min(block.x, 1200 - block.width))
-            let correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
+            const correctedX = Math.max(0, Math.min(block.x, 1200 - block.width))
+            const correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
 
             // Update to corrected position if needed
             if (correctedX !== block.x || correctedY !== block.y) {
@@ -316,7 +331,7 @@ export const Canvas: React.FC = () => {
         onMouseLeave={handleMouseLeave}
         data-testid="canvas"
         style={{
-          minHeight: '1200px',
+          minHeight: `${calculateCanvasHeight}px`,
         }}
       >
         {/* Render dropped blocks */}

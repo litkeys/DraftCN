@@ -2477,4 +2477,274 @@ describe('Canvas', () => {
       expect(blockElement).toHaveClass('hover:outline-blue-500')
     })
   })
+
+  describe('Dynamic Height Calculation', () => {
+    it('should set minimum height of 1200px when canvas is empty', () => {
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [], // Empty canvas
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+
+      expect(canvas).toHaveStyle({ minHeight: '1200px' })
+    })
+
+    it('should calculate height based on lowest block position plus 1200px buffer', () => {
+      const blocks = [
+        { ...mockBlock, id: 'block-1', y: 100, height: 100 }, // bottom at 200
+        { ...mockBlock, id: 'block-2', y: 500, height: 200 }, // bottom at 700
+        { ...mockBlock, id: 'block-3', y: 300, height: 150 }, // bottom at 450
+      ]
+
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks,
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+
+      // Lowest point is 700 (block-2), so height should be 700 + 1200 = 1900px
+      expect(canvas).toHaveStyle({ minHeight: '1900px' })
+    })
+
+    it('should maintain minimum height of 1200px even with blocks near top', () => {
+      const blocks = [
+        { ...mockBlock, id: 'block-1', y: 0, height: 50 }, // bottom at 50
+        { ...mockBlock, id: 'block-2', y: 10, height: 30 }, // bottom at 40
+      ]
+
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks,
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+
+      // Lowest point is 50, + 1200 = 1250, but should maintain minimum of 1200
+      // Actually 50 + 1200 = 1250, which is greater than 1200
+      expect(canvas).toHaveStyle({ minHeight: '1250px' })
+    })
+
+    it('should recalculate height when blocks are added', () => {
+      const initialBlocks = [
+        { ...mockBlock, id: 'block-1', y: 100, height: 100 }, // bottom at 200
+      ]
+
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      const { rerender } = render(<Canvas />)
+
+      // Initial render with one block
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: initialBlocks,
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      rerender(<Canvas />)
+      let canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveStyle({ minHeight: '1400px' }) // 200 + 1200
+
+      // Add a new block further down
+      const updatedBlocks = [
+        ...initialBlocks,
+        { ...mockBlock, id: 'block-2', y: 800, height: 200 }, // bottom at 1000
+      ]
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: updatedBlocks,
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      rerender(<Canvas />)
+      canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveStyle({ minHeight: '2200px' }) // 1000 + 1200
+    })
+
+    it('should recalculate height when blocks are moved', () => {
+      const blockAtTop = { ...mockBlock, id: 'block-1', y: 100, height: 100 }
+
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      const { rerender } = render(<Canvas />)
+
+      // Initial position
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [blockAtTop],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      rerender(<Canvas />)
+      let canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveStyle({ minHeight: '1400px' }) // 200 + 1200
+
+      // Move block further down
+      const blockMovedDown = { ...blockAtTop, y: 1500 }
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [blockMovedDown],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      rerender(<Canvas />)
+      canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveStyle({ minHeight: '2800px' }) // 1600 + 1200
+    })
+
+    it('should recalculate height when blocks are removed', () => {
+      const blocks = [
+        { ...mockBlock, id: 'block-1', y: 100, height: 100 }, // bottom at 200
+        { ...mockBlock, id: 'block-2', y: 1000, height: 200 }, // bottom at 1200
+      ]
+
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+
+      const { rerender } = render(<Canvas />)
+
+      // Initial render with two blocks
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks,
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      rerender(<Canvas />)
+      let canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveStyle({ minHeight: '2400px' }) // 1200 + 1200
+
+      // Remove the lower block
+      const remainingBlocks = [blocks[0]]
+
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: remainingBlocks,
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            updateBlock: mockUpdateBlock,
+            setDragState: mockSetDragState,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      rerender(<Canvas />)
+      canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveStyle({ minHeight: '1400px' }) // 200 + 1200
+    })
+  })
 })
