@@ -108,6 +108,19 @@ export const Canvas: React.FC = () => {
   )
 
   /**
+   * Handle clicks on container area (for deselection)
+   */
+  const handleContainerClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Check if clicked on container (not canvas or its children)
+      if (e.target === e.currentTarget) {
+        clearSelection() // Deselect all blocks
+      }
+    },
+    [clearSelection]
+  )
+
+  /**
    * Handle drop from library
    */
   const handleLibraryDrop = useCallback(
@@ -150,8 +163,12 @@ export const Canvas: React.FC = () => {
       }
 
       // Calculate drop position relative to canvas, accounting for click offset
-      const dropX = e.clientX - rect.left - (offset?.x || 0)
-      const dropY = e.clientY - rect.top - (offset?.y || 0)
+      let dropX = e.clientX - rect.left - (offset?.x || 0)
+      let dropY = e.clientY - rect.top - (offset?.y || 0)
+
+      // Constrain position to canvas boundaries (1200px width)
+      dropX = Math.max(0, Math.min(dropX, 1200 - newBlock.width))
+      dropY = Math.max(0, dropY) // Allow vertical extension but not negative
 
       // Update block position to drop coordinates
       newBlock.x = dropX
@@ -164,6 +181,9 @@ export const Canvas: React.FC = () => {
       // Add new block to store
       addBlock(newBlock)
 
+      // Select the newly dropped block
+      selectBlock(newBlock.id)
+
       // End drag operation
       dragManager.endDrag()
       clearDragState()
@@ -175,6 +195,7 @@ export const Canvas: React.FC = () => {
       clearDragState,
       addBlock,
       getHighestZIndex,
+      selectBlock,
     ]
   )
 
@@ -189,8 +210,22 @@ export const Canvas: React.FC = () => {
       const { sourceType: dragSourceType } = dragManager.getDragState()
 
       if (dragSourceType === 'canvas') {
-        // Canvas block drag completion - just end the drag
-        // Position is already updated in real-time, no final update needed
+        // Canvas block drag completion - apply position correction
+        if (draggedItem && draggedItem.id && canvasRef.current) {
+          // Get the current block to check its final position
+          const block = blocks.find(b => b.id === draggedItem.id)
+          if (block) {
+            // Apply position constraints to ensure block stays within canvas
+            let correctedX = Math.max(0, Math.min(block.x, 1200 - block.width))
+            let correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
+
+            // Update to corrected position if needed
+            if (correctedX !== block.x || correctedY !== block.y) {
+              updateBlock(block.id, { x: correctedX, y: correctedY })
+            }
+          }
+        }
+
         // Block remains selected after drag
         dragManager.endDrag()
         clearDragState()
@@ -199,7 +234,7 @@ export const Canvas: React.FC = () => {
         handleLibraryDrop(e)
       }
     },
-    [clearDragState, handleLibraryDrop]
+    [clearDragState, handleLibraryDrop, draggedItem, blocks, updateBlock]
   )
 
   /**
@@ -217,7 +252,8 @@ export const Canvas: React.FC = () => {
         const newX = e.clientX - rect.left - (offset?.x || 0)
         const newY = e.clientY - rect.top - (offset?.y || 0)
 
-        // Update the dragged block's position in real-time
+        // Update the dragged block's position in real-time without constraints
+        // This allows for smooth dragging without jarring corrections
         if (draggedItem?.id) {
           updateBlock(draggedItem.id, { x: newX, y: newY })
         }
@@ -230,103 +266,111 @@ export const Canvas: React.FC = () => {
    * Handle mouse enter to track when cursor enters canvas
    */
   const handleMouseEnter = useCallback(() => {
-    if (isDragging && canvasRef.current) {
-      canvasRef.current.classList.add('drag-over')
-    }
+    // Removed drag-over class to prevent background color change
   }, [isDragging])
 
   /**
    * Handle mouse leave to track when cursor leaves canvas
    */
   const handleMouseLeave = useCallback(() => {
-    if (canvasRef.current) {
-      canvasRef.current.classList.remove('drag-over')
-    }
-
     // Clear drag state if dragging when mouse leaves canvas
     if (dragManager.isDragging()) {
       const { sourceType } = dragManager.getDragState()
 
-      // Only clear drag state for canvas drags (not library drags)
+      // Only handle canvas drags (not library drags)
       if (sourceType === 'canvas') {
+        // Apply position correction before ending drag
+        if (draggedItem && draggedItem.id) {
+          const block = blocks.find(b => b.id === draggedItem.id)
+          if (block) {
+            // Apply position constraints to ensure block stays within canvas
+            let correctedX = Math.max(0, Math.min(block.x, 1200 - block.width))
+            let correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
+
+            // Update to corrected position if needed
+            if (correctedX !== block.x || correctedY !== block.y) {
+              updateBlock(block.id, { x: correctedX, y: correctedY })
+            }
+          }
+        }
+
         dragManager.endDrag()
         clearDragState()
       }
     }
-  }, [clearDragState])
+  }, [clearDragState, draggedItem, blocks, updateBlock])
 
   return (
     <div
-      ref={canvasRef}
-      className="relative w-full h-full bg-slate-50 overflow-auto"
-      onClick={handleCanvasClick}
-      onMouseUp={handleMouseUp}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      data-testid="canvas"
-      style={{
-        minHeight: '100vh',
-      }}
+      className="w-full h-full bg-gray-100 overflow-y-auto overflow-x-hidden p-8"
+      onClick={handleContainerClick}
+      data-testid="canvas-container"
     >
-      {/* Render dropped blocks */}
-      {blocks.map((block) => {
-        // Get the template for this block
-        const template = blockRegistry.getTemplate(block.typeId)
-        if (!template) {
-          return null
-        }
+      <div
+        ref={canvasRef}
+        className="relative w-[1200px] bg-white shadow-md outline outline-1 outline-gray-200 mx-auto"
+        onClick={handleCanvasClick}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        data-testid="canvas"
+        style={{
+          minHeight: '1200px',
+        }}
+      >
+        {/* Render dropped blocks */}
+        {blocks.map((block) => {
+          // Get the template for this block
+          const template = blockRegistry.getTemplate(block.typeId)
+          if (!template) {
+            return null
+          }
 
-        const Component = template.component
-        if (!Component) {
-          return null
-        }
+          const Component = template.component
+          if (!Component) {
+            return null
+          }
 
-        return (
-          <div
-            key={block.id}
-            className={`absolute rounded cursor-pointer transition-colors border-2 ${
-              block.selected
-                ? 'border-blue-500'
-                : `border-transparent ${
-                    !isDragging ? 'hover:border-blue-500' : ''
-                  }`
-            }`}
-            style={{
-              left: block.x,
-              top: block.y,
-              width: block.width,
-              height: block.height,
-              zIndex: block.z,
-              userSelect: 'none', // Prevent text selection during drag
-            }}
-            onClick={(e) => handleBlockClick(block.id, e)}
-            onMouseDown={(e) => handleBlockMouseDown(block.id, e)}
-            data-block-id={block.id}
-            data-selected={block.selected}
-            data-testid={`block-${block.id}`}
-          >
-            <Component {...block.props} />
+          return (
+            <div
+              key={block.id}
+              className={`absolute rounded cursor-pointer ${
+                block.selected
+                  ? 'outline outline-2 outline-blue-500'
+                  : !isDragging
+                  ? 'hover:outline hover:outline-2 hover:outline-blue-500'
+                  : ''
+              }`}
+              style={{
+                left: block.x,
+                top: block.y,
+                width: block.width,
+                height: block.height,
+                zIndex: block.z,
+                userSelect: 'none', // Prevent text selection during drag
+              }}
+              onClick={(e) => handleBlockClick(block.id, e)}
+              onMouseDown={(e) => handleBlockMouseDown(block.id, e)}
+              data-block-id={block.id}
+              data-selected={block.selected}
+              data-testid={`block-${block.id}`}
+            >
+              <Component {...block.props} />
+            </div>
+          )
+        })}
+
+        {/* Visual indicator when dragging over canvas */}
+        {isDragging && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="w-full h-full border-2 border-dashed border-primary/20" />
           </div>
-        )
-      })}
+        )}
 
-      {/* Visual indicator when dragging over canvas */}
-      {isDragging && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="w-full h-full border-2 border-dashed border-primary/20" />
-        </div>
-      )}
-
-      {/* Render DropPreview when dragging */}
-      <DropPreview />
-
-      {/* Style for drag over state */}
-      <style jsx>{`
-        .drag-over {
-          background-color: rgba(var(--primary), 0.05);
-        }
-      `}</style>
+        {/* Render DropPreview when dragging */}
+        <DropPreview />
+      </div>
     </div>
   )
 }

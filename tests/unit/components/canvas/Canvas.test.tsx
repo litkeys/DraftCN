@@ -131,19 +131,59 @@ describe('Canvas', () => {
   })
 
   describe('Rendering', () => {
-    it('should render canvas element', () => {
+    it('should render container and canvas elements', () => {
       render(<Canvas />)
+      expect(screen.getByTestId('canvas-container')).toBeInTheDocument()
       expect(screen.getByTestId('canvas')).toBeInTheDocument()
     })
 
-    it('should have proper styling', () => {
+    it('should render canvas nested within container', () => {
+      render(<Canvas />)
+      const container = screen.getByTestId('canvas-container')
+      const canvas = screen.getByTestId('canvas')
+      expect(container).toContainElement(canvas)
+    })
+
+    it('should have proper container styling', () => {
+      render(<Canvas />)
+      const container = screen.getByTestId('canvas-container')
+      expect(container.className).toContain('w-full')
+      expect(container.className).toContain('h-full')
+      expect(container.className).toContain('bg-gray-100')
+      expect(container.className).toContain('overflow-y-auto')
+      expect(container.className).toContain('overflow-x-hidden')
+      expect(container.className).toContain('p-8')
+    })
+
+    it('should have proper canvas styling', () => {
       render(<Canvas />)
       const canvas = screen.getByTestId('canvas')
       expect(canvas.className).toContain('relative')
-      expect(canvas.className).toContain('w-full')
-      expect(canvas.className).toContain('h-full')
-      expect(canvas.className).toContain('bg-slate-50')
-      expect(canvas.className).toContain('overflow-auto')
+      expect(canvas.className).toContain('w-[1200px]')
+      expect(canvas.className).toContain('bg-white')
+      expect(canvas.className).toContain('shadow-md')
+      expect(canvas.className).toContain('outline')
+      expect(canvas.className).toContain('outline-1')
+      expect(canvas.className).toContain('outline-gray-200')
+      expect(canvas.className).toContain('mx-auto')
+    })
+
+    it('should set canvas width to exactly 1200px', () => {
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveClass('w-[1200px]')
+    })
+
+    it('should set canvas minimum height to 1200px', () => {
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveStyle({ minHeight: '1200px' })
+    })
+
+    it('should horizontally center canvas with mx-auto', () => {
+      render(<Canvas />)
+      const canvas = screen.getByTestId('canvas')
+      expect(canvas).toHaveClass('mx-auto')
     })
 
     it('should render existing blocks', () => {
@@ -487,7 +527,7 @@ describe('Canvas', () => {
   })
 
   describe('Mouse Events', () => {
-    it('should add drag-over class on mouse enter when dragging', () => {
+    it('should not change background color on mouse enter when dragging', () => {
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -512,10 +552,11 @@ describe('Canvas', () => {
 
       fireEvent.mouseEnter(canvas)
 
-      expect(canvas.classList.contains('drag-over')).toBe(true)
+      // Canvas should not have drag-over class
+      expect(canvas.classList.contains('drag-over')).toBe(false)
     })
 
-    it('should remove drag-over class on mouse leave', () => {
+    it('should handle mouse leave without changing styles', () => {
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
           const state = {
@@ -541,6 +582,7 @@ describe('Canvas', () => {
       fireEvent.mouseEnter(canvas)
       fireEvent.mouseLeave(canvas)
 
+      // Canvas should never have drag-over class
       expect(canvas.classList.contains('drag-over')).toBe(false)
     })
   })
@@ -882,8 +924,9 @@ describe('Canvas', () => {
       render(<Canvas />)
       const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
 
-      expect(blockElement).toHaveClass('border-blue-500')
-      expect(blockElement).not.toHaveClass('border-transparent')
+      expect(blockElement).toHaveClass('outline')
+      expect(blockElement).toHaveClass('outline-2')
+      expect(blockElement).toHaveClass('outline-blue-500')
     })
 
     it('should apply hover styling when block is not selected', () => {
@@ -908,9 +951,10 @@ describe('Canvas', () => {
       render(<Canvas />)
       const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
 
-      expect(blockElement).toHaveClass('border-transparent')
-      expect(blockElement).toHaveClass('hover:border-blue-500')
-      expect(blockElement).not.toHaveClass('border-blue-500')
+      expect(blockElement).toHaveClass('hover:outline')
+      expect(blockElement).toHaveClass('hover:outline-2')
+      expect(blockElement).toHaveClass('hover:outline-blue-500')
+      expect(blockElement).not.toHaveClass('outline')
     })
 
     it('should add data-selected attribute based on selection state', () => {
@@ -2265,7 +2309,7 @@ describe('Canvas', () => {
       expect(mockClearDragState).not.toHaveBeenCalled()
     })
 
-    it('should remove drag-over class when mouse leaves canvas', () => {
+    it('should handle mouse leave without style changes', () => {
       ;(dragManager.isDragging as any).mockReturnValue(false)
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
@@ -2291,15 +2335,14 @@ describe('Canvas', () => {
       render(<Canvas />)
       const canvas = screen.getByTestId('canvas')
 
-      // Add drag-over class manually to test removal
-      canvas.classList.add('drag-over')
-      expect(canvas.classList.contains('drag-over')).toBe(true)
+      // Canvas should maintain white background
+      expect(canvas).toHaveClass('bg-white')
 
       // Simulate mouse leave
       fireEvent.mouseLeave(canvas)
 
-      // Should remove drag-over class
-      expect(canvas.classList.contains('drag-over')).toBe(false)
+      // Canvas should still have white background
+      expect(canvas).toHaveClass('bg-white')
     })
 
     it('should apply user-select: none to prevent text selection during drag', () => {
@@ -2396,8 +2439,9 @@ describe('Canvas', () => {
       const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
 
       // Should not have hover class when dragging
-      expect(blockElement).toHaveClass('border-transparent')
-      expect(blockElement).not.toHaveClass('hover:border-blue-500')
+      expect(blockElement).not.toHaveClass('hover:outline')
+      expect(blockElement).not.toHaveClass('hover:outline-2')
+      expect(blockElement).not.toHaveClass('hover:outline-blue-500')
     })
 
     it('should enable hover effects on blocks when not dragging', () => {
@@ -2428,8 +2472,9 @@ describe('Canvas', () => {
       const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
 
       // Should have hover class when not dragging
-      expect(blockElement).toHaveClass('border-transparent')
-      expect(blockElement).toHaveClass('hover:border-blue-500')
+      expect(blockElement).toHaveClass('hover:outline')
+      expect(blockElement).toHaveClass('hover:outline-2')
+      expect(blockElement).toHaveClass('hover:outline-blue-500')
     })
   })
 })
