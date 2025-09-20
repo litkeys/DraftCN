@@ -9,7 +9,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Key Interfaces:**
 - `onMouseUp(e: MouseEvent)` - Detect drop events and calculate positions
 - `onBlockMove(blockId: string, position: {x, y})` - Handle block repositioning
-- `renderGrid()` - Display 60px grid overlay
+- `renderGrid()` - Display 40px grid overlay
 
 **Drop Handling Responsibilities:**
 - Detect when mouse is released over canvas

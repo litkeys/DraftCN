@@ -12,7 +12,7 @@
 
 ### Background Context
 
-DraftCN addresses the gap between design tools and production-ready web applications by providing a visual website builder that generates clean, maintainable React code. The current landscape shows designers struggling with handoff to developers, while developers spend significant time translating designs into code. This MVP focuses on the core interaction model - drag-and-drop with a 60px grid system - to validate that users can effectively compose layouts using pre-built shadcn/ui components.
+DraftCN addresses the gap between design tools and production-ready web applications by providing a visual website builder that generates clean, maintainable React code. The current landscape shows designers struggling with handoff to developers, while developers spend significant time translating designs into code. This MVP focuses on the core interaction model - drag-and-drop with a 40px grid system - to validate that users can effectively compose layouts using pre-built shadcn/ui components.
 
 The architecture employs a **template-based block system** where reusable block templates are manually registered in a central registry with their metadata, props interfaces, and component definitions. Templates are instantiated with customized props, and a global CSS file provides consistent styling across all blocks. This approach enables developer-friendly template creation, reusable block definitions, props-based customization, and a clear path to future inline editing capabilities.
 
@@ -30,7 +30,7 @@ By intentionally limiting scope (no persistence, no auth, no text editing), the 
 ### Functional
 
 -   FR1: The system shall provide a drag-and-drop interface allowing users to drag blocks from the left sidebar library onto the canvas
--   FR2: The canvas shall enforce a 60-pixel grid system for block placement with visual grid guidelines always visible
+-   FR2: The canvas shall enforce a 40-pixel grid system for block placement with visual grid guidelines always visible
 -   FR3: Blocks shall snap to grid positions on drop, with Alt key bypass for pixel-precise positioning
 -   FR4: The canvas shall dynamically expand height based on content with a 20-cell (1200px) buffer below the lowest block
 -   FR5: Users shall be able to select blocks by clicking, with visual highlighting indicating selection state
@@ -63,7 +63,7 @@ Minimalist, grid-focused visual builder that prioritizes clarity and predictabil
 
 ### Key Interaction Paradigms
 - **Direct manipulation**: Drag blocks directly from library to canvas with immediate visual feedback
-- **Grid-first placement**: All positioning snaps to 60px grid by default, with Alt key for precision override
+- **Grid-first placement**: All positioning snaps to 40px grid by default, with Alt key for precision override
 - **Single-click selection**: Click to select, keyboard to delete - no complex multi-selection in MVP
 - **Visual boundaries**: Red dead zones clearly show valid drop areas, preventing user frustration
 
@@ -116,7 +116,7 @@ Single repository containing the entire Next.js application with clear separatio
 
 **Epic 1: Core Builder with Freeform Drag & Drop** - Implement template-based block system with BlockTemplate and Block instance separation, create template registry and processor for TSX source files, enable freeform drag & drop from library panel to canvas (no grid snapping), support block selection/movement/deletion with props-based customization, auto-expand canvas height, and enforce boundaries with dead zone implementation
 
-**Epic 2: Grid System with Smart Snapping** - Add 60px visible grid overlay to canvas with automatic snapping enabled by default, implement drop zone preview showing which cells will be occupied, enable Alt key bypass for pixel-precise positioning during drag operations, integrate grid system with template-based block instantiation
+**Epic 2: Grid System with Smart Snapping** - Add 40px visible grid overlay to canvas with automatic snapping enabled by default, implement drop zone preview showing which cells will be occupied, enable Alt key bypass for pixel-precise positioning during drag operations, integrate grid system with template-based block instantiation
 
 ## Epic 1: Core Builder with Freeform Drag & Drop
 
@@ -259,7 +259,7 @@ so that I can adjust my layout.
 
 ## Epic 2: Grid System with Smart Snapping
 
-**Goal:** Enhance the builder with a 60px grid system that provides visual guidance and automatic snapping for precise, professional layouts. This epic transforms the freeform builder into a production-ready tool with predictable placement and alignment.
+**Goal:** Enhance the builder with a 40px grid system that provides visual guidance and automatic snapping for precise, professional layouts. This epic transforms the freeform builder into a production-ready tool with predictable placement and alignment.
 
 ### Story 2.1: Grid Overlay Implementation
 As a user,  
@@ -267,7 +267,7 @@ I want to see a grid overlay on the canvas,
 so that I have visual guides for aligning blocks.
 
 **Acceptance Criteria:**
-1. 60px grid lines visible across entire canvas
+1. 40px grid lines visible across entire canvas
 2. Grid rendered using CSS background gradients for performance
 3. Grid lines use subtle gray color (#e5e5e5 or similar)
 4. Grid overlay positioned absolutely over canvas
@@ -281,7 +281,7 @@ so that my layouts are automatically aligned.
 
 **Acceptance Criteria:**
 1. On mouse release, block position snaps to nearest grid intersection
-2. Snapping calculation rounds to nearest 60px increment
+2. Snapping calculation rounds to nearest 40px increment
 3. Both X and Y coordinates snap independently
 4. Block dimensions remain unchanged (only position snaps)
 5. Snapped position respects canvas boundaries

@@ -6,7 +6,7 @@
 - **Component Patterns:** Use functional components with hooks, no class components
 - **State Updates:** Never mutate state directly - use Zustand actions only
 - **Block Templates:** Must be manually registered with complete metadata and component reference
-- **Grid Positioning:** All positions in pixels, grid snapping at 60px intervals
+- **Grid Positioning:** All positions in pixels, grid snapping at 40px intervals
 - **Error Handling:** All user actions must have error boundaries
 - **Performance:** Components handling drag must use React.memo
 - **Accessibility:** All interactive elements must have keyboard support

@@ -1,6 +1,0 @@
-<svg width="240" height="120" xmlns="http://www.w3.org/2000/svg">
-  <rect width="240" height="120" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
-  <text x="120" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#6b7280">Hero1</text>
-  <text x="120" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#9ca3af">Template</text>
-  <text x="120" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#9ca3af">1200x600</text>
-</svg>

@@ -10,7 +10,7 @@
 
 ### Background Context
 
-DraftCN addresses the gap between design tools and production-ready web applications by providing a visual website builder that generates clean, maintainable React code. The current landscape shows designers struggling with handoff to developers, while developers spend significant time translating designs into code. This MVP focuses on the core interaction model - drag-and-drop with a 60px grid system - to validate that users can effectively compose layouts using pre-built shadcn/ui components.
+DraftCN addresses the gap between design tools and production-ready web applications by providing a visual website builder that generates clean, maintainable React code. The current landscape shows designers struggling with handoff to developers, while developers spend significant time translating designs into code. This MVP focuses on the core interaction model - drag-and-drop with a 40px grid system - to validate that users can effectively compose layouts using pre-built shadcn/ui components.
 
 The architecture employs a **template-based block system** where reusable block templates are manually registered in a central registry with their metadata, props interfaces, and component definitions. Templates are instantiated with customized props, and a global CSS file provides consistent styling across all blocks. This approach enables developer-friendly template creation, reusable block definitions, props-based customization, and a clear path to future inline editing capabilities.
 

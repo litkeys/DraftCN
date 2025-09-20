@@ -5,7 +5,7 @@ Minimalist, grid-focused visual builder that prioritizes clarity and predictabil
 
 ### Key Interaction Paradigms
 - **Direct manipulation**: Drag blocks directly from library to canvas with immediate visual feedback
-- **Grid-first placement**: All positioning snaps to 60px grid by default, with Alt key for precision override
+- **Grid-first placement**: All positioning snaps to 40px grid by default, with Alt key for precision override
 - **Single-click selection**: Click to select, keyboard to delete - no complex multi-selection in MVP
 - **Visual boundaries**: Red dead zones clearly show valid drop areas, preventing user frustration
 

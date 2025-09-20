@@ -41,7 +41,7 @@ No starter templates or existing projects are mentioned in the PRD or front-end 
 
 ### Technical Summary
 
-DraftCN is a client-side visual website builder utilizing Next.js 15's App Router with React 19 for optimal performance. The architecture employs a grid-based drag-and-drop system with freeform block positioning, managed through Zustand for predictable state management. The frontend leverages shadcn/ui components for consistent UI elements, while the 60px grid system ensures professional layouts. With no backend services, the application runs entirely in the browser, deploying as a static site to Vercel for global edge distribution. This architecture achieves the PRD goals by providing immediate visual feedback, intuitive grid-based placement, and a foundation for future enhancements while maintaining 60fps performance during drag operations.
+DraftCN is a client-side visual website builder utilizing Next.js 15's App Router with React 19 for optimal performance. The architecture employs a grid-based drag-and-drop system with freeform block positioning, managed through Zustand for predictable state management. The frontend leverages shadcn/ui components for consistent UI elements, while the 40px grid system ensures professional layouts. With no backend services, the application runs entirely in the browser, deploying as a static site to Vercel for global edge distribution. This architecture achieves the PRD goals by providing immediate visual feedback, intuitive grid-based placement, and a foundation for future enhancements while maintaining 60fps performance during drag operations.
 
 ### Platform and Infrastructure Choice
 
@@ -110,7 +110,7 @@ graph TB
 - **Component-Based Architecture:** Modular React components with shadcn/ui for reusability - *Rationale:* Enables rapid UI development and consistent design system
 - **Template-Instance Pattern:** Separation of block templates (definitions) from block instances (positioned elements) - *Rationale:* Allows reuse of templates with different content/props
 - **Client-Side State Management:** Zustand store for all application state including blocks and templates - *Rationale:* Lightweight, performant, and simple compared to Redux
-- **Grid-First Positioning:** 60px grid system as primary layout constraint - *Rationale:* Provides predictable, professional layouts while simplifying position calculations
+- **Grid-First Positioning:** 40px grid system as primary layout constraint - *Rationale:* Provides predictable, professional layouts while simplifying position calculations
 - **Props-Based Customization:** Block content customized via props without modifying template code - *Rationale:* Enables future inline editing without template changes
 - **Static Site Generation:** Pre-rendered HTML with client-side hydration - *Rationale:* Fastest initial load times
 - **Template Registry Pattern:** Centralized management of available block templates - *Rationale:* Simplifies template discovery and instantiation
@@ -479,7 +479,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 - `onBlockDrop(block: Block)` - Handle new block placement
 - `onBlockMove(blockId: string, position: {x, y})` - Handle block repositioning
 - `onBlockSelect(blockId: string)` - Handle block selection
-- `renderGrid()` - Display 60px grid overlay
+- `renderGrid()` - Display 40px grid overlay
 
 **Dependencies:** Grid System Manager, Block Renderer, Dead Zone Component
 
@@ -746,7 +746,7 @@ sequenceDiagram
     Store-->>Canvas: Block added at exact position
 
     Note over Canvas: Future stories will add:
-    Note over Canvas: - 60px grid snapping
+    Note over Canvas: - 40px grid snapping
     Note over Canvas: - Alt key to bypass grid
     Note over Canvas: - Visual grid overlay
     Note over Canvas: - Snap preview indicators
@@ -1077,7 +1077,7 @@ draftcn/
 │   │   └── utils.ts         # Drag utilities
 │   ├── grid/                # Grid system
 │   │   ├── calculator.ts    # Grid calculations
-│   │   └── constants.ts     # Grid constants (60px)
+│   │   └── constants.ts     # Grid constants (40px)
 │   └── utils.ts             # General utilities
 ├── store/                    # State management
 │   ├── index.ts             # Main Zustand store combining slices
@@ -1502,7 +1502,7 @@ test('drag block from library to canvas', async ({ page }) => {
 - **Component Patterns:** Use functional components with hooks, no class components
 - **State Updates:** Never mutate state directly - use Zustand actions only
 - **Block Templates:** Must be manually registered with complete metadata and component reference
-- **Grid Positioning:** All positions in pixels, grid snapping at 60px intervals
+- **Grid Positioning:** All positions in pixels, grid snapping at 40px intervals
 - **Error Handling:** All user actions must have error boundaries
 - **Performance:** Components handling drag must use React.memo
 - **Accessibility:** All interactive elements must have keyboard support
@@ -1681,4 +1681,4 @@ class BlockErrorBoundary extends Component<Props, State> {
 - **Frontend architecture completeness:** 100%
 - **Component design clarity:** Excellent with TypeScript interfaces
 - **UI/UX specification coverage:** Full alignment with front-end spec
-- **Grid system implementation:** Clearly defined 60px system
+- **Grid system implementation:** Clearly defined 40px system

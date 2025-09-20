@@ -35,7 +35,7 @@ draftcn/
 │   │   └── utils.ts         # Drag utilities
 │   ├── grid/                # Grid system
 │   │   ├── calculator.ts    # Grid calculations
-│   │   └── constants.ts     # Grid constants (60px)
+│   │   └── constants.ts     # Grid constants (40px)
 │   └── utils.ts             # General utilities
 ├── store/                    # State management
 │   ├── index.ts             # Main Zustand store

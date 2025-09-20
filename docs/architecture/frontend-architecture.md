@@ -245,7 +245,7 @@ export const Canvas: React.FC = () => {
           className="w-full h-full"
           style={{
             backgroundImage: 'radial-gradient(circle, #e2e8f0 1px, transparent 1px)',
-            backgroundSize: '60px 60px'
+            backgroundSize: '40px 40px'
           }}
         />
       </div>

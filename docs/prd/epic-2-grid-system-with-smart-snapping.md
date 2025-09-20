@@ -1,6 +1,6 @@
 # Epic 2: Grid System with Smart Snapping
 
-**Goal:** Enhance the builder with a 60px grid system that provides visual guidance and automatic snapping for precise, professional layouts. This epic transforms the freeform builder into a production-ready tool with predictable placement and alignment.
+**Goal:** Enhance the builder with a 40px grid system that provides visual guidance and automatic snapping for precise, professional layouts. This epic transforms the freeform builder into a production-ready tool with predictable placement and alignment.
 
 ### Story 2.1: Grid Overlay Implementation
 As a user,  
@@ -8,7 +8,7 @@ I want to see a grid overlay on the canvas,
 so that I have visual guides for aligning blocks.
 
 **Acceptance Criteria:**
-1. 60px grid lines visible across entire canvas
+1. 40px grid lines visible across entire canvas
 2. Grid rendered using CSS background gradients for performance
 3. Grid lines use subtle gray color (#e5e5e5 or similar)
 4. Grid overlay positioned absolutely over canvas
@@ -22,7 +22,7 @@ so that my layouts are automatically aligned.
 
 **Acceptance Criteria:**
 1. On mouse release, block position snaps to nearest grid intersection
-2. Snapping calculation rounds to nearest 60px increment
+2. Snapping calculation rounds to nearest 40px increment
 3. Both X and Y coordinates snap independently
 4. Block dimensions remain unchanged (only position snaps)
 5. Snapped position respects canvas boundaries

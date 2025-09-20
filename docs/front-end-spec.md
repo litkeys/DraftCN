@@ -47,7 +47,7 @@ graph TD
     C --> C1[Block Templates]
     C --> C2[Draggable Items]
 
-    D --> D1[60px Grid System]
+    D --> D1[40px Grid System]
     D --> D2[Placed Blocks]
     D --> D3[Grid Highlights - Drag Preview]
     D --> D4[Canvas Boundaries - 20 cells wide]
@@ -171,7 +171,7 @@ graph TD
 
 **Entry Points:** Hold Alt key while dragging any block (new or existing)
 
-**Success Criteria:** Block is placed at exact pixel position without snapping to 60px grid
+**Success Criteria:** Block is placed at exact pixel position without snapping to 40px grid
 
 #### Flow Diagram
 
@@ -210,7 +210,7 @@ graph TD
 
 -   Logo positioned in top-left corner for brand presence
 -   Block library sidebar (20% width) with scrollable template list
--   Canvas area (80% width) with visible 60px grid overlay
+-   Canvas area (80% width) with visible 40px grid overlay
 -   Visual dead zones appearing as red semi-transparent areas when zoomed out
 
 **Interaction Notes:** All interactions happen through direct manipulation - drag from sidebar to canvas, click to select, drag to reposition
@@ -238,7 +238,7 @@ graph TD
 
 **Key Elements:**
 
--   60px grid lines visible as subtle gray guides
+-   40px grid lines visible as subtle gray guides
 -   20 cells wide (1200px reference width)
 -   Dynamic height based on content plus buffer
 -   Grid highlight overlay during drag operations
@@ -272,7 +272,7 @@ graph TD
 
 #### Grid Overlay
 
-**Purpose:** Provide visual guidance for block placement with 60px grid lines
+**Purpose:** Provide visual guidance for block placement with 40px grid lines
 
 **Variants:** Single variant - always visible gray grid lines
 
@@ -374,7 +374,7 @@ graph TD
 
 ### Spacing & Layout
 
-**Grid System:** 60px base grid for all block positioning, 20 cells wide (1200px reference)
+**Grid System:** 40px base grid for all block positioning, 30 cells wide (1200px reference)
 
 **Spacing Scale:** 4px, 8px, 12px, 16px, 24px, 32px for UI element spacing (not block placement)
 
