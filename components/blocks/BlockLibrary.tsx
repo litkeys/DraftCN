@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react'
 import { blockRegistry } from '@/lib/blocks/registry'
 import type { BlockTemplate } from '@/types/template'
 import { TemplateCard } from './TemplateCard'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Search, X } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
 export const BlockLibrary: React.FC = () => {
   const [templates, setTemplates] = useState<BlockTemplate[]>([])
