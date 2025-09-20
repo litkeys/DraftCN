@@ -147,3 +147,23 @@ so that I have a predictable workspace with unlimited vertical space.
 7. Blocks can only be dropped within the 1200px canvas boundaries (dead zones are container areas outside canvas)
 8. Canvas re-calculates height when blocks are added/moved/removed
 9. Scrollable vertically when canvas content exceeds viewport height
+
+### Story 1.10: Library Sidebar Search Functionality
+
+As a user,
+I want to search for block templates by typing keywords,
+so that I can quickly find the blocks I need without scrolling through categories.
+
+**Acceptance Criteria:**
+
+1. Search bar positioned at top of library sidebar, below any header/title
+2. Search input field has placeholder text "Search blocks..."
+3. Search is case-insensitive and matches against template typeId, names, and categories
+4. Results filter in real-time as user types (no need to press Enter)
+5. Matching templates displayed below search bar, maintaining category grouping
+6. Non-matching templates hidden from view
+7. Clear/X button appears in search field when text is entered
+8. Clicking clear button or deleting all text restores full template list
+9. Search maintains visual consistency with existing sidebar design
+10. Empty search results show message "No blocks found"
+11. Search persists during drag operations (doesn't clear when dragging blocks)
