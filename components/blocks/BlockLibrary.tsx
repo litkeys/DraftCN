@@ -12,6 +12,7 @@ export const BlockLibrary: React.FC = () => {
   const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   useEffect(() => {
     const loadTemplates = async () => {
@@ -87,7 +88,26 @@ export const BlockLibrary: React.FC = () => {
   return (
     <div className="p-4 space-y-6">
       <h2 className="text-lg font-semibold">Block Library</h2>
-      
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search blocks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 pr-9"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
+          >
+            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+          </button>
+        )}
+      </div>
+
       {categories.length === 0 ? (
         <div className="text-sm text-muted-foreground">
           No categories available. Templates need to be organized into categories.
