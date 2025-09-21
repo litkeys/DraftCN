@@ -100,6 +100,15 @@ export const BlockLibrary: React.FC = () => {
     )
   }
 
+  // Check if search has no results across all categories
+  const hasSearchResults = searchQuery.trim() && categories.some((category) => {
+    const categoryTemplates = blockRegistry.getTemplatesByCategory(category)
+    const filteredTemplates = filterTemplatesBySearch(categoryTemplates, searchQuery)
+    return filteredTemplates.length > 0
+  })
+
+  const showNoResults = searchQuery.trim() && !hasSearchResults
+
   return (
     <div className="p-4 space-y-6">
       <h2 className="text-lg font-semibold">Block Library</h2>
@@ -123,7 +132,11 @@ export const BlockLibrary: React.FC = () => {
         )}
       </div>
 
-      {categories.length === 0 ? (
+      {showNoResults ? (
+        <div className="text-sm text-muted-foreground">
+          No blocks found
+        </div>
+      ) : categories.length === 0 ? (
         <div className="text-sm text-muted-foreground">
           No categories available. Templates need to be organized into categories.
         </div>
