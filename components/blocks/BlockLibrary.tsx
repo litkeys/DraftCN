@@ -14,18 +14,33 @@ export const BlockLibrary: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
 
+  const filterTemplatesBySearch = (
+    templates: BlockTemplate[],
+    query: string
+  ): BlockTemplate[] => {
+    if (!query.trim()) return templates
+
+    const lowerQuery = query.toLowerCase()
+    return templates.filter(
+      (template) =>
+        template.typeId.toLowerCase().includes(lowerQuery) ||
+        template.name.toLowerCase().includes(lowerQuery) ||
+        template.category.toLowerCase().includes(lowerQuery)
+    )
+  }
+
   useEffect(() => {
     const loadTemplates = async () => {
       try {
         setError(null)
         setLoading(true)
-        
+
         // Simulate async loading for better UX
         await new Promise(resolve => setTimeout(resolve, 100))
-        
+
         const allTemplates = blockRegistry.getAllTemplates()
         const allCategories = blockRegistry.getCategories()
-        
+
         setTemplates(allTemplates)
         setCategories(allCategories)
       } catch (error) {
@@ -115,18 +130,11 @@ export const BlockLibrary: React.FC = () => {
       ) : (
         categories.map((category) => {
           const categoryTemplates = blockRegistry.getTemplatesByCategory(category)
-          
-          if (categoryTemplates.length === 0) {
-            return (
-              <div key={category} className="space-y-3">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {category}
-                </h3>
-                <div className="text-xs text-muted-foreground italic">
-                  No templates in this category yet
-                </div>
-              </div>
-            )
+          const filteredTemplates = filterTemplatesBySearch(categoryTemplates, searchQuery)
+
+          // Only show category if it has matching templates
+          if (filteredTemplates.length === 0) {
+            return null
           }
 
           return (
@@ -135,7 +143,7 @@ export const BlockLibrary: React.FC = () => {
                 {category}
               </h3>
               <div className="grid gap-3">
-                {categoryTemplates.map((template) => (
+                {filteredTemplates.map((template) => (
                   <TemplateCard key={template.typeId} template={template} />
                 ))}
               </div>
