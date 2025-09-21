@@ -167,3 +167,28 @@ so that I can quickly find the blocks I need without scrolling through categorie
 9. Search maintains visual consistency with existing sidebar design
 10. Empty search results show message "No blocks found"
 11. Search persists during drag operations (doesn't clear when dragging blocks)
+
+### Story 1.11: Canvas Zoom Control
+
+As a user,
+I want to adjust the zoom level of the canvas using a slider in the navigation bar,
+so that I can zoom in for detailed work or zoom out to see the full design.
+
+**Acceptance Criteria:**
+
+1. Zoom control slider positioned in the center of the top navigation bar
+2. Slider shows current zoom percentage (e.g., "100%") as a label next to or on the slider
+3. Zoom range from 25% minimum to 200% maximum
+4. Default zoom level is 100% (actually renders at 0.8 scale for better viewport fit)
+5. Slider has discrete steps: 25%, 50%, 75%, 100%, 125%, 150%, 175%, 200%
+   - 100% = 0.8 scale (default, fits more content)
+   - 125% = 1.0 scale (true 1:1)
+   - Scale calculation: actualScale = sliderValue \* 0.8
+6. Canvas and all blocks scale proportionally based on zoom level using CSS transform: scale()
+7. Block previews during drag operations also scale according to current zoom level
+8. Canvas container maintains its 80% viewport width regardless of zoom level
+9. When zoomed in beyond container width, horizontal scrollbar appears at bottom of canvas container
+10. Vertical scrollbar behavior remains unchanged (appears when content exceeds viewport height)
+11. Block drag and drop operations work correctly at all zoom levels (mouse position properly calculated)
+12. Block selection and movement maintain accuracy at all zoom levels
+13. Zoom level persists during the session (doesn't reset on block operations)
