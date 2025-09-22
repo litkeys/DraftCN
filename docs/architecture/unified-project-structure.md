@@ -41,7 +41,8 @@ draftcn/
 │   ├── index.ts             # Main Zustand store
 │   └── slices/              # Store slices
 │       ├── blocks.ts        # BlocksSlice - blocks state and actions
-│       └── drag.ts          # DragSlice - drag state and actions
+│       ├── drag.ts          # DragSlice - drag state and actions
+│       └── ui.ts            # UISlice - cross-component UI interactions
 ├── templates/               # Block templates
 │   ├── hero/               # Hero templates
 │   │   ├── hero1.tsx       # Hero template source
@@ -74,4 +75,4 @@ draftcn/
 ├── tsconfig.json        # TypeScript configuration
 └── README.md           # Project documentation
 ```
-
+

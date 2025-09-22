@@ -66,6 +66,7 @@ describe('Canvas', () => {
   const mockClearSelection = vi.fn()
   const mockUpdateBlock = vi.fn()
   const mockSetDragState = vi.fn()
+  const mockBlurSearchInput = vi.fn()
 
   const mockTemplate: BlockTemplate = {
     typeId: 'test-template',
@@ -1116,6 +1117,7 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            blurSearchInput: mockBlurSearchInput,
           }
           return selector(state)
         }
@@ -1128,6 +1130,35 @@ describe('Canvas', () => {
       fireEvent.click(blockElement)
 
       expect(mockSelectBlock).toHaveBeenCalledWith(mockBlock.id)
+      expect(mockBlurSearchInput).toHaveBeenCalledTimes(1)
+    })
+
+    it('should blur search input when a block is selected via click', () => {
+      const mockBlockWithTemplate = { ...mockBlock, selected: false }
+      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
+      ;(useAppStore as any).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          const state = {
+            isDragging: false,
+            blocks: [mockBlockWithTemplate],
+            clearDragState: mockClearDragState,
+            addBlock: mockAddBlock,
+            getHighestZIndex: mockGetHighestZIndex,
+            selectBlock: mockSelectBlock,
+            clearSelection: mockClearSelection,
+            blurSearchInput: mockBlurSearchInput,
+          }
+          return selector(state)
+        }
+        return null
+      })
+
+      render(<Canvas />)
+      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
+
+      fireEvent.click(blockElement)
+
+      expect(mockBlurSearchInput).toHaveBeenCalledTimes(1)
     })
 
     it('should apply selected styling when block is selected', () => {

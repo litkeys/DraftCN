@@ -11,6 +11,7 @@ This unified approach combines what would traditionally be separate backend and 
 #### Technical Context
 
 The architecture supports a unique **template-based block system** where:
+
 - Block templates are manually defined and registered in a central registry
 - Each template includes metadata, props interfaces, and React component definitions
 - Instances are created from templates with customized props
@@ -18,6 +19,7 @@ The architecture supports a unique **template-based block system** where:
 - Templates are added to the registry by developers as needed
 
 This approach enables:
+
 - **Developer-friendly template creation** - Write standard React components
 - **Reusable block definitions** - One template, many instances
 - **Props-based customization** - Change content without modifying code
@@ -31,10 +33,10 @@ No starter templates or existing projects are mentioned in the PRD or front-end 
 
 #### Change Log
 
-| Date       | Version | Description                    | Author           |
-| ---------- | ------- | ------------------------------ | ---------------- |
-| 2025-01-06 | v1.0    | Initial architecture document  | Winston (Architect) |
-| 2025-01-13 | v1.1    | Updated to match implementation reality | Winston (Architect) |
+| Date       | Version | Description                                                       | Author              |
+| ---------- | ------- | ----------------------------------------------------------------- | ------------------- |
+| 2025-01-06 | v1.0    | Initial architecture document                                     | Winston (Architect) |
+| 2025-01-13 | v1.1    | Updated to match implementation reality                           | Winston (Architect) |
 | 2025-01-14 | v1.2    | Corrected Zustand state management to match actual implementation | Winston (Architect) |
 
 ## High Level Architecture
@@ -67,37 +69,37 @@ graph TB
         Grid[Grid System Manager]
         Drag[Drag Manager]
     end
-    
+
     subgraph "Static Hosting - Vercel"
         CDN[Global CDN]
         Static[Static Assets]
         CSS[Global CSS Styles]
     end
-    
+
     subgraph "Development"
         Next[Next.js 15 App Router]
         Build[Build Process]
         Components[Template Components]
         Thumbs[Template Thumbnails]
     end
-    
+
     User[User] -->|Interacts| UI
     UI -->|Updates| State
     State -->|Triggers| UI
     UI -->|Drag Events| Drag
     Drag -->|Calculates| Grid
     Grid -->|Updates| State
-    
+
     Registry -->|Provides| Templates
     Templates -->|Instantiates| State
     Components -->|Registered in| Registry
     Thumbs -->|Attached to| Templates
-    
+
     Build -->|Bundles| Static
     CSS -->|Styles| UI
     Static -->|Serves via| CDN
     CDN -->|Delivers to| User
-    
+
     style User fill:#e1f5fe
     style CDN fill:#c8e6c9
     style State fill:#fff3e0
@@ -107,15 +109,15 @@ graph TB
 
 ### Architectural Patterns
 
-- **Component-Based Architecture:** Modular React components with shadcn/ui for reusability - *Rationale:* Enables rapid UI development and consistent design system
-- **Template-Instance Pattern:** Separation of block templates (definitions) from block instances (positioned elements) - *Rationale:* Allows reuse of templates with different content/props
-- **Client-Side State Management:** Zustand store for all application state including blocks and templates - *Rationale:* Lightweight, performant, and simple compared to Redux
-- **Grid-First Positioning:** 40px grid system as primary layout constraint - *Rationale:* Provides predictable, professional layouts while simplifying position calculations
-- **Props-Based Customization:** Block content customized via props without modifying template code - *Rationale:* Enables future inline editing without template changes
-- **Static Site Generation:** Pre-rendered HTML with client-side hydration - *Rationale:* Fastest initial load times
-- **Template Registry Pattern:** Centralized management of available block templates - *Rationale:* Simplifies template discovery and instantiation
-- **Event-Driven Updates:** Mouse/keyboard events trigger state changes - *Rationale:* Direct manipulation requires immediate event handling
-- **Render Optimization:** React.memo and selective re-renders - *Rationale:* Maintains 60fps during rapid drag operations
+- **Component-Based Architecture:** Modular React components with shadcn/ui for reusability - _Rationale:_ Enables rapid UI development and consistent design system
+- **Template-Instance Pattern:** Separation of block templates (definitions) from block instances (positioned elements) - _Rationale:_ Allows reuse of templates with different content/props
+- **Client-Side State Management:** Zustand store for all application state including blocks and templates - _Rationale:_ Lightweight, performant, and simple compared to Redux
+- **Grid-First Positioning:** 40px grid system as primary layout constraint - _Rationale:_ Provides predictable, professional layouts while simplifying position calculations
+- **Props-Based Customization:** Block content customized via props without modifying template code - _Rationale:_ Enables future inline editing without template changes
+- **Static Site Generation:** Pre-rendered HTML with client-side hydration - _Rationale:_ Fastest initial load times
+- **Template Registry Pattern:** Centralized management of available block templates - _Rationale:_ Simplifies template discovery and instantiation
+- **Event-Driven Updates:** Mouse/keyboard events trigger state changes - _Rationale:_ Direct manipulation requires immediate event handling
+- **Render Optimization:** React.memo and selective re-renders - _Rationale:_ Maintains 60fps during rapid drag operations
 
 ## Tech Stack
 
@@ -123,37 +125,37 @@ This is the **DEFINITIVE** technology selection for the entire project. All deve
 
 ### Technology Stack Table
 
-| Category | Technology | Version | Purpose | Rationale |
-|----------|------------|---------|---------|-----------|
-| Frontend Language | TypeScript | 5.3+ | Type-safe development | Prevents runtime errors, improves IDE support, essential for complex drag-drop logic |
-| Frontend Framework | Next.js | 15.0+ | React framework with App Router | Latest performance optimizations, React 19 support, excellent Vercel integration |
-| UI Component Library | shadcn/ui | Latest | Accessible, customizable components | Copy-paste model allows customization, well-tested patterns, Tailwind integration |
-| State Management | Zustand | 4.5+ | Client-side state management | Lightweight (8kb), simple API, perfect for drag-drop state, excellent TypeScript support |
-| Backend Language | N/A | - | No backend for MVP | Client-side only per requirements |
-| Backend Framework | N/A | - | No backend for MVP | Future: Next.js API routes |
-| API Style | N/A | - | No API for MVP | Future: REST or tRPC |
-| Database | N/A | - | No persistence for MVP | All state in memory only |
-| Cache | Browser Memory | - | Runtime state caching | Zustand manages in-memory state |
-| File Storage | N/A | - | No file storage needed | Blocks stored in memory only |
-| Authentication | N/A | - | No auth for MVP | Public access only |
-| Frontend Testing | Vitest | 1.0+ | Unit testing | Fast, Jest-compatible, works well with Vite |
-| Backend Testing | N/A | - | No backend to test | Future: Vitest for API routes |
-| E2E Testing | Playwright | 1.40+ | Integration testing (post-MVP) | Modern, fast, good debugging tools |
-| Build Tool | Next.js Turbopack | Built-in | Development builds | Faster than Webpack, built into Next.js 15 |
-| Bundler | Next.js/Webpack | Built-in | Production builds | Automatic optimization |
-| IaC Tool | N/A | - | No infrastructure needed | Vercel handles everything |
-| CI/CD | GitHub Actions | Latest | Automated testing/deployment | Free for public repos, Vercel integration |
-| Monitoring | Vercel Analytics | Latest | Basic metrics (optional) | Built-in, zero-config |
-| Logging | Console | Browser | Development debugging | No server logs needed |
-| CSS Framework | Tailwind CSS | 3.4+ | Utility-first styling | Required by shadcn/ui, fast development |
-| Runtime | React | 19.0+ | UI library | Latest concurrent features, improved performance |
-| Package Manager | npm | 10.0+ | Dependency management | Built-in workspaces support |
-| Linting | ESLint | 8.50+ | Code quality | Next.js preset included |
-| Formatting | Prettier | 3.0+ | Code formatting | Consistent code style |
-| Template Management | JavaScript Objects | Built-in | Template registry system | Manual registration of block templates |
-| Component Runtime | React.lazy | 19.0+ | Dynamic component loading | Load block templates on demand |
-| Style Management | Global CSS | - | Shared block styles | Centralized styling in globals.css |
-| Asset Management | Base64/URLs | - | Template thumbnails | Simple image handling for previews |
+| Category             | Technology         | Version  | Purpose                             | Rationale                                                                                |
+| -------------------- | ------------------ | -------- | ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| Frontend Language    | TypeScript         | 5.3+     | Type-safe development               | Prevents runtime errors, improves IDE support, essential for complex drag-drop logic     |
+| Frontend Framework   | Next.js            | 15.0+    | React framework with App Router     | Latest performance optimizations, React 19 support, excellent Vercel integration         |
+| UI Component Library | shadcn/ui          | Latest   | Accessible, customizable components | Copy-paste model allows customization, well-tested patterns, Tailwind integration        |
+| State Management     | Zustand            | 4.5+     | Client-side state management        | Lightweight (8kb), simple API, perfect for drag-drop state, excellent TypeScript support |
+| Backend Language     | N/A                | -        | No backend for MVP                  | Client-side only per requirements                                                        |
+| Backend Framework    | N/A                | -        | No backend for MVP                  | Future: Next.js API routes                                                               |
+| API Style            | N/A                | -        | No API for MVP                      | Future: REST or tRPC                                                                     |
+| Database             | N/A                | -        | No persistence for MVP              | All state in memory only                                                                 |
+| Cache                | Browser Memory     | -        | Runtime state caching               | Zustand manages in-memory state                                                          |
+| File Storage         | N/A                | -        | No file storage needed              | Blocks stored in memory only                                                             |
+| Authentication       | N/A                | -        | No auth for MVP                     | Public access only                                                                       |
+| Frontend Testing     | Vitest             | 1.0+     | Unit testing                        | Fast, Jest-compatible, works well with Vite                                              |
+| Backend Testing      | N/A                | -        | No backend to test                  | Future: Vitest for API routes                                                            |
+| E2E Testing          | Playwright         | 1.40+    | Integration testing (post-MVP)      | Modern, fast, good debugging tools                                                       |
+| Build Tool           | Next.js Turbopack  | Built-in | Development builds                  | Faster than Webpack, built into Next.js 15                                               |
+| Bundler              | Next.js/Webpack    | Built-in | Production builds                   | Automatic optimization                                                                   |
+| IaC Tool             | N/A                | -        | No infrastructure needed            | Vercel handles everything                                                                |
+| CI/CD                | GitHub Actions     | Latest   | Automated testing/deployment        | Free for public repos, Vercel integration                                                |
+| Monitoring           | Vercel Analytics   | Latest   | Basic metrics (optional)            | Built-in, zero-config                                                                    |
+| Logging              | Console            | Browser  | Development debugging               | No server logs needed                                                                    |
+| CSS Framework        | Tailwind CSS       | 3.4+     | Utility-first styling               | Required by shadcn/ui, fast development                                                  |
+| Runtime              | React              | 19.0+    | UI library                          | Latest concurrent features, improved performance                                         |
+| Package Manager      | npm                | 10.0+    | Dependency management               | Built-in workspaces support                                                              |
+| Linting              | ESLint             | 8.50+    | Code quality                        | Next.js preset included                                                                  |
+| Formatting           | Prettier           | 3.0+     | Code formatting                     | Consistent code style                                                                    |
+| Template Management  | JavaScript Objects | Built-in | Template registry system            | Manual registration of block templates                                                   |
+| Component Runtime    | React.lazy         | 19.0+    | Dynamic component loading           | Load block templates on demand                                                           |
+| Style Management     | Global CSS         | -        | Shared block styles                 | Centralized styling in globals.css                                                       |
+| Asset Management     | Base64/URLs        | -        | Template thumbnails                 | Simple image handling for previews                                                       |
 
 ## Data Models
 
@@ -162,6 +164,7 @@ This is the **DEFINITIVE** technology selection for the entire project. All deve
 **Purpose:** Represents an individual draggable UI component instance on the canvas with complete positioning, rendering information, and customized content.
 
 **Key Attributes:**
+
 - `id: string` - Unique identifier for every block instance
 - `typeId: string` - References the block template type (e.g., "hero-1")
 - `props: any` - Customized content following template's props interface
@@ -173,29 +176,33 @@ This is the **DEFINITIVE** technology selection for the entire project. All deve
 - `selected: boolean` - Whether the block is currently selected
 
 #### TypeScript Interface
+
 ```typescript
 interface Block {
-  id: string;
-  typeId: string;
-  props: any; // Matches template's specific props interface
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  z: number;
-  selected: boolean;
+  id: string
+  typeId: string
+  props: any // Matches template's specific props interface
+  x: number
+  y: number
+  width: number
+  height: number
+  z: number
+  selected: boolean
 }
 ```
 
 #### Relationships
+
 - References a BlockTemplate via typeId
 - Props must conform to template's interface structure
 - Z-index determines visual stacking when blocks overlap
 
 #### Selection Architecture Note
+
 The `selected` field in Block is initialized as `false` when blocks are created. In the current implementation:
+
 - Selection is tracked via the boolean `selected` field in each Block object
-- No separate SelectionSlice exists yet (planned for future stories)
+- Selection is handled directly within BlocksSlice for simplicity
 - Selection operations will be handled by updating the block's `selected` field via `updateBlock`
 - Multi-select and advanced selection features are not yet implemented
 
@@ -204,6 +211,7 @@ The `selected` field in Block is initialized as `false` when blocks are created.
 **Purpose:** Defines reusable block blueprints with their dependencies, default props, and rendering code.
 
 **Key Attributes:**
+
 - `typeId: string` - Unique template identifier (e.g., "hero-1")
 - `name: string` - Display name for the template
 - `category: string` - Template category for grouping
@@ -217,23 +225,25 @@ The `selected` field in Block is initialized as `false` when blocks are created.
 - `minimumHeight: number` - Minimum allowed height for resizing
 
 #### TypeScript Interface
+
 ```typescript
 interface BlockTemplate {
-  typeId: string;
-  name: string;
-  category: string;
-  thumbnail: string;
-  dependencies: string[];
-  defaultProps: any;
-  component: React.ComponentType<any>;
-  defaultWidth: number;
-  defaultHeight: number;
-  minimumWidth: number;
-  minimumHeight: number;
+  typeId: string
+  name: string
+  category: string
+  thumbnail: string
+  dependencies: string[]
+  defaultProps: any
+  component: React.ComponentType<any>
+  defaultWidth: number
+  defaultHeight: number
+  minimumWidth: number
+  minimumHeight: number
 }
 ```
 
 #### Relationships
+
 - Templates are instantiated to create Block instances
 - Global CSS file assumed to contain all required styles
 - Dependencies list extracted from import statements
@@ -243,16 +253,17 @@ interface BlockTemplate {
 **Purpose:** Manages the collection of available block templates and provides template instantiation utilities.
 
 #### TypeScript Interface
+
 ```typescript
 interface BlockRegistry {
-  templates: Map<string, BlockTemplate>;
-  categories: string[];
-  
+  templates: Map<string, BlockTemplate>
+  categories: string[]
+
   // Methods for template management
-  registerTemplate(template: BlockTemplate): void;
-  getTemplate(typeId: string): BlockTemplate | undefined;
-  getTemplatesByCategory(category: string): BlockTemplate[];
-  generateBlockInstance(typeId: string, props?: any): Block;
+  registerTemplate(template: BlockTemplate): void
+  getTemplate(typeId: string): BlockTemplate | undefined
+  getTemplatesByCategory(category: string): BlockTemplate[]
+  generateBlockInstance(typeId: string, props?: any): Block
 }
 ```
 
@@ -261,6 +272,7 @@ interface BlockRegistry {
 **Purpose:** Manual registration of block templates in the central registry.
 
 #### Registration Structure
+
 ```typescript
 // Example of manually registering a template
 const heroTemplate: BlockTemplate = {
@@ -272,25 +284,26 @@ const heroTemplate: BlockTemplate = {
   defaultProps: {
     title: 'Welcome to Our Site',
     subtitle: 'Build amazing websites visually',
-    buttonText: 'Get Started'
+    buttonText: 'Get Started',
   },
   component: HeroComponent,
   defaultWidth: 1200,
   defaultHeight: 400,
   minimumWidth: 600,
-  minimumHeight: 200
-};
+  minimumHeight: 200,
+}
 
 // Register the template
-registry.registerTemplate(heroTemplate);
+registry.registerTemplate(heroTemplate)
 ```
 
 ### Methods for Block Template Development
 
 #### 1. Manual Template Registration
+
 ```typescript
 // Step 1: Create your React component
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 
 const HeroComponent = ({ title, subtitle, buttonText }) => {
   return (
@@ -299,8 +312,8 @@ const HeroComponent = ({ title, subtitle, buttonText }) => {
       <p>{subtitle}</p>
       <Button>{buttonText}</Button>
     </div>
-  );
-};
+  )
+}
 
 // Step 2: Register the template in the registry
 const heroTemplate: BlockTemplate = {
@@ -312,41 +325,44 @@ const heroTemplate: BlockTemplate = {
   defaultProps: {
     title: 'Welcome',
     subtitle: 'Build amazing websites',
-    buttonText: 'Get Started'
+    buttonText: 'Get Started',
   },
   component: HeroComponent,
   defaultWidth: 1200,
   defaultHeight: 400,
   minimumWidth: 600,
-  minimumHeight: 200
-};
+  minimumHeight: 200,
+}
 
 // Step 3: Add to registry
-blockRegistry.registerTemplate(heroTemplate);
+blockRegistry.registerTemplate(heroTemplate)
 ```
 
 #### 2. Block Instance Creation
+
 ```typescript
 function createBlockInstance(
   typeId: string,
   position: { x: number; y: number },
   customProps?: any
 ): Block {
-  const template = blockRegistry.getTemplate(typeId);
-  if (!template) throw new Error(`Template ${typeId} not found`);
-  
-  const props = customProps || template.defaultProps;
-  
+  const template = blockRegistry.getTemplate(typeId)
+  if (!template) throw new Error(`Template ${typeId} not found`)
+
+  const props = customProps || template.defaultProps
+
   return {
-    id: `${typeId}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+    id: `${typeId}-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 11)}`,
     typeId,
     props,
     x: snapToGrid(position.x),
     y: snapToGrid(position.y),
     width: template.defaultWidth,
     height: template.defaultHeight,
-    z: getNextZIndex()
-  };
+    z: getNextZIndex(),
+  }
 }
 ```
 
@@ -357,11 +373,11 @@ Create a new React component file in `src/templates/` folder:
 
 ```typescript
 // src/templates/navbar/NavbarComponent.tsx
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 
 interface NavbarProps {
-  logo: string;
-  links: Array<{ label: string; href: string; }>;
+  logo: string
+  links: Array<{ label: string; href: string }>
 }
 
 const NavbarComponent = ({ logo, links }: NavbarProps) => {
@@ -369,24 +385,24 @@ const NavbarComponent = ({ logo, links }: NavbarProps) => {
     <nav className="navbar">
       <div className="logo">{logo}</div>
       <ul className="nav-links">
-        {links.map(link => (
+        {links.map((link) => (
           <li key={link.href}>
             <a href={link.href}>{link.label}</a>
           </li>
         ))}
       </ul>
     </nav>
-  );
-};
+  )
+}
 
-export { NavbarComponent };
+export { NavbarComponent }
 ```
 
 **Step 2: Add Template to Registry**
 In `src/lib/blocks/registry.ts`, add your template:
 
 ```typescript
-import { NavbarComponent } from '@/templates/navbar/NavbarComponent';
+import { NavbarComponent } from '@/templates/navbar/NavbarComponent'
 
 const navbarTemplate: BlockTemplate = {
   typeId: 'navbar-1',
@@ -399,18 +415,18 @@ const navbarTemplate: BlockTemplate = {
     links: [
       { label: 'Home', href: '/' },
       { label: 'About', href: '/about' },
-      { label: 'Contact', href: '/contact' }
-    ]
+      { label: 'Contact', href: '/contact' },
+    ],
   },
   component: NavbarComponent,
   defaultWidth: 1200,
   defaultHeight: 80,
   minimumWidth: 800,
-  minimumHeight: 60
-};
+  minimumHeight: 60,
+}
 
 // Register the template
-registry.registerTemplate(navbarTemplate);
+registry.registerTemplate(navbarTemplate)
 ```
 
 **Step 3: Add Thumbnail**
@@ -434,13 +450,13 @@ Add any required styles to `app/globals.css`:
 ```typescript
 // Canvas State Type (from types/canvas.ts)
 export interface CanvasState {
-  blocks: Block[];
-  selectedBlockIds: string[];
-  canvasWidth: number;
-  canvasHeight: number;
-  zoom: number;
-  panX: number;
-  panY: number;
+  blocks: Block[]
+  selectedBlockIds: string[]
+  canvasWidth: number
+  canvasHeight: number
+  zoom: number
+  panX: number
+  panY: number
 }
 
 // Note: The actual implementation currently manages canvas state differently:
@@ -476,6 +492,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Responsibility:** Manages the main workspace where blocks are positioned and rendered. Handles grid overlay, drop zones, and block rendering.
 
 **Key Interfaces:**
+
 - `onBlockDrop(block: Block)` - Handle new block placement
 - `onBlockMove(blockId: string, position: {x, y})` - Handle block repositioning
 - `onBlockSelect(blockId: string)` - Handle block selection
@@ -490,6 +507,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Responsibility:** Displays available block templates organized by category, enables drag initiation from template thumbnails.
 
 **Key Interfaces:**
+
 - `getTemplatesByCategory(category: string)` - Filter templates
 - `onDragStart(typeId: string)` - Initiate template drag
 - `renderThumbnail(template: BlockTemplate)` - Display template preview
@@ -503,6 +521,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Responsibility:** Dynamically renders block instances with their customized props, handles component code execution and styling.
 
 **Key Interfaces:**
+
 - `renderBlock(block: Block, template: BlockTemplate)` - Render single block
 - `applyProps(component: React.ComponentType, props: any)` - Render component with props
 - `handleSelection(blockId: string)` - Apply selection styling
@@ -518,11 +537,13 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Implementation:** Managed via DragSlice in the Zustand store
 
 **Key Interfaces:**
+
 - `setDragState(state: Partial<DragState>)` - Update any part of drag state
 - `updateDragPosition(x: number, y: number)` - Update cursor position during drag
 - `clearDragState()` - Reset to initial state after drag ends
 
 **State Properties (from DragSlice):**
+
 - `isActive: boolean` - Whether a drag is in progress
 - `sourceType: 'library' | 'canvas' | null` - Where the drag originated
 - `draggedItem: any` - The template or block being dragged
@@ -538,6 +559,7 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Responsibility:** Handles all grid-related calculations including snapping, grid rendering, and Alt-key bypass logic.
 
 **Key Interfaces:**
+
 - `snapToGrid(x: number, y: number, bypass: boolean)` - Calculate snapped position
 - `getGridCells(x: number, y: number, width: number, height: number)` - Get occupied cells
 - `renderGridOverlay()` - Generate grid visual
@@ -547,12 +569,12 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 
 **Technology Stack:** Pure TypeScript calculations, CSS for grid visualization
 
-
 ### Block Registry
 
 **Responsibility:** Central repository for all available block templates, manages template lifecycle and instance creation.
 
 **Key Interfaces:**
+
 - `registerTemplate(template: BlockTemplate)` - Add new template
 - `getTemplate(typeId: string)` - Retrieve specific template
 - `generateBlockInstance(typeId: string, overrideProps?: any)` - Generate block instance with merged props (returns null if template not found)
@@ -569,11 +591,13 @@ Based on the architectural patterns, tech stack, and data models, here are the m
 **Responsibility:** Centralized state management for blocks and drag operations.
 
 **Store Structure:**
+
 - `store/index.ts` - Main store combining all slices
 - `store/slices/blocks.ts` - Block management slice with selectors
 - `store/slices/drag.ts` - Drag operation slice with selectors
 
 **Key Interfaces:**
+
 - `addBlock(block: Block)` - Add new block to canvas
 - `updateBlock(id: string, updates: Partial<Block>)` - Modify block properties
 - `removeBlock(id: string)` - Remove block from canvas
@@ -594,30 +618,30 @@ graph TB
         Sidebar[Block Library Sidebar]
         Renderer[Block Renderer]
     end
-    
+
     subgraph "Logic Layer"
         DragMgr[Drag Manager]
         GridMgr[Grid System Manager]
         Registry[Block Registry]
     end
-    
+
     subgraph "State Layer"
         Store[Zustand Store]
     end
-    
+
     Sidebar -->|Drag Start| DragMgr
     DragMgr -->|Calculate Position| GridMgr
     DragMgr -->|Update State| Store
-    
+
     Canvas -->|Render Blocks| Renderer
     Renderer -->|Get Template| Registry
-    
+
     Canvas -->|Grid Display| GridMgr
     Sidebar -->|Get Templates| Registry
-    
+
     Store -->|State Updates| Canvas
     Store -->|State Updates| Sidebar
-    
+
     style Store fill:#fff3e0
     style Registry fill:#d1c4e9
     style Canvas fill:#c8e6c9
@@ -651,12 +675,12 @@ sequenceDiagram
     Registry-->>Sidebar: BlockTemplate
     Sidebar->>DragMgr: startDrag('library', template)
     DragMgr->>Store: setDragState({isActive: true, sourceType: 'library'})
-    
+
     User->>Canvas: Drag over canvas
     Canvas->>GridMgr: calculateDropPreview(x, y)
     GridMgr-->>Canvas: Grid cells to highlight
     Canvas->>Canvas: Show blue highlight
-    
+
     User->>Canvas: Mouse up (drop)
     Canvas->>GridMgr: snapToGrid(x, y, altPressed)
     GridMgr-->>Canvas: Snapped position
@@ -764,9 +788,9 @@ sequenceDiagram
 
     Dev->>Comp: Create HeroComponent.tsx
     Dev->>Dev: Add thumbnail to public/thumbnails/
-    
+
     Note over Dev: Manual registration process
-    
+
     Dev->>Reg: Open registry.ts
     Dev->>Reg: Import HeroComponent
     Dev->>Reg: Define template object
@@ -775,7 +799,7 @@ sequenceDiagram
     Reg->>Reg: Define defaultProps
     Reg->>Reg: Reference component
     Reg->>Reg: Set dimensions
-    
+
     Dev->>Registry: Call registerTemplate(template)
     Registry->>Registry: Validate template structure
     Registry->>Registry: Add to templates Map
@@ -796,7 +820,7 @@ When persistence is added post-MVP, the schema would likely include:
 ```sql
 -- Future schema structure (not implemented in MVP)
 -- Projects table for saved canvases
--- Blocks table for persisted block instances  
+-- Blocks table for persisted block instances
 -- Templates table for custom user templates
 -- Assets table for uploaded images
 ```
@@ -838,27 +862,27 @@ src/
 
 ```typescript
 // Example component structure with actual store usage
-import { useCallback } from 'react';
-import { useAppStore } from '@/store';
-import { dragSelectors } from '@/store/slices/drag';
-import { blocksSelectors } from '@/store/slices/blocks';
+import { useCallback } from 'react'
+import { useAppStore } from '@/store'
+import { dragSelectors } from '@/store/slices/drag'
+import { blocksSelectors } from '@/store/slices/blocks'
 
 // Canvas Direct Rendering Pattern
 // The Canvas component renders blocks directly without a BlockInstance wrapper:
 export const Canvas: React.FC = () => {
   // Access store using selectors for optimal performance
-  const blocks = useAppStore(blocksSelectors.getAllBlocks);
-  const isDragging = useAppStore(dragSelectors.isDragging);
+  const blocks = useAppStore(blocksSelectors.getAllBlocks)
+  const isDragging = useAppStore(dragSelectors.isDragging)
 
   return (
     <div className="relative w-full h-full bg-slate-50 overflow-auto">
       {/* Render each block directly */}
       {blocks.map((block) => {
-        const template = blockRegistry.getTemplate(block.typeId);
-        if (!template) return null;
+        const template = blockRegistry.getTemplate(block.typeId)
+        if (!template) return null
 
-        const Component = template.component;
-        if (!Component) return null;
+        const Component = template.component
+        if (!Component) return null
 
         return (
           <div
@@ -876,7 +900,7 @@ export const Canvas: React.FC = () => {
           >
             <Component {...block.props} />
           </div>
-        );
+        )
       })}
 
       {/* Drag indicator overlay */}
@@ -886,8 +910,8 @@ export const Canvas: React.FC = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 ```
 
 ### State Management Architecture
@@ -896,55 +920,55 @@ export const Canvas: React.FC = () => {
 
 ```typescript
 // Actual Zustand store structure - simplified slices pattern
-export type AppStore = AppState & AppActions & DragSlice & BlocksSlice;
+export type AppStore = AppState & AppActions & DragSlice & BlocksSlice
 
 // AppState - global app state
 export interface AppState {
-  initialized: boolean;
+  initialized: boolean
 }
 
 export interface AppActions {
-  setInitialized: (initialized: boolean) => void;
+  setInitialized: (initialized: boolean) => void
 }
 
 // BlocksSlice - manages all block operations
 export interface BlocksSlice {
   // State
-  blocks: Block[];
+  blocks: Block[]
 
   // Actions
-  addBlock: (block: Block) => void;
-  updateBlock: (id: string, updates: Partial<Block>) => void;
-  removeBlock: (id: string) => void;
-  clearBlocks: () => void;
-  getHighestZIndex: () => number;
+  addBlock: (block: Block) => void
+  updateBlock: (id: string, updates: Partial<Block>) => void
+  removeBlock: (id: string) => void
+  clearBlocks: () => void
+  getHighestZIndex: () => number
 }
 
 // DragSlice - manages drag and drop operations
 export interface DragSlice extends DragState, DragActions {}
 
 export interface DragState {
-  isActive: boolean;
-  sourceType: 'library' | 'canvas' | null;
-  draggedItem: any; // The template or block being dragged
+  isActive: boolean
+  sourceType: 'library' | 'canvas' | null
+  draggedItem: any // The template or block being dragged
   position: {
-    x: number;
-    y: number;
-  };
+    x: number
+    y: number
+  }
   offset: {
-    x: number;
-    y: number;
-  };
+    x: number
+    y: number
+  }
 }
 
 export interface DragActions {
-  setDragState: (state: Partial<DragState>) => void;
-  updateDragPosition: (x: number, y: number) => void;
-  clearDragState: () => void;
+  setDragState: (state: Partial<DragState>) => void
+  updateDragPosition: (x: number, y: number) => void
+  clearDragState: () => void
 }
 
 // Note: Selection is currently handled via the 'selected' boolean field in each Block.
-// No separate SelectionSlice exists in the current implementation.
+// Selection is handled directly within BlocksSlice in the current implementation.
 // Future stories may introduce more sophisticated selection management.
 ```
 
@@ -983,22 +1007,24 @@ Since this is a single-page application, there's only one route - the main build
 ```typescript
 // The BlockRegistry manages all templates (lib/blocks/registry.ts)
 export class BlockRegistry {
-  private templates: Map<string, BlockTemplate> = new Map();
+  private templates: Map<string, BlockTemplate> = new Map()
 
   registerTemplate(template: BlockTemplate): void {
-    this.templates.set(template.typeId, template);
+    this.templates.set(template.typeId, template)
   }
 
   getTemplate(typeId: string): BlockTemplate | undefined {
-    return this.templates.get(typeId);
+    return this.templates.get(typeId)
   }
 
   generateBlockInstance(typeId: string, overrideProps?: any): Block | null {
-    const template = this.getTemplate(typeId);
-    if (!template) return null;
+    const template = this.getTemplate(typeId)
+    if (!template) return null
 
     return {
-      id: `${typeId}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+      id: `${typeId}-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 11)}`,
       typeId: template.typeId,
       props: { ...template.defaultProps, ...overrideProps },
       x: 0,
@@ -1007,22 +1033,22 @@ export class BlockRegistry {
       height: template.defaultHeight,
       z: 0,
       selected: false,
-    };
+    }
   }
 
   getAllTemplates(): BlockTemplate[] {
-    return Array.from(this.templates.values());
+    return Array.from(this.templates.values())
   }
 
   getCategories(): string[] {
-    const categories = new Set<string>();
-    this.templates.forEach((template) => categories.add(template.category));
-    return Array.from(categories);
+    const categories = new Set<string>()
+    this.templates.forEach((template) => categories.add(template.category))
+    return Array.from(categories)
   }
 }
 
 // Singleton instance
-export const blockRegistry = new BlockRegistry();
+export const blockRegistry = new BlockRegistry()
 ```
 
 ## Backend Architecture
@@ -1195,12 +1221,14 @@ npm run start      # Run production build locally
 ### Deployment Strategy
 
 **Frontend Deployment:**
+
 - **Platform:** Vercel (automatic from GitHub)
 - **Build Command:** `npm run build`
 - **Output Directory:** `.next`
 - **CDN/Edge:** Vercel Edge Network (automatic)
 
 **Backend Deployment:**
+
 - **Platform:** N/A - No backend for MVP
 - **Build Command:** N/A
 - **Deployment Method:** N/A
@@ -1226,22 +1254,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run type check
         run: npm run type-check
-      
+
       - name: Run linter
         run: npm run lint
-      
+
       - name: Run tests
         run: npm run test
 
@@ -1251,16 +1279,16 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
-      
+
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      
+
       - name: Build Project
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-      
+
       - name: Deploy to Vercel (Preview)
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
 
@@ -1270,43 +1298,46 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
-      
+
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      
+
       - name: Build Project
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      
+
       - name: Deploy to Vercel (Production)
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 ```
 
 ### Environments
 
-| Environment | Frontend URL | Backend URL | Purpose |
-|------------|--------------|-------------|---------|
-| Development | http://localhost:3000 | N/A | Local development |
-| Preview | https://draftcn-[branch]-[org].vercel.app | N/A | PR preview deployments |
-| Production | https://draftcn.vercel.app | N/A | Live environment |
+| Environment | Frontend URL                              | Backend URL | Purpose                |
+| ----------- | ----------------------------------------- | ----------- | ---------------------- |
+| Development | http://localhost:3000                     | N/A         | Local development      |
+| Preview     | https://draftcn-[branch]-[org].vercel.app | N/A         | PR preview deployments |
+| Production  | https://draftcn.vercel.app                | N/A         | Live environment       |
 
 ## Security and Performance
 
 ### Security Requirements
 
 **Frontend Security:**
+
 - CSP Headers: `default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval';` (for dynamic component rendering)
 - XSS Prevention: React's built-in escaping, sanitize any user-provided HTML
 - Secure Storage: No sensitive data stored (no auth in MVP)
 
 **Backend Security:**
+
 - Input Validation: N/A - No backend
 - Rate Limiting: N/A - No API
 - CORS Policy: N/A - No API
 
 **Authentication Security:**
+
 - Token Storage: N/A - No auth in MVP
 - Session Management: N/A
 - Password Policy: N/A
@@ -1314,11 +1345,13 @@ jobs:
 ### Performance Optimization
 
 **Frontend Performance:**
+
 - Bundle Size Target: < 500KB initial JS
 - Loading Strategy: Code splitting with React.lazy for block templates
 - Caching Strategy: Vercel Edge caching, browser caching for static assets
 
 **Backend Performance:**
+
 - Response Time Target: N/A - No backend
 - Database Optimization: N/A
 - Caching Strategy: N/A
@@ -1387,9 +1420,9 @@ tests/e2e/
 
 ```typescript
 // tests/unit/components/canvas/Canvas.test.tsx
-import { render, fireEvent } from '@testing-library/react';
-import { Canvas } from '@/components/canvas/Canvas';
-import { useAppStore } from '@/store';
+import { render, fireEvent } from '@testing-library/react'
+import { Canvas } from '@/components/canvas/Canvas'
+import { useAppStore } from '@/store'
 
 describe('Canvas', () => {
   const mockBlock = {
@@ -1401,62 +1434,62 @@ describe('Canvas', () => {
     width: 1200,
     height: 600,
     z: 1,
-    selected: false
-  };
+    selected: false,
+  }
 
   beforeEach(() => {
     // Clear store before each test
-    useAppStore.getState().clearBlocks();
-    useAppStore.getState().clearDragState();
-  });
+    useAppStore.getState().clearBlocks()
+    useAppStore.getState().clearDragState()
+  })
 
   it('renders blocks at correct position', () => {
-    const { container } = render(<Canvas />);
+    const { container } = render(<Canvas />)
 
     // Add block to store
-    useAppStore.getState().addBlock(mockBlock);
+    useAppStore.getState().addBlock(mockBlock)
 
     // Check block renders at correct position
-    const blockElement = container.querySelector('[data-block-id="test-1"]');
+    const blockElement = container.querySelector('[data-block-id="test-1"]')
     expect(blockElement).toHaveStyle({
       left: '100px',
       top: '200px',
       width: '1200px',
-      height: '600px'
-    });
-  });
+      height: '600px',
+    })
+  })
 
   it('renders blocks with gray border', () => {
-    const { container } = render(<Canvas />);
+    const { container } = render(<Canvas />)
 
     // Add block to store
-    useAppStore.getState().addBlock(mockBlock);
+    useAppStore.getState().addBlock(mockBlock)
 
-    const blockElement = container.querySelector('[data-block-id="test-1"]');
-    expect(blockElement).toHaveClass('border', 'border-gray-300');
-  });
+    const blockElement = container.querySelector('[data-block-id="test-1"]')
+    expect(blockElement).toHaveClass('border', 'border-gray-300')
+  })
 
   it('handles drop from library correctly', () => {
-    const { container } = render(<Canvas />);
+    const { container } = render(<Canvas />)
 
     // Simulate drag state from library
     useAppStore.getState().setDragState({
       isActive: true,
       draggedItem: mockTemplate,
       sourceType: 'library',
-      offset: { x: 50, y: 50 }
-    });
+      offset: { x: 50, y: 50 },
+    })
 
     // Simulate drop on canvas
-    const canvas = container.querySelector('[data-testid="canvas"]');
-    fireEvent.mouseUp(canvas, { clientX: 300, clientY: 400 });
+    const canvas = container.querySelector('[data-testid="canvas"]')
+    fireEvent.mouseUp(canvas, { clientX: 300, clientY: 400 })
 
     // Check block was added
-    const blocks = useAppStore.getState().blocks;
-    expect(blocks.length).toBe(1);
-    expect(blocks[0].typeId).toBe(mockTemplate.typeId);
-  });
-});
+    const blocks = useAppStore.getState().blocks
+    expect(blocks.length).toBe(1)
+    expect(blocks[0].typeId).toBe(mockTemplate.typeId)
+  })
+})
 ```
 
 #### Backend API Test
@@ -1469,29 +1502,29 @@ describe('Canvas', () => {
 
 ```typescript
 // tests/e2e/drag-drop.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test'
 
 test('drag block from library to canvas', async ({ page }) => {
-  await page.goto('/');
-  
+  await page.goto('/')
+
   // Find template in sidebar
-  const template = await page.locator('[data-template-id="hero-1"]');
-  const canvas = await page.locator('[data-canvas]');
-  
+  const template = await page.locator('[data-template-id="hero-1"]')
+  const canvas = await page.locator('[data-canvas]')
+
   // Drag template to canvas
   await template.dragTo(canvas, {
-    targetPosition: { x: 300, y: 300 }
-  });
-  
+    targetPosition: { x: 300, y: 300 },
+  })
+
   // Verify block was added
-  const block = await page.locator('[data-block-id]').first();
-  await expect(block).toBeVisible();
-  
+  const block = await page.locator('[data-block-id]').first()
+  await expect(block).toBeVisible()
+
   // Verify grid snapping
-  const boundingBox = await block.boundingBox();
-  expect(boundingBox?.x).toBe(300); // Snapped to grid
-  expect(boundingBox?.y).toBe(300);
-});
+  const boundingBox = await block.boundingBox()
+  expect(boundingBox?.x).toBe(300) // Snapped to grid
+  expect(boundingBox?.y).toBe(300)
+})
 ```
 
 ## Coding Standards
@@ -1509,16 +1542,16 @@ test('drag block from library to canvas', async ({ page }) => {
 
 ### Naming Conventions
 
-| Element | Frontend | Backend | Example |
-|---------|----------|---------|---------|
-| Components | PascalCase | - | `Canvas.tsx` |
-| Hooks | camelCase with 'use' | - | `useDrag.ts` |
-| Functions | camelCase | - | `snapToGrid()` |
-| Types/Interfaces | PascalCase | - | `BlockTemplate` |
-| Files | kebab-case or PascalCase | - | `block-renderer.tsx` |
-| CSS Classes | kebab-case | - | `canvas-grid` |
-| Store Actions | camelCase | - | `addBlock()` |
-| Constants | UPPER_SNAKE_CASE | - | `GRID_SIZE` |
+| Element          | Frontend                 | Backend | Example              |
+| ---------------- | ------------------------ | ------- | -------------------- |
+| Components       | PascalCase               | -       | `Canvas.tsx`         |
+| Hooks            | camelCase with 'use'     | -       | `useDrag.ts`         |
+| Functions        | camelCase                | -       | `snapToGrid()`       |
+| Types/Interfaces | PascalCase               | -       | `BlockTemplate`      |
+| Files            | kebab-case or PascalCase | -       | `block-renderer.tsx` |
+| CSS Classes      | kebab-case               | -       | `canvas-grid`        |
+| Store Actions    | camelCase                | -       | `addBlock()`         |
+| Constants        | UPPER_SNAKE_CASE         | -       | `GRID_SIZE`          |
 
 ## Error Handling Strategy
 
@@ -1534,7 +1567,7 @@ sequenceDiagram
 
     User->>Component: Trigger action
     Component->>Component: Try operation
-    
+
     alt Success
         Component->>Store: Update state
         Store-->>Component: State updated
@@ -1550,11 +1583,11 @@ sequenceDiagram
 
 ```typescript
 interface AppError {
-  code: string;
-  message: string;
-  details?: Record<string, any>;
-  timestamp: string;
-  recoverable: boolean;
+  code: string
+  message: string
+  details?: Record<string, any>
+  timestamp: string
+  recoverable: boolean
 }
 ```
 
@@ -1564,22 +1597,18 @@ interface AppError {
 // Error boundary for components
 class BlockErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Block rendering error:', error, errorInfo);
-    
+    console.error('Block rendering error:', error, errorInfo)
+
     // Reset block to safe state
-    this.props.resetBlock(this.props.blockId);
+    this.props.resetBlock(this.props.blockId)
   }
-  
+
   render() {
     if (this.state.hasError) {
-      return (
-        <div className="error-placeholder">
-          Failed to render block
-        </div>
-      );
+      return <div className="error-placeholder">Failed to render block</div>
     }
-    
-    return this.props.children;
+
+    return this.props.children
   }
 }
 ```
@@ -1602,12 +1631,14 @@ class BlockErrorBoundary extends Component<Props, State> {
 ### Key Metrics
 
 **Frontend Metrics:**
+
 - Core Web Vitals (LCP, FID, CLS)
 - JavaScript errors in console
 - Drag operation frame rate (target: 60fps)
 - Initial bundle size
 
 **Backend Metrics:**
+
 - N/A - No backend for MVP
 
 ## Checklist Results Report
@@ -1621,49 +1652,56 @@ class BlockErrorBoundary extends Component<Props, State> {
 
 ### Section Analysis
 
-| Section | Pass Rate | Notes |
-|---------|-----------|-------|
-| Requirements Alignment | 100% | All PRD requirements addressed |
-| Architecture Fundamentals | 100% | Clear diagrams and component definitions |
-| Technical Stack | 100% | Specific versions defined |
-| Frontend Design | 100% | Comprehensive component architecture |
-| Resilience & Operations | 90% | Limited monitoring for MVP |
-| Security & Compliance | N/A | No auth/data persistence in MVP |
-| Implementation Guidance | 100% | Clear standards and patterns |
-| Dependencies | 100% | Minimal external dependencies |
-| AI Agent Suitability | 100% | Optimized for AI implementation |
-| Accessibility | 80% | Basic keyboard support, full a11y post-MVP |
+| Section                   | Pass Rate | Notes                                      |
+| ------------------------- | --------- | ------------------------------------------ |
+| Requirements Alignment    | 100%      | All PRD requirements addressed             |
+| Architecture Fundamentals | 100%      | Clear diagrams and component definitions   |
+| Technical Stack           | 100%      | Specific versions defined                  |
+| Frontend Design           | 100%      | Comprehensive component architecture       |
+| Resilience & Operations   | 90%       | Limited monitoring for MVP                 |
+| Security & Compliance     | N/A       | No auth/data persistence in MVP            |
+| Implementation Guidance   | 100%      | Clear standards and patterns               |
+| Dependencies              | 100%      | Minimal external dependencies              |
+| AI Agent Suitability      | 100%      | Optimized for AI implementation            |
+| Accessibility             | 80%       | Basic keyboard support, full a11y post-MVP |
 
 ### Risk Assessment
 
 **Top 5 Risks by Severity:**
 
 1. **Performance at Scale (Medium)** - Rendering many blocks may impact 60fps target
-   - *Mitigation:* React.memo optimization, virtualization for block library
+
+   - _Mitigation:_ React.memo optimization, virtualization for block library
 
 2. **Template Registration Complexity (Low)** - Manual template registration requires consistency
-   - *Mitigation:* Clear documentation, validation during registration
+
+   - _Mitigation:_ Clear documentation, validation during registration
 
 3. **Browser Memory Limits (Low)** - No persistence means all state in memory
-   - *Mitigation:* Reasonable block limits, memory monitoring
+
+   - _Mitigation:_ Reasonable block limits, memory monitoring
 
 4. **Grid Calculation Performance (Low)** - Rapid drag movements need optimization
-   - *Mitigation:* Throttled calculations, requestAnimationFrame
+
+   - _Mitigation:_ Throttled calculations, requestAnimationFrame
 
 5. **Dynamic Component Security (Low)** - Executing component code from templates
-   - *Mitigation:* Sanitization, trusted templates only
+   - _Mitigation:_ Sanitization, trusted templates only
 
 ### Recommendations
 
 **Must-fix before development:**
+
 - ✅ All critical items addressed
 
 **Should-fix for better quality:**
+
 - Add performance profiling setup
 - Include basic error telemetry
 - Define block count limits
 
 **Nice-to-have improvements:**
+
 - Progressive Web App capabilities
 - Offline template caching
 - Advanced keyboard shortcuts

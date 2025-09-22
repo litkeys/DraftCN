@@ -33,6 +33,7 @@ export const Canvas: React.FC = () => {
   const clearSelection = useAppStore((state) => state.clearSelection)
   const updateBlock = useAppStore((state) => state.updateBlock)
   const setDragState = useAppStore((state) => state.setDragState)
+  const blurSearchInput = useAppStore((state) => state.blurSearchInput)
 
   /**
    * Calculate the required canvas height based on block positions
@@ -43,7 +44,9 @@ export const Canvas: React.FC = () => {
     }
 
     // Find the lowest point of all blocks
-    const lowestPoint = Math.max(...blocks.map((block) => block.y + block.height))
+    const lowestPoint = Math.max(
+      ...blocks.map((block) => block.y + block.height)
+    )
 
     // Return minimum of 1200px or lowest point + 1200px buffer
     return Math.max(1200, lowestPoint + 1200)
@@ -65,6 +68,7 @@ export const Canvas: React.FC = () => {
 
       // Always select only this block (clears multi-selection)
       selectBlock(blockId)
+      blurSearchInput?.() // Blur search input when block is selected
 
       // Get canvas bounds for coordinate system conversion
       if (!canvasRef.current) return
@@ -91,7 +95,7 @@ export const Canvas: React.FC = () => {
         draggedItem: block,
       })
     },
-    [blocks, selectBlock, setDragState]
+    [blocks, selectBlock, setDragState, blurSearchInput]
   )
 
   /**
@@ -105,8 +109,9 @@ export const Canvas: React.FC = () => {
       if (dragManager.isDragging()) return
 
       selectBlock(blockId) // BlocksSlice handles deselection of others and sync
+      blurSearchInput?.() // Blur search input when block is selected
     },
-    [selectBlock]
+    [selectBlock, blurSearchInput]
   )
 
   /**
@@ -228,10 +233,13 @@ export const Canvas: React.FC = () => {
         // Canvas block drag completion - apply position correction
         if (draggedItem && draggedItem.id && canvasRef.current) {
           // Get the current block to check its final position
-          const block = blocks.find(b => b.id === draggedItem.id)
+          const block = blocks.find((b) => b.id === draggedItem.id)
           if (block) {
             // Apply position constraints to ensure block stays within canvas
-            const correctedX = Math.max(0, Math.min(block.x, 1200 - block.width))
+            const correctedX = Math.max(
+              0,
+              Math.min(block.x, 1200 - block.width)
+            )
             const correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
 
             // Update to corrected position if needed
@@ -296,10 +304,13 @@ export const Canvas: React.FC = () => {
       if (sourceType === 'canvas') {
         // Apply position correction before ending drag
         if (draggedItem && draggedItem.id) {
-          const block = blocks.find(b => b.id === draggedItem.id)
+          const block = blocks.find((b) => b.id === draggedItem.id)
           if (block) {
             // Apply position constraints to ensure block stays within canvas
-            const correctedX = Math.max(0, Math.min(block.x, 1200 - block.width))
+            const correctedX = Math.max(
+              0,
+              Math.min(block.x, 1200 - block.width)
+            )
             const correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
 
             // Update to corrected position if needed

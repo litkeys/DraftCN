@@ -5,6 +5,7 @@
 **Purpose:** Represents an individual draggable UI component instance on the canvas with complete positioning, rendering information, and customized content.
 
 **Key Attributes:**
+
 - `id: string` - Unique identifier for every block instance
 - `typeId: string` - References the block template type (e.g., "hero-1")
 - `props: any` - Customized content following template's props interface
@@ -16,37 +17,43 @@
 - `selected: boolean` - Whether the block is currently selected
 
 #### TypeScript Interface
+
 ```typescript
 interface Block {
-  id: string;
-  typeId: string;
-  props: any; // Matches template's specific props interface
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  z: number;
-  selected: boolean;
+  id: string
+  typeId: string
+  props: any // Matches template's specific props interface
+  x: number
+  y: number
+  width: number
+  height: number
+  z: number
+  selected: boolean
 }
 ```
 
 #### Relationships
+
 - References a BlockTemplate via typeId
 - Props must conform to template's interface structure
 - Z-index determines visual stacking when blocks overlap
 
 #### Selection Architecture Note
-The `selected` field in Block is initialized as `false` when blocks are created but is **not actively maintained**. Selection state is managed by the SelectionSlice which maintains a `selectedBlockIds` array. This approach:
-- Avoids updating every block when selection changes (performance)
-- Keeps selection logic centralized in SelectionSlice
-- Allows for efficient multi-select operations
-- The `selected` field exists for potential future use or serialization
+
+The `selected` field in Block works in conjunction with BlocksSlice's `selectedBlockIds` array using a dual-state approach:
+
+- **`selectedBlockIds` array** - Single source of truth maintained by BlocksSlice
+- **`block.selected` boolean** - Synchronized field on each block for efficient rendering
+- When selection changes, BlocksSlice updates both the array and individual block fields
+- Components render based on the `selected` field for optimal performance
+- This approach centralizes selection logic while maintaining rendering efficiency
 
 ### BlockTemplate
 
 **Purpose:** Defines reusable block blueprints with their dependencies, default props, and rendering code.
 
 **Key Attributes:**
+
 - `typeId: string` - Unique template identifier (e.g., "hero-1")
 - `name: string` - Display name for the template
 - `category: string` - Template category for grouping
@@ -60,23 +67,25 @@ The `selected` field in Block is initialized as `false` when blocks are created 
 - `minimumHeight: number` - Minimum allowed height for resizing
 
 #### TypeScript Interface
+
 ```typescript
 interface BlockTemplate {
-  typeId: string;
-  name: string;
-  category: string;
-  thumbnail: string;
-  dependencies: string[];
-  defaultProps: any;
-  component: React.ComponentType<any>;
-  defaultWidth: number;
-  defaultHeight: number;
-  minimumWidth: number;
-  minimumHeight: number;
+  typeId: string
+  name: string
+  category: string
+  thumbnail: string
+  dependencies: string[]
+  defaultProps: any
+  component: React.ComponentType<any>
+  defaultWidth: number
+  defaultHeight: number
+  minimumWidth: number
+  minimumHeight: number
 }
 ```
 
 #### Relationships
+
 - Templates are instantiated to create Block instances
 - Global CSS file assumed to contain all required styles
 - Dependencies list extracted from import statements
@@ -86,16 +95,17 @@ interface BlockTemplate {
 **Purpose:** Manages the collection of available block templates and provides template instantiation utilities.
 
 #### TypeScript Interface
+
 ```typescript
 interface BlockRegistry {
-  templates: Map<string, BlockTemplate>;
-  categories: string[];
-  
+  templates: Map<string, BlockTemplate>
+  categories: string[]
+
   // Methods for template management
-  registerTemplate(template: BlockTemplate): void;
-  getTemplate(typeId: string): BlockTemplate | undefined;
-  getTemplatesByCategory(category: string): BlockTemplate[];
-  generateBlockInstance(typeId: string, props?: any): Block;
+  registerTemplate(template: BlockTemplate): void
+  getTemplate(typeId: string): BlockTemplate | undefined
+  getTemplatesByCategory(category: string): BlockTemplate[]
+  generateBlockInstance(typeId: string, props?: any): Block
 }
 ```
 
@@ -104,6 +114,7 @@ interface BlockRegistry {
 **Purpose:** Manual registration of block templates in the central registry.
 
 #### Registration Structure
+
 ```typescript
 // Example of manually registering a template
 const heroTemplate: BlockTemplate = {
@@ -115,25 +126,26 @@ const heroTemplate: BlockTemplate = {
   defaultProps: {
     title: 'Welcome to Our Site',
     subtitle: 'Build amazing websites visually',
-    buttonText: 'Get Started'
+    buttonText: 'Get Started',
   },
   component: HeroComponent,
   defaultWidth: 1200,
   defaultHeight: 400,
   minimumWidth: 600,
-  minimumHeight: 200
-};
+  minimumHeight: 200,
+}
 
 // Register the template
-registry.registerTemplate(heroTemplate);
+registry.registerTemplate(heroTemplate)
 ```
 
 ### Methods for Block Template Development
 
 #### 1. Manual Template Registration
+
 ```typescript
 // Step 1: Create your React component
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 
 const HeroComponent = ({ title, subtitle, buttonText }) => {
   return (
@@ -142,8 +154,8 @@ const HeroComponent = ({ title, subtitle, buttonText }) => {
       <p>{subtitle}</p>
       <Button>{buttonText}</Button>
     </div>
-  );
-};
+  )
+}
 
 // Step 2: Register the template in the registry
 const heroTemplate: BlockTemplate = {
@@ -155,41 +167,44 @@ const heroTemplate: BlockTemplate = {
   defaultProps: {
     title: 'Welcome',
     subtitle: 'Build amazing websites',
-    buttonText: 'Get Started'
+    buttonText: 'Get Started',
   },
   component: HeroComponent,
   defaultWidth: 1200,
   defaultHeight: 400,
   minimumWidth: 600,
-  minimumHeight: 200
-};
+  minimumHeight: 200,
+}
 
 // Step 3: Add to registry
-blockRegistry.registerTemplate(heroTemplate);
+blockRegistry.registerTemplate(heroTemplate)
 ```
 
 #### 2. Block Instance Creation
+
 ```typescript
 function createBlockInstance(
   typeId: string,
   position: { x: number; y: number },
   customProps?: any
 ): Block {
-  const template = blockRegistry.getTemplate(typeId);
-  if (!template) throw new Error(`Template ${typeId} not found`);
-  
-  const props = customProps || template.defaultProps;
-  
+  const template = blockRegistry.getTemplate(typeId)
+  if (!template) throw new Error(`Template ${typeId} not found`)
+
+  const props = customProps || template.defaultProps
+
   return {
-    id: `${typeId}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+    id: `${typeId}-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 11)}`,
     typeId,
     props,
     x: snapToGrid(position.x),
     y: snapToGrid(position.y),
     width: template.defaultWidth,
     height: template.defaultHeight,
-    z: getNextZIndex()
-  };
+    z: getNextZIndex(),
+  }
 }
 ```
 
@@ -200,11 +215,11 @@ Create a new React component file in `templates/` folder:
 
 ```typescript
 // templates/navbar/NavbarComponent.tsx
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 
 interface NavbarProps {
-  logo: string;
-  links: Array<{ label: string; href: string; }>;
+  logo: string
+  links: Array<{ label: string; href: string }>
 }
 
 const NavbarComponent = ({ logo, links }: NavbarProps) => {
@@ -212,24 +227,24 @@ const NavbarComponent = ({ logo, links }: NavbarProps) => {
     <nav className="navbar">
       <div className="logo">{logo}</div>
       <ul className="nav-links">
-        {links.map(link => (
+        {links.map((link) => (
           <li key={link.href}>
             <a href={link.href}>{link.label}</a>
           </li>
         ))}
       </ul>
     </nav>
-  );
-};
+  )
+}
 
-export { NavbarComponent };
+export { NavbarComponent }
 ```
 
 **Step 2: Add Template to Registry**
 In `lib/blocks/registry.ts`, add your template:
 
 ```typescript
-import { NavbarComponent } from '@/templates/navbar/NavbarComponent';
+import { NavbarComponent } from '@/templates/navbar/NavbarComponent'
 
 const navbarTemplate: BlockTemplate = {
   typeId: 'navbar-1',
@@ -242,18 +257,18 @@ const navbarTemplate: BlockTemplate = {
     links: [
       { label: 'Home', href: '/' },
       { label: 'About', href: '/about' },
-      { label: 'Contact', href: '/contact' }
-    ]
+      { label: 'Contact', href: '/contact' },
+    ],
   },
   component: NavbarComponent,
   defaultWidth: 1200,
   defaultHeight: 80,
   minimumWidth: 800,
-  minimumHeight: 60
-};
+  minimumHeight: 60,
+}
 
 // Register the template
-registry.registerTemplate(navbarTemplate);
+registry.registerTemplate(navbarTemplate)
 ```
 
 **Step 3: Add Thumbnail**
@@ -278,52 +293,84 @@ The application uses Zustand with a sliced pattern for state management, separat
 
 #### BlocksSlice
 
+**Purpose:** Manages all block instances and their selection state in a unified slice.
+
 ```typescript
 // State
 interface BlocksState {
-  blocks: Block[];
+  blocks: Block[]
+  selectedBlockIds: string[] // Array of selected block IDs
 }
 
 // Actions
 interface BlocksActions {
-  addBlock: (block: Block) => void;
-  updateBlock: (id: string, updates: Partial<Block>) => void;
-  removeBlock: (id: string) => void;
-  clearBlocks: () => void;
-  getHighestZIndex: () => number;
+  // Block management
+  addBlock: (block: Block) => void
+  updateBlock: (id: string, updates: Partial<Block>) => void
+  removeBlock: (id: string) => void
+  clearBlocks: () => void
+  getHighestZIndex: () => number
+
+  // Selection management
+  selectBlock: (blockId: string) => void
+  clearSelection: () => void
 }
 
 // Combined type
-type BlocksSlice = BlocksState & BlocksActions;
+type BlocksSlice = BlocksState & BlocksActions
+
+// Helper selectors
+const blocksSelectors = {
+  getAllBlocks: (state: BlocksSlice) => state.blocks,
+  getBlockById: (state: BlocksSlice, id: string) =>
+    state.blocks.find((block) => block.id === id),
+  getSelectedBlockIds: (state: BlocksSlice) => state.selectedBlockIds,
+  hasSelection: (state: BlocksSlice) => state.selectedBlockIds.length > 0,
+  isBlockSelected: (state: BlocksSlice, blockId: string) =>
+    state.selectedBlockIds.includes(blockId),
+}
 ```
+
+#### Selection Architecture
+
+**Dual-State Approach:** BlocksSlice maintains selection state in two places for optimal performance:
+
+- **`selectedBlockIds` array** - Single source of truth for selection, used for persistence and operations
+- **`block.selected` boolean** - Synchronized field on each block for efficient rendering
+
+**Selection Synchronization:** When `selectBlock()` or `clearSelection()` is called:
+
+1. Updates the `selectedBlockIds` array
+2. Updates the `selected` field on all affected blocks
+3. Components render based on the `selected` field for performance
 
 #### DragSlice
 
 ```typescript
 // State
 interface DragState {
-  isActive: boolean;
-  sourceType: 'library' | 'canvas' | null;
-  draggedItem: any; // The item being dragged (block template or existing block)
+  isActive: boolean
+  sourceType: 'library' | 'canvas' | null
+  draggedItem: any // The item being dragged (block template or existing block)
   position: {
-    x: number;
-    y: number;
-  };
+    x: number
+    y: number
+  }
   offset: {
-    x: number;
-    y: number;
-  };
+    x: number
+    y: number
+  }
 }
 
 // Actions
 interface DragActions {
-  setDragState: (state: Partial<DragState>) => void;
-  updateDragPosition: (x: number, y: number) => void;
-  clearDragState: () => void;
+  setDragState: (state: Partial<DragState>) => void
+  updateDragPosition: (x: number, y: number) => void
+  clearDragState: () => void
 }
 
 // Combined type
-type DragSlice = DragState & DragActions;
+type DragSlice = DragState & DragActions
 
 // Helper selectors
 const dragSelectors = {
@@ -332,66 +379,74 @@ const dragSelectors = {
   getDragPosition: (state: DragSlice) => state.position,
   getDragOffset: (state: DragSlice) => state.offset,
   getDragSource: (state: DragSlice) => state.sourceType,
-};
+}
 ```
 
 #### AppStore (Combined Store)
 
 ```typescript
 interface AppState {
-  initialized: boolean;
+  initialized: boolean
 }
 
 interface AppActions {
-  setInitialized: (initialized: boolean) => void;
+  setInitialized: (initialized: boolean) => void
 }
 
-type AppStore = AppState & AppActions & DragSlice & BlocksSlice & SelectionSlice;
-```
-
-#### SelectionSlice
-
-**Purpose:** Centralized management of block selection state, supporting both single and multi-select operations.
-
-```typescript
-// State
-interface SelectionState {
-  selectedBlockIds: string[]; // Array for persistence/serialization
-  lastSelectedBlockId: string | null; // For shift-click range selection
-  // Internal: Use Set for O(1) lookups in selectors
-  _selectedSet?: Set<string>; // Derived from array in selectors
-}
-
-// Actions
-interface SelectionActions {
-  // Core selection operations
-  selectBlock: (blockId: string, mode?: 'replace' | 'add' | 'toggle') => void;
-  deselectBlock: (blockId: string) => void;
-  clearSelection: () => void;
-
-  // Multi-select operations
-  selectMultiple: (blockIds: string[]) => void;
-  selectRange: (fromBlockId: string, toBlockId: string) => void;
-  selectAll: () => void;
-
-  // Rectangle selection
-  selectWithinBounds: (bounds: { x: number; y: number; width: number; height: number }) => void;
-
-}
-
-// Combined type
-type SelectionSlice = SelectionState & SelectionActions;
+type AppStore = AppState & AppActions & DragSlice & BlocksSlice & UISlice
 ```
 
 #### Selection Patterns
 
-1. **Single Selection**
-   - Click on block: Replace current selection
-   - Click on canvas: Clear selection
+**Current Implementation (BlocksSlice):**
 
-2. **Multi-Selection**
-   - Ctrl/Cmd + Click: Toggle individual block
-   - Shift + Click: Select range between last and current
-   - Ctrl/Cmd + A: Select all blocks
-   - Drag rectangle: Select blocks within bounds
-
+1. **Single Selection**
+   - Click on block: Replace current selection with single block
+   - Click on canvas: Clear all selection
+
+**Future Multi-Selection Support:**
+The current `selectBlock()` implementation supports only single selection. Multi-select patterns would require extending BlocksActions with:
+
+- `toggleBlockSelection(blockId: string)` - Toggle individual block
+- `selectRange(fromBlockId: string, toBlockId: string)` - Range selection
+- `selectAll()` - Select all blocks
+- `selectWithinBounds(bounds)` - Rectangle selection
+
+#### UISlice
+
+**Purpose:** Manages cross-component UI interactions and focus behavior to prevent user input conflicts and provide smooth UX transitions.
+
+```typescript
+// State
+interface UIState {
+  // No state properties currently - designed for actions only
+  // Future: could store focus state, modal state, etc.
+}
+
+// Actions
+interface UIActions {
+  blurSearchInput: () => void // Triggers search input to lose focus
+  registerSearchBlurCallback: (callback: () => void) => void // Registers blur handler
+}
+
+// Combined type
+type UISlice = UIState & UIActions
+```
+
+#### UI Interaction Patterns
+
+1. **Search Focus Management**
+
+   - **Search Focus → Clear Selection**: When user focuses search input, canvas block selection is automatically cleared
+   - **Block Selection → Blur Search**: When user selects a block, search input automatically loses focus
+   - Prevents backspace conflicts between search editing and block deletion
+
+2. **Callback Registration Pattern**
+
+   - `registerSearchBlurCallback()` allows BlockLibrary to register a blur function
+   - `blurSearchInput()` triggers the registered callback from Canvas component
+   - Decouples components while enabling cross-component communication
+
+3. **Safe Execution**
+   - Uses optional chaining (`blurSearchInput?.()`) for test environment compatibility
+   - No state dependencies - purely action-based interactions

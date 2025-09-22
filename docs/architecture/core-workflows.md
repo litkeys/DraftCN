@@ -18,12 +18,12 @@ sequenceDiagram
     Registry-->>Sidebar: BlockTemplate
     Sidebar->>DragMgr: startDrag('library', template)
     DragMgr->>Store: setDragState({active: true, sourceType: 'library'})
-    
+
     User->>Canvas: Drag over canvas
     Canvas->>GridMgr: calculateDropPreview(x, y)
     GridMgr-->>Canvas: Grid cells to highlight
     Canvas->>Canvas: Show blue highlight
-    
+
     User->>Canvas: Mouse up (drop)
     Canvas->>Canvas: Detect drop position from event
     Canvas->>GridMgr: snapToGrid(x, y, altPressed)
@@ -51,15 +51,15 @@ sequenceDiagram
     participant Store as Zustand Store
 
     User->>Block: Click on block
-    Block->>SelectMgr: handleBlockClick(blockId, event)
-    SelectMgr->>Store: selectBlock(blockId, 'replace')
+    Block->>BlocksSlice: handleBlockClick(blockId, event)
+    BlocksSlice->>Store: selectBlock(blockId, 'replace')
     Store-->>Canvas: Update selection state
     Canvas->>Block: Show selection highlight
-    
+
     User->>Block: Mouse down and drag
     Block->>DragMgr: startDrag('canvas', blockId)
     DragMgr->>Store: setDragState({active: true, sourceType: 'canvas'})
-    
+
     loop During drag
         User->>Canvas: Mouse move
         Canvas->>Block: Update position (follows cursor)
@@ -67,7 +67,7 @@ sequenceDiagram
         GridMgr-->>Canvas: Grid cells preview
         Canvas->>Canvas: Show snap preview
     end
-    
+
     User->>Canvas: Mouse up
     Canvas->>Canvas: Detect final position from event
     Canvas->>GridMgr: snapToGrid(newX, newY, altPressed)
@@ -88,32 +88,32 @@ sequenceDiagram
     participant Canvas
     participant Block
     participant Store as Zustand Store
-    participant SelectMgr as SelectionSlice
+    participant BlocksSlice as Blocks/Selection State
     participant Renderer as Block Renderer
 
     alt Single Selection
         User->>Block: Click to select
-        SelectMgr->>Store: selectBlock(blockId, 'replace')
+        BlocksSlice->>Store: selectBlock(blockId, 'replace')
     else Multiple Selection
         User->>Block: Ctrl+Click multiple blocks
-        SelectMgr->>Store: selectBlock(blockId, 'toggle')
+        BlocksSlice->>Store: selectBlock(blockId, 'toggle')
     end
 
-    SelectMgr-->>Block: Update selection state
+    BlocksSlice-->>Block: Update selection state
     Block->>Block: Show blue selection border
 
     User->>User: Press Delete/Backspace key
     User->>Canvas: Keyboard event
-    Canvas->>SelectMgr: getSelectedBlockIds()
-    SelectMgr-->>Canvas: Array of selected blockIds
+    Canvas->>BlocksSlice: getSelectedBlockIds()
+    BlocksSlice-->>Canvas: Array of selected blockIds
 
     loop For each selected block
         Canvas->>Store: removeBlock(blockId)
         Store->>Store: Remove from blocks array
     end
 
-    Canvas->>SelectMgr: clearSelection()
-    SelectMgr-->>Canvas: Selection cleared
+    Canvas->>BlocksSlice: clearSelection()
+    BlocksSlice-->>Canvas: Selection cleared
     Store-->>Canvas: State change notification
     Canvas->>Renderer: Remove blocks from DOM
     Renderer-->>Canvas: Blocks removed
@@ -132,24 +132,24 @@ sequenceDiagram
 
     User->>Canvas: Start dragging block
     DragMgr->>Store: setDragState({active: true})
-    
+
     User->>User: Hold Alt key
     User->>Canvas: Alt key down event
     Canvas->>DragMgr: setBypassGrid(true)
     DragMgr->>Canvas: Disable grid preview
-    
+
     loop While Alt held
         User->>Canvas: Mouse move
         Canvas->>Canvas: Follow cursor exactly
         Note over Canvas: No grid snapping preview
     end
-    
+
     User->>Canvas: Mouse up (with Alt)
     Canvas->>GridMgr: snapToGrid(x, y, bypass=true)
     GridMgr-->>Canvas: Exact pixel position (no snapping)
     Canvas->>Store: updateBlock(blockId, {x: exactX, y: exactY})
     Store-->>Canvas: State updated
-    
+
     User->>User: Release Alt key
     Canvas->>DragMgr: setBypassGrid(false)
 ```
@@ -161,30 +161,30 @@ sequenceDiagram
     participant User
     participant Canvas
     participant Block
-    participant SelectMgr as SelectionSlice
+    participant BlocksSlice as Blocks/Selection State
     participant Store as Zustand Store
 
     Note over User: Ctrl/Cmd + Click Flow
     User->>Block: Ctrl+Click on block A
-    SelectMgr->>Store: selectBlock(blockA, 'toggle')
+    BlocksSlice->>Store: selectBlock(blockA, 'toggle')
     Store->>Store: Add to selectedBlockIds
-    SelectMgr-->>Block: Show selection
+    BlocksSlice-->>Block: Show selection
 
     User->>Block: Ctrl+Click on block B
-    SelectMgr->>Store: selectBlock(blockB, 'toggle')
+    BlocksSlice->>Store: selectBlock(blockB, 'toggle')
     Store->>Store: Add to selectedBlockIds
-    SelectMgr-->>Block: Show selection
+    BlocksSlice-->>Block: Show selection
 
     Note over User: Shift + Click Flow (Range)
     User->>Block: Click on block A (without modifier)
-    SelectMgr->>Store: selectBlock(blockA, 'replace')
+    BlocksSlice->>Store: selectBlock(blockA, 'replace')
     Store->>Store: Set as lastSelectedBlockId
 
     User->>Block: Shift+Click on block C
-    SelectMgr->>Store: selectRange(blockA, blockC)
+    BlocksSlice->>Store: selectRange(blockA, blockC)
     Store->>Store: Calculate blocks between A and C
     Store->>Store: Select all blocks in range
-    SelectMgr-->>Canvas: Update all blocks in range
+    BlocksSlice-->>Canvas: Update all blocks in range
 ```
 
 ### Rectangle Selection (Drag to Select)
@@ -193,7 +193,7 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant Canvas
-    participant SelectMgr as SelectionSlice
+    participant BlocksSlice as Blocks/Selection State
     participant Store as Zustand Store
 
     User->>Canvas: Mouse down on empty canvas
@@ -210,11 +210,11 @@ sequenceDiagram
 
     User->>Canvas: Mouse up
     Canvas->>Canvas: Calculate final bounds
-    Canvas->>SelectMgr: selectWithinBounds(bounds)
-    SelectMgr->>Store: Get all blocks
-    SelectMgr->>SelectMgr: Filter blocks within bounds
-    SelectMgr->>SelectMgr: Update selectedBlockIds
-    SelectMgr-->>Canvas: Selection updated
+    Canvas->>BlocksSlice: selectWithinBounds(bounds)
+    BlocksSlice->>Store: Get all blocks
+    BlocksSlice->>BlocksSlice: Filter blocks within bounds
+    BlocksSlice->>BlocksSlice: Update selectedBlockIds
+    BlocksSlice-->>Canvas: Selection updated
     Canvas->>Canvas: Hide selection rectangle
     Canvas->>Canvas: Show selected blocks
 ```
@@ -225,16 +225,16 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant Canvas
-    participant SelectMgr as SelectionSlice
+    participant BlocksSlice as Blocks/Selection State
     participant Store as Zustand Store
 
     User->>User: Press Ctrl/Cmd + A
     User->>Canvas: Keyboard event
     Canvas->>Canvas: Detect selectAll shortcut
-    Canvas->>SelectMgr: selectAll()
-    SelectMgr->>Store: Get all block IDs
-    SelectMgr->>SelectMgr: Set selectedBlockIds to all blocks
-    SelectMgr-->>Canvas: All blocks selected
+    Canvas->>BlocksSlice: selectAll()
+    BlocksSlice->>Store: Get all block IDs
+    BlocksSlice->>BlocksSlice: Set selectedBlockIds to all blocks
+    BlocksSlice-->>Canvas: All blocks selected
     Canvas->>Canvas: Update all block visuals
     Canvas->>Canvas: Show selection count in UI
 ```
@@ -245,14 +245,14 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant Canvas
-    participant SelectMgr as SelectionSlice
+    participant BlocksSlice as Blocks/Selection State
     participant DragMgr as Drag Manager
     participant Store as Zustand Store
 
     Note over User: Multiple blocks selected
     User->>Canvas: Mouse down on selected block
-    Canvas->>SelectMgr: getSelectedBlockIds()
-    SelectMgr-->>Canvas: Array of selected IDs
+    Canvas->>BlocksSlice: getSelectedBlockIds()
+    BlocksSlice-->>Canvas: Array of selected IDs
     Canvas->>DragMgr: startDrag('canvas', selectedBlockIds)
     DragMgr->>DragMgr: Store drag offset for each block
 
@@ -284,9 +284,9 @@ sequenceDiagram
 
     Dev->>Comp: Create HeroComponent.tsx
     Dev->>Dev: Add thumbnail to public/thumbnails/
-    
+
     Note over Dev: Manual registration process
-    
+
     Dev->>Reg: Open registry.ts
     Dev->>Reg: Import HeroComponent
     Dev->>Reg: Define template object
@@ -295,11 +295,10 @@ sequenceDiagram
     Reg->>Reg: Define defaultProps
     Reg->>Reg: Reference component
     Reg->>Reg: Set dimensions
-    
+
     Dev->>Registry: Call registerTemplate(template)
     Registry->>Registry: Validate template structure
     Registry->>Registry: Add to templates Map
     Registry->>Store: updateAvailableTemplates()
     Store-->>Store: Notify UI of new templates
 ```
-

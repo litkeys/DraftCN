@@ -1,10 +1,11 @@
-"use client"
+'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { blockRegistry } from '@/lib/blocks/registry'
 import type { BlockTemplate } from '@/types/template'
 import { TemplateCard } from './TemplateCard'
 import { Loader2, Search, X } from 'lucide-react'
+import { useAppStore } from '@/store'
 import { Input } from '@/components/ui/input'
 
 export const BlockLibrary: React.FC = () => {
@@ -13,6 +14,13 @@ export const BlockLibrary: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Block selection actions
+  const clearSelection = useAppStore((state) => state.clearSelection)
+  const registerSearchBlurCallback = useAppStore(
+    (state) => state.registerSearchBlurCallback
+  )
 
   const filterTemplatesBySearch = (
     templates: BlockTemplate[],
@@ -36,7 +44,7 @@ export const BlockLibrary: React.FC = () => {
         setLoading(true)
 
         // Simulate async loading for better UX
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100))
 
         const allTemplates = blockRegistry.getAllTemplates()
         const allCategories = blockRegistry.getCategories()
@@ -45,7 +53,9 @@ export const BlockLibrary: React.FC = () => {
         setCategories(allCategories)
       } catch (error) {
         console.error('Failed to load templates:', error)
-        setError(error instanceof Error ? error.message : 'Failed to load templates')
+        setError(
+          error instanceof Error ? error.message : 'Failed to load templates'
+        )
       } finally {
         setLoading(false)
       }
@@ -53,6 +63,17 @@ export const BlockLibrary: React.FC = () => {
 
     loadTemplates()
   }, [])
+
+  // Register the search blur callback when component mounts
+  useEffect(() => {
+    const blurCallback = () => {
+      if (searchInputRef.current) {
+        searchInputRef.current.blur()
+      }
+    }
+
+    registerSearchBlurCallback(blurCallback)
+  }, [registerSearchBlurCallback])
 
   if (loading) {
     return (
@@ -101,11 +122,16 @@ export const BlockLibrary: React.FC = () => {
   }
 
   // Check if search has no results across all categories
-  const hasSearchResults = searchQuery.trim() && categories.some((category) => {
-    const categoryTemplates = blockRegistry.getTemplatesByCategory(category)
-    const filteredTemplates = filterTemplatesBySearch(categoryTemplates, searchQuery)
-    return filteredTemplates.length > 0
-  })
+  const hasSearchResults =
+    searchQuery.trim() &&
+    categories.some((category) => {
+      const categoryTemplates = blockRegistry.getTemplatesByCategory(category)
+      const filteredTemplates = filterTemplatesBySearch(
+        categoryTemplates,
+        searchQuery
+      )
+      return filteredTemplates.length > 0
+    })
 
   const showNoResults = searchQuery.trim() && !hasSearchResults
 
@@ -116,10 +142,12 @@ export const BlockLibrary: React.FC = () => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
+          ref={searchInputRef}
           type="text"
           placeholder="Search blocks..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onFocus={() => clearSelection()}
           className="pl-9 pr-9"
         />
         {searchQuery && (
@@ -133,17 +161,20 @@ export const BlockLibrary: React.FC = () => {
       </div>
 
       {showNoResults ? (
-        <div className="text-sm text-muted-foreground">
-          No blocks found
-        </div>
+        <div className="text-sm text-muted-foreground">No blocks found</div>
       ) : categories.length === 0 ? (
         <div className="text-sm text-muted-foreground">
-          No categories available. Templates need to be organized into categories.
+          No categories available. Templates need to be organized into
+          categories.
         </div>
       ) : (
         categories.map((category) => {
-          const categoryTemplates = blockRegistry.getTemplatesByCategory(category)
-          const filteredTemplates = filterTemplatesBySearch(categoryTemplates, searchQuery)
+          const categoryTemplates =
+            blockRegistry.getTemplatesByCategory(category)
+          const filteredTemplates = filterTemplatesBySearch(
+            categoryTemplates,
+            searchQuery
+          )
 
           // Only show category if it has matching templates
           if (filteredTemplates.length === 0) {
