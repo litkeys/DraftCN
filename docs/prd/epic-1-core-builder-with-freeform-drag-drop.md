@@ -184,11 +184,14 @@ so that I can zoom in for detailed work or zoom out to see the full design.
    - 100% = 0.8 scale (default, fits more content)
    - 125% = 1.0 scale (true 1:1)
    - Scale calculation: actualScale = sliderValue \* 0.8
-6. Canvas and all blocks scale proportionally based on zoom level using CSS transform: scale()
-7. Block previews during drag operations also scale according to current zoom level
+6. Canvas uses viewport/camera system: blocks scale proportionally by recalculating positions, dimensions, and font sizes based on zoom level (no CSS transforms)
+7. Block previews during drag operations scale by applying zoom factor to preview dimensions and positioning
 8. Canvas container maintains its 80% viewport width regardless of zoom level
 9. When zoomed in beyond container width, horizontal scrollbar appears at bottom of canvas container
 10. Vertical scrollbar behavior remains unchanged (appears when content exceeds viewport height)
-11. Block drag and drop operations work correctly at all zoom levels (mouse position properly calculated)
-12. Block selection and movement maintain accuracy at all zoom levels
+11. Block drag and drop operations work correctly at all zoom levels (mouse coordinates calculated relative to zoom factor)
+12. Block selection and movement maintain accuracy at all zoom levels using camera-relative positioning
 13. Zoom level persists during the session (doesn't reset on block operations)
+14. All block properties (width, height, x, y, fontSize) dynamically calculated using: `scaledValue = originalValue * zoomFactor`
+15. Text remains crisp at all zoom levels (no transform-induced blurriness)
+16. No CSS transform stacking context issues with overlapping or positioned elements
