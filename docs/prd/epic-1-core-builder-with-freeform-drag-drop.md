@@ -184,11 +184,21 @@ so that I can zoom in for detailed work or zoom out to see the full design.
    - 100% = 0.8 scale (default, fits more content)
    - 125% = 1.0 scale (true 1:1)
    - Scale calculation: actualScale = sliderValue \* 0.8
-6. Canvas uses viewport/camera system: blocks scale proportionally by recalculating positions, dimensions, and font sizes based on zoom level (no CSS transforms)
-7. Block previews during drag operations scale by applying zoom factor to preview dimensions and positioning
-8. When zoomed in beyond container width, horizontal scrollbar appears at bottom of canvas container
-9. Block drag and drop from library sidebar maintain accuracy at all zoom levels using camera-relative positioning
-10. Block selection and movement on canvas maintain accuracy at all zoom levels using camera-relative positioning
-11. All block properties (width, height, x, y, fontSize) dynamically calculated using: `scaledValue = originalValue * zoomFactor`
-12. Text remains crisp at all zoom levels (no transform-induced blurriness)
-13. No CSS transform stacking context issues with overlapping or wrongly positioned elements
+6. Canvas uses world coordinate system with transform-based rendering:
+   - Backend/state stores only world-space block data (x, y, width, height in fixed pixels)
+   - Frontend maintains single zoom factor and pan offset (panX, panY) in global state
+   - No zoom information stored with document data
+7. Input event handling uses inverse transform for world coordinates:
+   - Mouse/touch to world: `worldX = (screenX - panX) / zoom`, `worldY = (screenY - panY) / zoom`
+   - Coordinate origin (0, 0) at top-left of canvas container
+   - All drag, drop, and selection operations work in world space
+8. Rendering applies forward transform from world to screen coordinates:
+   - Screen position: `screenX = worldX * zoom + panX`, `screenY = worldY * zoom + panY`
+   - Block dimensions: `screenWidth = worldWidth * zoom`, `screenHeight = worldHeight * zoom`
+   - Rendering context multiplies by zoom factor when drawing blocks
+9. Block previews during drag operations render at current zoom level using world coordinate transforms
+10. When zoomed in beyond container width, horizontal scrollbar appears at bottom of canvas container (container-based scrolling)
+11. Block drag and drop from library sidebar uses world coordinate conversion for accurate placement at any zoom level
+12. Block selection and movement on canvas operate in world space, ensuring consistent behavior across zoom levels
+13. Client can render document at any zoom level without modifying underlying world-space data
+14. Text rendering scales proportionally with zoom (text sizes stored in world units)
