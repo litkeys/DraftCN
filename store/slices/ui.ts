@@ -4,7 +4,9 @@ import type { StateCreator } from 'zustand'
  * UI state interface
  */
 export interface UIState {
-  // UI state can be extended here if needed in the future
+  zoom: number
+  panX: number
+  panY: number
 }
 
 /**
@@ -13,6 +15,8 @@ export interface UIState {
 export interface UIActions {
   blurSearchInput: () => void
   registerSearchBlurCallback: (callback: () => void) => void
+  setZoom: (zoom: number) => void
+  setPan: (x: number, y: number) => void
 }
 
 /**
@@ -24,7 +28,9 @@ export type UISlice = UIState & UIActions
  * Initial UI state
  */
 const initialUIState: UIState = {
-  // Empty for now, can be extended
+  zoom: 100,
+  panX: 0,
+  panY: 0,
 }
 
 // Store the search blur callback
@@ -47,6 +53,10 @@ export const createUISlice: StateCreator<UISlice> = (set, get) => ({
   registerSearchBlurCallback: (callback) => {
     searchBlurCallback = callback
   },
+
+  setZoom: (zoom) => set({ zoom }),
+
+  setPan: (x, y) => set({ panX: x, panY: y }),
 })
 
 /**
