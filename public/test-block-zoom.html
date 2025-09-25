@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Block Content Zoom Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .controls { margin-bottom: 20px; }
+        .canvas-container {
+            width: 100%;
+            height: 600px;
+            overflow: auto;
+            border: 2px solid #ddd;
+            background: #f0f0f0;
+        }
+        .canvas {
+            background: white;
+            position: relative;
+            border: 1px solid #999;
+            margin: 20px;
+        }
+        .block-outer {
+            position: absolute;
+            border: 2px solid #3b82f6;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .block-inner {
+            /* This div scales the content */
+            transform-origin: top left;
+        }
+        .block-content {
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .block-content h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .block-content p {
+            font-size: 1rem;
+            color: #666;
+        }
+        .block-content .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Block Content Zoom Test</h1>
+    <div class="controls">
+        <label>Zoom: <span id="zoomValue">100%</span></label>
+        <input type="range" id="zoomSlider" min="25" max="200" step="25" value="100">
+    </div>
+    <div class="canvas-container">
+        <div id="canvas" class="canvas"></div>
+    </div>
+
+    <script>
+        const slider = document.getElementById('zoomSlider');
+        const zoomValue = document.getElementById('zoomValue');
+        const canvas = document.getElementById('canvas');
+
+        // Test block in world coordinates
+        const block = {
+            x: 100, // world coordinates
+            y: 50,
+            width: 400,
+            height: 200
+        };
+
+        function calculateActualScale(zoom) {
+            return zoom * 0.008;
+        }
+
+        function updateCanvas() {
+            const zoom = parseInt(slider.value);
+            const actualScale = calculateActualScale(zoom);
+
+            zoomValue.textContent = zoom + '%';
+
+            // Scale canvas
+            canvas.style.width = (1200 * actualScale) + 'px';
+            canvas.style.height = (800 * actualScale) + 'px';
+
+            // Clear and redraw block
+            canvas.innerHTML = '';
+
+            // Create outer container (positioned and sized)
+            const blockOuter = document.createElement('div');
+            blockOuter.className = 'block-outer';
+            blockOuter.style.left = (block.x * actualScale) + 'px';
+            blockOuter.style.top = (block.y * actualScale) + 'px';
+            blockOuter.style.width = (block.width * actualScale) + 'px';
+            blockOuter.style.height = (block.height * actualScale) + 'px';
+
+            // Create inner container (scales content)
+            const blockInner = document.createElement('div');
+            blockInner.className = 'block-inner';
+            blockInner.style.transform = `scale(${actualScale})`;
+            blockInner.style.width = block.width + 'px';
+            blockInner.style.height = block.height + 'px';
+
+            // Create content (original size)
+            const content = document.createElement('div');
+            content.className = 'block-content';
+            content.innerHTML = `
+                <h1>Hero Section</h1>
+                <p>This content scales properly with zoom!</p>
+                <div class="button">Learn More</div>
+            `;
+
+            blockInner.appendChild(content);
+            blockOuter.appendChild(blockInner);
+            canvas.appendChild(blockOuter);
+        }
+
+        slider.addEventListener('input', updateCanvas);
+        updateCanvas();
+    </script>
+</body>
+</html>

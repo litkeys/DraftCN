@@ -8,6 +8,12 @@ import { blockRegistry } from '@/lib/blocks/registry'
 import { dragManager } from '@/lib/drag/manager'
 import { DropPreview } from './DropPreview'
 import { useKeyboard } from '@/hooks/useKeyboard'
+import {
+  calculateActualScale,
+  screenToWorld,
+  worldToScreen,
+  worldDimensionsToScreen,
+} from '@/lib/canvas/transforms'
 import type { BlockTemplate } from '@/types/template'
 
 /**
@@ -35,22 +41,39 @@ export const Canvas: React.FC = () => {
   const setDragState = useAppStore((state) => state.setDragState)
   const blurSearchInput = useAppStore((state) => state.blurSearchInput)
 
+  // Get zoom and pan state
+  const zoom = useAppStore((state) => state.zoom)
+  const panX = useAppStore((state) => state.panX)
+  const panY = useAppStore((state) => state.panY)
+
   /**
-   * Calculate the required canvas height based on block positions
+   * Calculate the required canvas dimensions based on block positions and zoom
    */
-  const calculateCanvasHeight = useMemo(() => {
-    if (blocks.length === 0) {
-      return 1200 // Minimum height when empty
+  const calculateCanvasDimensions = useMemo(() => {
+    const baseWidth = 1200
+    const baseMinHeight = 1200
+
+    // Calculate actual scale for zoom
+    const actualScale = calculateActualScale(zoom)
+
+    // Calculate height based on blocks
+    let worldHeight = baseMinHeight
+    if (blocks.length > 0) {
+      // Find the lowest point of all blocks in world coordinates
+      const lowestPoint = Math.max(
+        ...blocks.map((block) => block.y + block.height)
+      )
+      worldHeight = Math.max(baseMinHeight, lowestPoint + 1200)
     }
 
-    // Find the lowest point of all blocks
-    const lowestPoint = Math.max(
-      ...blocks.map((block) => block.y + block.height)
-    )
-
-    // Return minimum of 1200px or lowest point + 1200px buffer
-    return Math.max(1200, lowestPoint + 1200)
-  }, [blocks])
+    // Transform dimensions to screen coordinates
+    return {
+      width: baseWidth * actualScale,
+      height: worldHeight * actualScale,
+      worldWidth: baseWidth,
+      worldHeight: worldHeight,
+    }
+  }, [blocks, zoom])
 
   /**
    * Handle mouse down on block (for drag initiation)
@@ -74,14 +97,17 @@ export const Canvas: React.FC = () => {
       if (!canvasRef.current) return
       const rect = canvasRef.current.getBoundingClientRect()
 
-      // Convert mouse position to canvas-relative coordinates
+      // Convert mouse position to canvas-relative screen coordinates
       const canvasMouseX = e.clientX - rect.left
       const canvasMouseY = e.clientY - rect.top
 
-      // Calculate offset from mouse to block origin (both in canvas coordinates)
+      // Convert mouse to world coordinates
+      const worldMouse = screenToWorld(canvasMouseX, canvasMouseY, zoom, panX, panY)
+
+      // Calculate offset from mouse to block origin (in world coordinates)
       const mouseOffset = {
-        x: canvasMouseX - block.x,
-        y: canvasMouseY - block.y,
+        x: worldMouse.x - block.x,
+        y: worldMouse.y - block.y,
       }
 
       // Start drag
@@ -95,7 +121,7 @@ export const Canvas: React.FC = () => {
         draggedItem: block,
       })
     },
-    [blocks, selectBlock, setDragState, blurSearchInput]
+    [blocks, selectBlock, setDragState, blurSearchInput, zoom, panX, panY]
   )
 
   /**
@@ -182,12 +208,18 @@ export const Canvas: React.FC = () => {
         return
       }
 
-      // Calculate drop position relative to canvas, accounting for click offset
-      let dropX = e.clientX - rect.left - (offset?.x || 0)
-      let dropY = e.clientY - rect.top - (offset?.y || 0)
+      // Calculate drop position in world coordinates
+      const screenX = e.clientX - rect.left
+      const screenY = e.clientY - rect.top
+      const worldPos = screenToWorld(screenX, screenY, zoom, panX, panY)
 
-      // Constrain position to canvas boundaries (1200px width)
-      dropX = Math.max(0, Math.min(dropX, 1200 - newBlock.width))
+      // Apply offset in world coordinates
+      let dropX = worldPos.x - (offset?.x || 0)
+      let dropY = worldPos.y - (offset?.y || 0)
+
+      // Constrain position to canvas boundaries in world coordinates
+      const worldCanvasWidth = 1200 // World coordinate width
+      dropX = Math.max(0, Math.min(dropX, worldCanvasWidth - newBlock.width))
       dropY = Math.max(0, dropY) // Allow vertical extension but not negative
 
       // Update block position to drop coordinates
@@ -216,6 +248,9 @@ export const Canvas: React.FC = () => {
       addBlock,
       getHighestZIndex,
       selectBlock,
+      zoom,
+      panX,
+      panY,
     ]
   )
 
@@ -235,10 +270,11 @@ export const Canvas: React.FC = () => {
           // Get the current block to check its final position
           const block = blocks.find((b) => b.id === draggedItem.id)
           if (block) {
-            // Apply position constraints to ensure block stays within canvas
+            // Apply position constraints to ensure block stays within canvas (world coordinates)
+            const worldCanvasWidth = 1200
             const correctedX = Math.max(
               0,
-              Math.min(block.x, 1200 - block.width)
+              Math.min(block.x, worldCanvasWidth - block.width)
             )
             const correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
 
@@ -271,9 +307,14 @@ export const Canvas: React.FC = () => {
         if (!canvasRef.current) return
         const rect = canvasRef.current.getBoundingClientRect()
 
-        // Calculate new block position based on mouse position minus stored offset
-        const newX = e.clientX - rect.left - (offset?.x || 0)
-        const newY = e.clientY - rect.top - (offset?.y || 0)
+        // Calculate new block position in world coordinates
+        const screenX = e.clientX - rect.left
+        const screenY = e.clientY - rect.top
+        const worldPos = screenToWorld(screenX, screenY, zoom, panX, panY)
+
+        // Apply offset in world coordinates
+        const newX = worldPos.x - (offset?.x || 0)
+        const newY = worldPos.y - (offset?.y || 0)
 
         // Update the dragged block's position in real-time without constraints
         // This allows for smooth dragging without jarring corrections
@@ -282,7 +323,7 @@ export const Canvas: React.FC = () => {
         }
       }
     },
-    [sourceType, offset, draggedItem, updateBlock]
+    [sourceType, offset, draggedItem, updateBlock, zoom, panX, panY]
   )
 
   /**
@@ -306,10 +347,11 @@ export const Canvas: React.FC = () => {
         if (draggedItem && draggedItem.id) {
           const block = blocks.find((b) => b.id === draggedItem.id)
           if (block) {
-            // Apply position constraints to ensure block stays within canvas
+            // Apply position constraints to ensure block stays within canvas (world coordinates)
+            const worldCanvasWidth = 1200
             const correctedX = Math.max(
               0,
-              Math.min(block.x, 1200 - block.width)
+              Math.min(block.x, worldCanvasWidth - block.width)
             )
             const correctedY = Math.max(0, block.y) // Allow vertical extension but not negative
 
@@ -334,7 +376,7 @@ export const Canvas: React.FC = () => {
     >
       <div
         ref={canvasRef}
-        className="relative w-[1200px] bg-white shadow-md outline outline-1 outline-gray-200 mx-auto"
+        className="relative bg-white shadow-md outline outline-1 outline-gray-200 mx-auto"
         onClick={handleCanvasClick}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
@@ -342,7 +384,9 @@ export const Canvas: React.FC = () => {
         onMouseLeave={handleMouseLeave}
         data-testid="canvas"
         style={{
-          minHeight: `${calculateCanvasHeight}px`,
+          width: `${calculateCanvasDimensions.width}px`,
+          minHeight: `${calculateCanvasDimensions.height}px`,
+          transformOrigin: 'top left',
         }}
       >
         {/* Render dropped blocks */}
@@ -358,6 +402,11 @@ export const Canvas: React.FC = () => {
             return null
           }
 
+          // Transform world coordinates to screen coordinates for rendering
+          const screenPos = worldToScreen(block.x, block.y, zoom, panX, panY)
+          const screenDimensions = worldDimensionsToScreen(block.width, block.height, zoom)
+          const actualScale = calculateActualScale(zoom)
+
           return (
             <div
               key={block.id}
@@ -369,12 +418,13 @@ export const Canvas: React.FC = () => {
                   : ''
               }`}
               style={{
-                left: block.x,
-                top: block.y,
-                width: block.width,
-                height: block.height,
+                left: screenPos.x,
+                top: screenPos.y,
+                width: screenDimensions.width,
+                height: screenDimensions.height,
                 zIndex: block.z,
                 userSelect: 'none', // Prevent text selection during drag
+                overflow: 'hidden', // Prevent content from overflowing scaled container
               }}
               onClick={(e) => handleBlockClick(block.id, e)}
               onMouseDown={(e) => handleBlockMouseDown(block.id, e)}
@@ -382,7 +432,16 @@ export const Canvas: React.FC = () => {
               data-selected={block.selected}
               data-testid={`block-${block.id}`}
             >
-              <Component {...block.props} />
+              <div
+                style={{
+                  transform: `scale(${actualScale})`,
+                  transformOrigin: 'top left',
+                  width: `${block.width}px`,
+                  height: `${block.height}px`,
+                }}
+              >
+                <Component {...block.props} />
+              </div>
             </div>
           )
         })}

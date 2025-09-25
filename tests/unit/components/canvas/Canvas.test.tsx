@@ -3284,4 +3284,242 @@ describe('Canvas', () => {
       expect(container).toHaveClass('overflow-y-auto')
     })
   })
+
+  describe('Zoom functionality', () => {
+    let mockStore: any
+
+    beforeEach(() => {
+      mockStore = {
+        isDragging: false,
+        getDraggedItem: null,
+        getDragSource: null,
+        getDragOffset: null,
+        clearDragState: vi.fn(),
+        addBlock: vi.fn(),
+        updateBlock: vi.fn(),
+        getHighestZIndex: vi.fn(() => 0),
+        blocks: [],
+        selectBlock: vi.fn(),
+        clearSelection: vi.fn(),
+        setDragState: vi.fn(),
+        blurSearchInput: vi.fn(),
+        zoom: 100, // Default zoom
+        panX: 0,
+        panY: 0,
+      }
+
+      ;(useAppStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        (selector: any) => {
+          if (typeof selector === 'function') {
+            return selector(mockStore)
+          }
+          return mockStore
+        }
+      )
+    })
+
+    it('should apply zoom transform to block positions', () => {
+      const testBlock: Block = {
+        id: 'test-block',
+        typeId: 'test-type',
+        x: 100, // World coordinate
+        y: 200, // World coordinate
+        width: 150,
+        height: 100,
+        z: 1,
+        props: {},
+        selected: false,
+      }
+
+      mockStore.blocks = [testBlock]
+      mockStore.zoom = 125 // 125% zoom = 1.0 scale
+
+      // Mock the template and component
+      ;(blockRegistry.getTemplate as ReturnType<typeof vi.fn>).mockReturnValue({
+        component: () => <div>Test Component</div>,
+      })
+
+      render(<Canvas />)
+
+      const block = screen.getByTestId('block-test-block')
+
+      // At 125% zoom (1.0 scale), world coordinates = screen coordinates
+      expect(block).toHaveStyle({
+        left: '100px',
+        top: '200px',
+        width: '150px',
+        height: '100px',
+      })
+    })
+
+    it('should scale blocks at different zoom levels', () => {
+      const testBlock: Block = {
+        id: 'test-block',
+        typeId: 'test-type',
+        x: 100, // World coordinate
+        y: 100, // World coordinate
+        width: 100,
+        height: 100,
+        z: 1,
+        props: {},
+        selected: false,
+      }
+
+      mockStore.blocks = [testBlock]
+
+      // Mock the template and component
+      ;(blockRegistry.getTemplate as ReturnType<typeof vi.fn>).mockReturnValue({
+        component: () => <div>Test Component</div>,
+      })
+
+      // Test at 50% zoom (0.4 scale)
+      mockStore.zoom = 50
+      const { rerender } = render(<Canvas />)
+      let block = screen.getByTestId('block-test-block')
+      expect(block).toHaveStyle({
+        left: '40px', // 100 * 0.4
+        top: '40px',  // 100 * 0.4
+        width: '40px', // 100 * 0.4
+        height: '40px', // 100 * 0.4
+      })
+
+      // Test at 200% zoom (1.6 scale)
+      mockStore.zoom = 200
+      rerender(<Canvas />)
+      block = screen.getByTestId('block-test-block')
+      expect(block).toHaveStyle({
+        left: '160px', // 100 * 1.6
+        top: '160px',  // 100 * 1.6
+        width: '160px', // 100 * 1.6
+        height: '160px', // 100 * 1.6
+      })
+    })
+
+    it('should apply pan offsets to block positions', () => {
+      const testBlock: Block = {
+        id: 'test-block',
+        typeId: 'test-type',
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 100,
+        z: 1,
+        props: {},
+        selected: false,
+      }
+
+      mockStore.blocks = [testBlock]
+      mockStore.zoom = 100 // 0.8 scale
+      mockStore.panX = 50
+      mockStore.panY = 30
+
+      // Mock the template and component
+      ;(blockRegistry.getTemplate as ReturnType<typeof vi.fn>).mockReturnValue({
+        component: () => <div>Test Component</div>,
+      })
+
+      render(<Canvas />)
+
+      const block = screen.getByTestId('block-test-block')
+
+      // Position = world * scale + pan
+      expect(block).toHaveStyle({
+        left: '130px', // 100 * 0.8 + 50
+        top: '110px',  // 100 * 0.8 + 30
+      })
+    })
+
+    it('should scale block content proportionally with zoom', () => {
+      const testBlock: Block = {
+        id: 'test-block',
+        typeId: 'test-type',
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 100,
+        z: 1,
+        props: {},
+        selected: false,
+      }
+
+      mockStore.blocks = [testBlock]
+
+      // Mock the template and component
+      ;(blockRegistry.getTemplate as ReturnType<typeof vi.fn>).mockReturnValue({
+        component: () => <div>Test Component</div>,
+      })
+
+      // Test at 100% zoom (0.8 scale)
+      mockStore.zoom = 100
+      const { rerender } = render(<Canvas />)
+      let block = screen.getByTestId('block-test-block')
+      // The inner div should have the transform scale
+      const innerDiv = block.firstElementChild as HTMLElement
+      expect(innerDiv).toHaveStyle({
+        transform: 'scale(0.8)', // 0.8 scale
+        transformOrigin: 'top left',
+        width: '100px',
+        height: '100px',
+      })
+
+      // Test at 125% zoom (1.0 scale)
+      mockStore.zoom = 125
+      rerender(<Canvas />)
+      block = screen.getByTestId('block-test-block')
+      const innerDiv125 = block.firstElementChild as HTMLElement
+      expect(innerDiv125).toHaveStyle({
+        transform: 'scale(1)', // 1.0 scale
+      })
+
+      // Test at 200% zoom (1.6 scale)
+      mockStore.zoom = 200
+      rerender(<Canvas />)
+      block = screen.getByTestId('block-test-block')
+      const innerDiv200 = block.firstElementChild as HTMLElement
+      expect(innerDiv200).toHaveStyle({
+        transform: 'scale(1.6)', // 1.6 scale
+      })
+    })
+
+    it('should maintain world coordinates in block state', () => {
+      const testBlock: Block = {
+        id: 'test-block',
+        typeId: 'test-type',
+        x: 100, // These should remain constant
+        y: 200,
+        width: 150,
+        height: 100,
+        z: 1,
+        props: {},
+        selected: false,
+      }
+
+      mockStore.blocks = [testBlock]
+
+      // Mock the template and component
+      ;(blockRegistry.getTemplate as ReturnType<typeof vi.fn>).mockReturnValue({
+        component: () => <div>Test Component</div>,
+      })
+
+      // Change zoom level
+      mockStore.zoom = 50
+      const { rerender } = render(<Canvas />)
+
+      // Block state should still have world coordinates
+      expect(mockStore.blocks[0].x).toBe(100)
+      expect(mockStore.blocks[0].y).toBe(200)
+      expect(mockStore.blocks[0].width).toBe(150)
+      expect(mockStore.blocks[0].height).toBe(100)
+
+      // Change zoom again
+      mockStore.zoom = 200
+      rerender(<Canvas />)
+
+      // World coordinates should remain unchanged
+      expect(mockStore.blocks[0].x).toBe(100)
+      expect(mockStore.blocks[0].y).toBe(200)
+      expect(mockStore.blocks[0].width).toBe(150)
+      expect(mockStore.blocks[0].height).toBe(100)
+    })
+  })
 })
