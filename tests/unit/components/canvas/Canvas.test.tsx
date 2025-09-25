@@ -3307,7 +3307,6 @@ describe('Canvas', () => {
         panX: 0,
         panY: 0,
       }
-
       ;(useAppStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
         (selector: any) => {
           if (typeof selector === 'function') {
@@ -3378,7 +3377,7 @@ describe('Canvas', () => {
       let block = screen.getByTestId('block-test-block')
       expect(block).toHaveStyle({
         left: '40px', // 100 * 0.4
-        top: '40px',  // 100 * 0.4
+        top: '40px', // 100 * 0.4
         width: '40px', // 100 * 0.4
         height: '40px', // 100 * 0.4
       })
@@ -3389,7 +3388,7 @@ describe('Canvas', () => {
       block = screen.getByTestId('block-test-block')
       expect(block).toHaveStyle({
         left: '160px', // 100 * 1.6
-        top: '160px',  // 100 * 1.6
+        top: '160px', // 100 * 1.6
         width: '160px', // 100 * 1.6
         height: '160px', // 100 * 1.6
       })
@@ -3425,7 +3424,7 @@ describe('Canvas', () => {
       // Position = world * scale + pan
       expect(block).toHaveStyle({
         left: '130px', // 100 * 0.8 + 50
-        top: '110px',  // 100 * 0.8 + 30
+        top: '110px', // 100 * 0.8 + 30
       })
     })
 

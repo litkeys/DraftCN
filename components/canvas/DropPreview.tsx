@@ -1,8 +1,13 @@
-"use client"
+'use client'
 
 import React from 'react'
 import { useAppStore } from '@/store'
 import { dragSelectors } from '@/store/slices/drag'
+import {
+  calculateActualScale,
+  screenToWorld,
+  worldToScreen,
+} from '@/lib/canvas/transforms'
 import type { BlockTemplate } from '@/types/template'
 
 /**
@@ -17,17 +22,65 @@ export const DropPreview: React.FC = () => {
   const offset = useAppStore(dragSelectors.getDragOffset)
   const sourceType = useAppStore(dragSelectors.getDragSource)
 
+  // Get zoom and pan state for proper coordinate transformation
+  const zoom = useAppStore((state) => state.zoom)
+  const panX = useAppStore((state) => state.panX)
+  const panY = useAppStore((state) => state.panY)
+
   // Don't render if not dragging or if dragging from canvas
   if (!isActive || !draggedItem || sourceType === 'canvas') {
     return null
   }
 
-  // Calculate the preview position
-  // Subtract the initial click offset to maintain relative positioning
+  // Calculate the preview position using canvas-relative coordinates
+  // This ensures the preview aligns with where the drop will actually occur
+  const calculatePreviewPosition = () => {
+    // Find the canvas element to get its bounds
+    const canvasElement = document.querySelector(
+      '[data-testid="canvas"]'
+    ) as HTMLDivElement
+    if (!canvasElement) {
+      // Fallback to original positioning if canvas not found
+      return {
+        left: position.x - offset.x,
+        top: position.y - offset.y,
+      }
+    }
+
+    const rect = canvasElement.getBoundingClientRect()
+
+    // Convert global mouse position to canvas-relative coordinates
+    const canvasRelativeX = position.x - rect.left
+    const canvasRelativeY = position.y - rect.top
+
+    // Convert to world coordinates using the same logic as Canvas drop
+    const worldPos = screenToWorld(
+      canvasRelativeX,
+      canvasRelativeY,
+      zoom,
+      panX,
+      panY
+    )
+
+    // Convert back to screen coordinates (accounting for zoom/pan)
+    const screenPos = worldToScreen(worldPos.x, worldPos.y, zoom, panX, panY)
+
+    // Calculate actual scale for offset adjustment
+    const actualScale = calculateActualScale(zoom)
+
+    // Position preview at the calculated screen position, adjusted for offset
+    return {
+      left: rect.left + screenPos.x - offset.x * actualScale,
+      top: rect.top + screenPos.y - offset.y * actualScale,
+    }
+  }
+
+  const previewPosition = calculatePreviewPosition()
+
   const previewStyle: React.CSSProperties = {
     position: 'fixed',
-    left: position.x - offset.x,
-    top: position.y - offset.y,
+    left: previewPosition.left,
+    top: previewPosition.top,
     opacity: 0.7,
     pointerEvents: 'none',
     zIndex: 9999,
@@ -40,30 +93,44 @@ export const DropPreview: React.FC = () => {
       // For library items, render the template preview
       const template = draggedItem as BlockTemplate
       const Component = template.component
-      
+
+      // Calculate scale for preview to match canvas zoom
+      const actualScale = calculateActualScale(zoom)
+      const scaledWidth = (template.defaultWidth || 200) * actualScale
+      const scaledHeight = (template.defaultHeight || 100) * actualScale
+
       return (
         <div
           style={{
-            width: template.defaultWidth || 200,
-            height: template.defaultHeight || 100,
+            width: scaledWidth,
+            height: scaledHeight,
             ...previewStyle,
           }}
           data-testid="drop-preview"
         >
           <div className="border-2 border-dashed border-primary/50 rounded-lg bg-background/90 shadow-2xl h-full w-full overflow-hidden">
-            {Component ? (
-              <Component {...(template.defaultProps || {})} />
-            ) : (
-              // Fallback for templates without component
-              <div className="flex items-center justify-center h-full p-4">
-                <div className="text-center">
-                  <div className="text-lg font-semibold">{template.name}</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    {template.category}
+            <div
+              style={{
+                transform: `scale(${actualScale})`,
+                transformOrigin: 'top left',
+                width: template.defaultWidth || 200,
+                height: template.defaultHeight || 100,
+              }}
+            >
+              {Component ? (
+                <Component {...(template.defaultProps || {})} />
+              ) : (
+                // Fallback for templates without component
+                <div className="flex items-center justify-center h-full p-4">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold">{template.name}</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {template.category}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )
@@ -71,7 +138,7 @@ export const DropPreview: React.FC = () => {
       // For canvas items, render the existing block
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const block = draggedItem as any // Block type from canvas
-      
+
       // Find the template for this block
       // This will be implemented when we have block registry integration
       return (
