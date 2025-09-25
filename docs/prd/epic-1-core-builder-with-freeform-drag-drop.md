@@ -202,3 +202,37 @@ so that I can zoom in for detailed work or zoom out to see the full design.
 12. Block selection and movement on canvas operate in world space, ensuring consistent behavior across zoom levels
 13. Client can render document at any zoom level without modifying underlying world-space data
 14. Text rendering scales proportionally with zoom (text sizes stored in world units)
+
+### Story 1.12: Project Import and Export Functionality
+
+As a user,
+I want to export my project as a JSON file and import previously exported projects,
+so that I can save my work externally and share or restore projects across sessions.
+
+**Acceptance Criteria:**
+
+1. Export button positioned on the right side of the top navigation bar
+2. Import button positioned immediately to the left of the Export button
+3. Both buttons styled consistently with existing navigation bar elements
+4. Export button click triggers a dropdown/modal with export options:
+   - Currently shows single option: "Export as JSON"
+   - Dropdown designed to accommodate future export formats
+5. Selecting "Export as JSON" generates a downloadable JSON file containing:
+   - All block instances with their complete state (id, typeId, props, x, y, width, height, z, selected)
+   - Canvas dimensions and configuration
+   - Project metadata (export timestamp, version identifier)
+6. JSON file downloads with descriptive filename: `draftcn-project-[YYYY-MM-DD-HHmmss].json`
+7. Import button click opens file picker dialog restricted to .json files
+8. Upon selecting a valid JSON file:
+   - File contents validated for correct structure and required fields
+   - Confirmation dialog shown: "This will replace your current project. Continue?"
+   - On confirmation, existing project state completely replaced with imported data
+   - All blocks cleared and recreated from imported data
+   - Canvas updates to reflect imported project state
+9. Import validation handles:
+   - Invalid JSON format with error message "Invalid file format"
+   - Missing required fields with error message "Incomplete project data"
+   - Corrupted data gracefully without crashing application
+10. Import preserves all block properties including positions, dimensions, and z-ordering
+11. After successful import, success notification shown: "Project imported successfully"
+12. Export/Import operations do not affect zoom level or pan position (UI state remains separate from project data)
