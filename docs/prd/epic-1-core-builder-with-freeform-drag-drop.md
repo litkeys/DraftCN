@@ -183,7 +183,7 @@ so that I can zoom in for detailed work or zoom out to see the full design.
 5. Slider has discrete steps: 25%, 50%, 75%, 100%, 125%, 150%, 175%, 200%
    - 100% = 0.8 scale (default, fits more content)
    - 125% = 1.0 scale (true 1:1)
-   - Scale calculation: actualScale = sliderValue \* 0.8
+   - Scale calculation: actualScale = zoom \* 0.8
 6. Canvas uses world coordinate system with transform-based rendering:
    - Backend/state stores only world-space block data (x, y, width, height in fixed pixels)
    - Frontend maintains single zoom factor and pan offset (panX, panY) in global state
