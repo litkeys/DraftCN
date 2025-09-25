@@ -220,7 +220,7 @@ so that I can save my work externally and share or restore projects across sessi
 5. Selecting "Export as JSON" generates a downloadable JSON file containing:
    - All block instances with their complete state (id, typeId, props, x, y, width, height, z, selected)
    - Canvas dimensions and configuration
-   - Project metadata (export timestamp, version identifier)
+   - Project metadata (export timestamp)
 6. JSON file downloads with descriptive filename: `draftcn-project-[YYYY-MM-DD-HHmmss].json`
 7. Import button click opens file picker dialog restricted to .json files
 8. Upon selecting a valid JSON file:
