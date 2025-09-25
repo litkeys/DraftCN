@@ -370,7 +370,7 @@ export const Canvas: React.FC = () => {
 
   return (
     <div
-      className="w-full h-full bg-gray-100 overflow-y-auto overflow-x-hidden p-8"
+      className="w-full h-full bg-gray-100 overflow-auto p-8"
       onClick={handleContainerClick}
       data-testid="canvas-container"
     >

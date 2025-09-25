@@ -154,8 +154,7 @@ describe('Canvas', () => {
       expect(container.className).toContain('w-full')
       expect(container.className).toContain('h-full')
       expect(container.className).toContain('bg-gray-100')
-      expect(container.className).toContain('overflow-y-auto')
-      expect(container.className).toContain('overflow-x-hidden')
+      expect(container.className).toContain('overflow-auto')
       expect(container.className).toContain('p-8')
     })
 
@@ -2392,9 +2391,8 @@ describe('Canvas', () => {
       render(<Canvas />)
       const container = screen.getByTestId('canvas-container')
 
-      // Container should have overflow-y-auto for scrolling
-      expect(container).toHaveClass('overflow-y-auto')
-      expect(container).toHaveClass('overflow-x-hidden')
+      // Container should have overflow-auto for scrolling
+      expect(container).toHaveClass('overflow-auto')
     })
 
     it('should not apply overflow styles to canvas itself', () => {
@@ -2471,7 +2469,7 @@ describe('Canvas', () => {
       expect(canvas).toHaveStyle({ minHeight: '2320px' })
 
       // Container should have scrolling capability
-      expect(container).toHaveClass('overflow-y-auto')
+      expect(container).toHaveClass('overflow-auto')
 
       // Container should be full height within parent
       expect(container).toHaveClass('h-full')
@@ -2559,10 +2557,10 @@ describe('Canvas', () => {
       expect(canvas).toHaveClass('mx-auto')
 
       // Container handles the scrolling
-      expect(container).toHaveClass('overflow-y-auto')
+      expect(container).toHaveClass('overflow-auto')
     })
 
-    it('should not enable horizontal scrolling even with wide canvas', () => {
+    it('should enable horizontal scrolling when canvas is wide at high zoom', () => {
       ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
@@ -2576,7 +2574,7 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
-            zoom: 100,
+            zoom: 200, // High zoom to make canvas wider
             panX: 0,
             panY: 0,
           }
@@ -2588,12 +2586,12 @@ describe('Canvas', () => {
       render(<Canvas />)
       const container = screen.getByTestId('canvas-container')
 
-      // Container should hide horizontal overflow
-      expect(container).toHaveClass('overflow-x-hidden')
+      // Container should allow both horizontal and vertical scrolling
+      expect(container).toHaveClass('overflow-auto')
 
-      // Canvas width is based on zoom (1200 * 0.8 = 960px at default zoom)
+      // Canvas width is based on zoom (1200 * 1.6 = 1920px at 200% zoom)
       const canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ width: '960px' })
+      expect(canvas).toHaveStyle({ width: '1920px' })
     })
 
     it('should adjust scrollable area when blocks are added/removed dynamically', () => {
@@ -2669,7 +2667,7 @@ describe('Canvas', () => {
       expect(canvas).toHaveStyle({ minHeight: '2720px' })
 
       const container = screen.getByTestId('canvas-container')
-      expect(container).toHaveClass('overflow-y-auto')
+      expect(container).toHaveClass('overflow-auto')
     })
   })
 
