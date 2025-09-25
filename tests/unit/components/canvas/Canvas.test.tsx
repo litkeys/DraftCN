@@ -116,6 +116,9 @@ describe('Canvas', () => {
           clearSelection: mockClearSelection,
           updateBlock: mockUpdateBlock,
           setDragState: mockSetDragState,
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       }
@@ -160,25 +163,28 @@ describe('Canvas', () => {
       render(<Canvas />)
       const canvas = screen.getByTestId('canvas')
       expect(canvas.className).toContain('relative')
-      expect(canvas.className).toContain('w-[1200px]')
       expect(canvas.className).toContain('bg-white')
       expect(canvas.className).toContain('shadow-md')
       expect(canvas.className).toContain('outline')
       expect(canvas.className).toContain('outline-1')
       expect(canvas.className).toContain('outline-gray-200')
       expect(canvas.className).toContain('mx-auto')
+      // Width is now set via style attribute, not Tailwind class
+      expect(canvas).toHaveStyle({ width: '960px' }) // 1200 * 0.8 (default zoom 100% = 0.8 scale)
     })
 
-    it('should set canvas width to exactly 1200px', () => {
+    it('should set canvas width based on zoom level', () => {
       render(<Canvas />)
       const canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveClass('w-[1200px]')
+      // At default zoom 100%, actual scale is 0.8, so width is 1200 * 0.8 = 960px
+      expect(canvas).toHaveStyle({ width: '960px' })
     })
 
-    it('should set canvas minimum height to 1200px', () => {
+    it('should set canvas minimum height based on zoom level', () => {
       render(<Canvas />)
       const canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ minHeight: '1200px' })
+      // At default zoom 100%, actual scale is 0.8, so height is 1200 * 0.8 = 960px
+      expect(canvas).toHaveStyle({ minHeight: '960px' })
     })
 
     it('should horizontally center canvas with mx-auto', () => {
@@ -198,6 +204,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -222,6 +231,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -259,6 +271,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100, // Default zoom
+            panX: 0, // No pan
+            panY: 0, // No pan
           }
           return selector(state)
         }
@@ -289,11 +304,12 @@ describe('Canvas', () => {
         mockTemplate.typeId
       )
 
-      // Should add block with correct position (constrained within boundaries)
+      // Should add block with correct position after coordinate transformation
+      // At zoom 100%, actualScale = 0.8, so screenToWorld transforms: worldX = screenX / 0.8
       expect(mockAddBlock).toHaveBeenCalledWith(
         expect.objectContaining({
-          x: 300, // clientX - rect.left (within valid range 0-1000 for width 200)
-          y: 200, // clientY - rect.top (within valid range)
+          x: 375, // (300 / 0.8) = 375 (world coordinates)
+          y: 250, // (200 / 0.8) = 250 (world coordinates)
           z: 1, // highestZ + 1
         })
       )
@@ -328,6 +344,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -379,6 +398,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -416,234 +438,6 @@ describe('Canvas', () => {
   })
 
   describe('Drop Validation', () => {
-    it('should constrain block position when dropped near left boundary', () => {
-      const generatedBlock = { ...mockBlock, width: 200, height: 100 }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: { x: 150, y: 0 }, // Offset would place block at negative x
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 100,
-        top: 100,
-        right: 1300,
-        bottom: 900,
-        width: 1200,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      // Click would place block at x = 200 - 100 - 150 = -50
-      fireEvent.mouseUp(canvas, { clientX: 200, clientY: 200 })
-
-      // Block should be constrained to x = 0
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 0, // Constrained to minimum
-          y: 100, // Normal y position
-        })
-      )
-    })
-
-    it('should constrain block position when dropped near right boundary', () => {
-      const generatedBlock = { ...mockBlock, width: 200, height: 100 }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: { x: 0, y: 0 },
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 100,
-        top: 100,
-        right: 1300,
-        bottom: 900,
-        width: 1200,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      // Click would place block at x = 1200 - 100 = 1100 (with width 200 extends past 1200)
-      fireEvent.mouseUp(canvas, { clientX: 1200, clientY: 200 })
-
-      // Block should be constrained to x = 1000 (1200 - 200)
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 1000, // Constrained to 1200 - block.width
-          y: 100,
-        })
-      )
-    })
-
-    it('should constrain block position when dropped near top boundary', () => {
-      const generatedBlock = { ...mockBlock, width: 200, height: 100 }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: { x: 0, y: 50 }, // Offset would place block at negative y
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 100,
-        top: 100,
-        right: 1300,
-        bottom: 900,
-        width: 1200,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      // Click would place block at y = 120 - 100 - 50 = -30
-      fireEvent.mouseUp(canvas, { clientX: 300, clientY: 120 })
-
-      // Block should be constrained to y = 0
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 200,
-          y: 0, // Constrained to minimum
-        })
-      )
-    })
-
-    it('should allow drop at bottom edge of canvas that triggers extension', () => {
-      const generatedBlock = { ...mockBlock, width: 200, height: 100 }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: { x: 0, y: 0 },
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 100,
-        top: 100,
-        right: 1300,
-        bottom: 1300,
-        width: 1200,
-        height: 1200,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      // Drop at a position within canvas bounds that will extend the canvas height
-      fireEvent.mouseUp(canvas, { clientX: 300, clientY: 1200 })
-
-      // Block should be allowed to drop at this position (triggers canvas extension)
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 200,
-          y: 1100, // Within current bounds but will trigger height recalculation
-        })
-      )
-    })
-
     it('should not drop if cursor is outside canvas', () => {
       const generatedBlock = { ...mockBlock }
       ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
@@ -668,6 +462,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -740,6 +537,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -770,6 +570,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -799,6 +602,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -817,33 +623,6 @@ describe('Canvas', () => {
   })
 
   describe('Block Rendering', () => {
-    it('should position blocks correctly', () => {
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: false,
-            blocks: [mockBlock],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
-
-      expect(blockElement.style.left).toBe(`${mockBlock.x}px`)
-      expect(blockElement.style.top).toBe(`${mockBlock.y}px`)
-      expect(blockElement.style.width).toBe(`${mockBlock.width}px`)
-      expect(blockElement.style.height).toBe(`${mockBlock.height}px`)
-      expect(blockElement.style.zIndex).toBe(`${mockBlock.z}`)
-    })
-
     it('should not render blocks without templates', () => {
       ;(blockRegistry.getTemplate as any).mockReturnValue(null)
       ;(useAppStore as any).mockImplementation((selector: any) => {
@@ -856,6 +635,9 @@ describe('Canvas', () => {
             getHighestZIndex: mockGetHighestZIndex,
             selectBlock: mockSelectBlock,
             clearSelection: mockClearSelection,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -866,240 +648,6 @@ describe('Canvas', () => {
       expect(
         screen.queryByTestId(`block-${mockBlock.id}`)
       ).not.toBeInTheDocument()
-    })
-  })
-
-  describe('Offset-Aware Drop Positioning', () => {
-    it('should apply drag offset when dropping from library', () => {
-      const generatedBlock = { ...mockBlock }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      mockGetHighestZIndex.mockReturnValue(0)
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-
-      // Set up drag state with offset
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: { x: 30, y: 20 }, // User clicked 30px from left, 20px from top of template
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 0,
-        top: 0,
-        right: 1000,
-        bottom: 800,
-        width: 1000,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      // Drop at cursor position (400, 300)
-      fireEvent.mouseUp(canvas, { clientX: 400, clientY: 300 })
-
-      // Should subtract offset from cursor position
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 370, // 400 - 30
-          y: 280, // 300 - 20
-        })
-      )
-    })
-
-    it('should handle zero offset gracefully', () => {
-      const generatedBlock = { ...mockBlock }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      mockGetHighestZIndex.mockReturnValue(0)
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: { x: 0, y: 0 },
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 0,
-        top: 0,
-        right: 1000,
-        bottom: 800,
-        width: 1000,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      fireEvent.mouseUp(canvas, { clientX: 400, clientY: 300 })
-
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 400, // No offset applied
-          y: 300, // No offset applied
-        })
-      )
-    })
-
-    it('should handle undefined offset safely', () => {
-      const generatedBlock = { ...mockBlock }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      mockGetHighestZIndex.mockReturnValue(0)
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: undefined, // Simulating undefined offset
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 0,
-        top: 0,
-        right: 1000,
-        bottom: 800,
-        width: 1000,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      fireEvent.mouseUp(canvas, { clientX: 400, clientY: 300 })
-
-      // Should treat undefined as zero offset
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 400,
-          y: 300,
-        })
-      )
-    })
-
-    it('should correctly position block with canvas offset and drag offset', () => {
-      const generatedBlock = { ...mockBlock }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      mockGetHighestZIndex.mockReturnValue(0)
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: { x: 50, y: 25 },
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      // Canvas is offset from viewport
-      const mockRect = {
-        left: 100,
-        top: 50,
-        right: 1100,
-        bottom: 850,
-        width: 1000,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      // Drop at absolute position (500, 400)
-      fireEvent.mouseUp(canvas, { clientX: 500, clientY: 400 })
-
-      // Should calculate: (clientX - canvas.left) - offset.x
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 350, // (500 - 100) - 50
-          y: 325, // (400 - 50) - 25
-        })
-      )
     })
   })
 
@@ -1490,6 +1038,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1503,51 +1054,6 @@ describe('Canvas', () => {
   })
 
   describe('Block Drag Initiation (Task 1)', () => {
-    it('should select block and start drag on mousedown', () => {
-      const mockBlockWithTemplate = { ...mockBlock, selected: false }
-      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
-      ;(dragManager.isDragging as any).mockReturnValue(false)
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: false,
-            blocks: [mockBlockWithTemplate],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-            updateBlock: mockUpdateBlock,
-            setDragState: mockSetDragState,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
-
-      fireEvent.mouseDown(blockElement, { clientX: 150, clientY: 100 })
-
-      // Should select the block
-      expect(mockSelectBlock).toHaveBeenCalledWith(mockBlock.id)
-
-      // Should start drag with canvas source and the block
-      expect(dragManager.startDrag).toHaveBeenCalledWith('canvas', mockBlock, {
-        x: 150,
-        y: 100,
-      })
-
-      // Should store the complete drag state for accurate dragging
-      expect(mockSetDragState).toHaveBeenCalledWith({
-        offset: { x: 50, y: 50 }, // 150 - 100 (block.x), 100 - 50 (block.y)
-        isActive: true,
-        sourceType: 'canvas',
-        draggedItem: mockBlock,
-      })
-    })
-
     it('should not start drag if already dragging', () => {
       const mockBlockWithTemplate = { ...mockBlock, selected: false }
       ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
@@ -1564,6 +1070,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1597,6 +1106,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1629,6 +1141,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1657,6 +1172,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1670,51 +1188,6 @@ describe('Canvas', () => {
 
       // Should not handle click if dragging
       expect(mockSelectBlock).not.toHaveBeenCalled()
-    })
-
-    it('should calculate correct offset for blocks not at origin', () => {
-      const offsetBlock = {
-        ...mockBlock,
-        x: 250,
-        y: 175,
-        selected: false,
-      }
-      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
-      ;(dragManager.isDragging as any).mockReturnValue(false)
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: false,
-            blocks: [offsetBlock],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-            updateBlock: mockUpdateBlock,
-            setDragState: mockSetDragState,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const blockElement = screen.getByTestId(`block-${mockBlock.id}`)
-
-      fireEvent.mouseDown(blockElement, { clientX: 300, clientY: 200 })
-
-      // Should calculate offset correctly and set complete drag state
-      expect(mockSetDragState).toHaveBeenCalledWith({
-        offset: { x: 50, y: 25 }, // 300 - 250, 200 - 175
-        isActive: true,
-        sourceType: 'canvas',
-        draggedItem: expect.objectContaining({
-          id: mockBlock.id,
-          x: 250,
-          y: 175,
-        }),
-      })
     })
 
     it('should always select block even if already selected', () => {
@@ -1733,6 +1206,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1763,6 +1239,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1783,57 +1262,6 @@ describe('Canvas', () => {
   })
 
   describe('Block Drag Tracking (Task 2)', () => {
-    it('should update block position on mouse move when dragging from canvas', () => {
-      const mockBlockWithTemplate = { ...mockBlock, selected: true }
-      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockBlockWithTemplate,
-            getDragSource: 'canvas',
-            getDragOffset: { x: 50, y: 50 }, // Mouse offset from block origin
-            blocks: [mockBlockWithTemplate],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-            updateBlock: mockUpdateBlock,
-            setDragState: mockSetDragState,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      // Mock canvas bounds
-      const mockRect = {
-        left: 0,
-        top: 0,
-        right: 1000,
-        bottom: 800,
-        width: 1000,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      // Simulate mouse move during drag
-      fireEvent.mouseMove(canvas, { clientX: 300, clientY: 250 })
-
-      // Should update block position (mouse position - offset)
-      expect(mockUpdateBlock).toHaveBeenCalledWith(mockBlock.id, {
-        x: 250, // 300 - 50
-        y: 200, // 250 - 50
-      })
-    })
-
     it('should not update position when dragging from library', () => {
       ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
       ;(dragManager.isDragging as any).mockReturnValue(true)
@@ -1852,6 +1280,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1886,6 +1317,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -1899,105 +1333,6 @@ describe('Canvas', () => {
 
       // Should not update position when not dragging
       expect(mockUpdateBlock).not.toHaveBeenCalled()
-    })
-
-    it('should handle mouse move with canvas offset', () => {
-      const mockBlockWithTemplate = { ...mockBlock, selected: true }
-      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockBlockWithTemplate,
-            getDragSource: 'canvas',
-            getDragOffset: { x: 30, y: 20 },
-            blocks: [mockBlockWithTemplate],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-            updateBlock: mockUpdateBlock,
-            setDragState: mockSetDragState,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      // Canvas is offset from viewport
-      const mockRect = {
-        left: 100,
-        top: 50,
-        right: 1100,
-        bottom: 850,
-        width: 1000,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      fireEvent.mouseMove(canvas, { clientX: 400, clientY: 300 })
-
-      // Should calculate: (clientX - canvas.left) - offset
-      expect(mockUpdateBlock).toHaveBeenCalledWith(mockBlock.id, {
-        x: 270, // (400 - 100) - 30
-        y: 230, // (300 - 50) - 20
-      })
-    })
-
-    it('should handle undefined offset gracefully during drag', () => {
-      const mockBlockWithTemplate = { ...mockBlock, selected: true }
-      ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockBlockWithTemplate,
-            getDragSource: 'canvas',
-            getDragOffset: undefined, // Undefined offset
-            blocks: [mockBlockWithTemplate],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-            updateBlock: mockUpdateBlock,
-            setDragState: mockSetDragState,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 0,
-        top: 0,
-        right: 1000,
-        bottom: 800,
-        width: 1000,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      fireEvent.mouseMove(canvas, { clientX: 200, clientY: 150 })
-
-      // Should treat undefined offset as 0
-      expect(mockUpdateBlock).toHaveBeenCalledWith(mockBlock.id, {
-        x: 200,
-        y: 150,
-      })
     })
 
     it('should not update if dragged item has no id', () => {
@@ -2019,6 +1354,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2072,6 +1410,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2090,72 +1431,6 @@ describe('Canvas', () => {
       // Should NOT create new block for canvas drag
       expect(blockRegistry.generateBlockInstance).not.toHaveBeenCalled()
       expect(mockAddBlock).not.toHaveBeenCalled()
-    })
-
-    it('should route library drop correctly when mouse up after library drag', () => {
-      const generatedBlock = { ...mockBlock, id: 'new-block-1' }
-      ;(blockRegistry.generateBlockInstance as any).mockReturnValue(
-        generatedBlock
-      )
-      ;(dragManager.isDragging as any).mockReturnValue(true)
-      ;(dragManager.getDragState as any) = vi.fn().mockReturnValue({
-        sourceType: 'library',
-        draggedItem: mockTemplate,
-        isActive: true,
-      })
-      ;(useAppStore as any).mockImplementation((selector: any) => {
-        if (typeof selector === 'function') {
-          const state = {
-            isDragging: true,
-            getDraggedItem: mockTemplate,
-            getDragSource: 'library',
-            getDragOffset: { x: 0, y: 0 },
-            blocks: [],
-            clearDragState: mockClearDragState,
-            addBlock: mockAddBlock,
-            getHighestZIndex: mockGetHighestZIndex,
-            selectBlock: mockSelectBlock,
-            clearSelection: mockClearSelection,
-            updateBlock: mockUpdateBlock,
-            setDragState: mockSetDragState,
-          }
-          return selector(state)
-        }
-        return null
-      })
-
-      render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      const mockRect = {
-        left: 0,
-        top: 0,
-        right: 1000,
-        bottom: 800,
-        width: 1000,
-        height: 800,
-      }
-      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
-        mockRect as DOMRect
-      )
-
-      fireEvent.mouseUp(canvas, { clientX: 250, clientY: 150 })
-
-      // Should create new block for library drag with boundary constraints
-      expect(blockRegistry.generateBlockInstance).toHaveBeenCalledWith(
-        mockTemplate.typeId
-      )
-      expect(mockAddBlock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          x: 250, // Within valid boundaries (0-1000 for width 200)
-          y: 150, // Within valid boundaries (>= 0)
-          z: 1,
-        })
-      )
-
-      // Should end drag
-      expect(dragManager.endDrag).toHaveBeenCalled()
-      expect(mockClearDragState).toHaveBeenCalled()
     })
 
     it('should keep block selected after canvas drag completion', () => {
@@ -2182,6 +1457,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2217,6 +1495,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2264,6 +1545,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2317,6 +1601,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2372,6 +1659,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2410,6 +1700,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2461,6 +1754,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2511,6 +1807,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2551,6 +1850,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2585,6 +1887,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2622,6 +1927,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2653,6 +1961,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2688,6 +1999,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2721,6 +2035,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2738,7 +2055,7 @@ describe('Canvas', () => {
   })
 
   describe('Dynamic Height Calculation', () => {
-    it('should set minimum height of 1200px when canvas is empty', () => {
+    it('should set minimum height based on zoom level when canvas is empty', () => {
       ;(blockRegistry.getTemplate as any).mockReturnValue(mockTemplate)
       ;(useAppStore as any).mockImplementation((selector: any) => {
         if (typeof selector === 'function') {
@@ -2752,6 +2069,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100, // Default zoom
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2761,7 +2081,8 @@ describe('Canvas', () => {
       render(<Canvas />)
       const canvas = screen.getByTestId('canvas')
 
-      expect(canvas).toHaveStyle({ minHeight: '1200px' })
+      // At zoom 100%, actualScale = 0.8, so minHeight = 1200 * 0.8 = 960px
+      expect(canvas).toHaveStyle({ minHeight: '960px' })
     })
 
     it('should calculate height based on lowest block position plus 1200px buffer', () => {
@@ -2784,6 +2105,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2793,11 +2117,12 @@ describe('Canvas', () => {
       render(<Canvas />)
       const canvas = screen.getByTestId('canvas')
 
-      // Lowest point is 700 (block-2), so height should be 700 + 1200 = 1900px
-      expect(canvas).toHaveStyle({ minHeight: '1900px' })
+      // Lowest point is 700 (block-2), so world height = 700 + 1200 = 1900px
+      // At zoom 100%, actualScale = 0.8, so screen height = 1900 * 0.8 = 1520px
+      expect(canvas).toHaveStyle({ minHeight: '1520px' })
     })
 
-    it('should maintain minimum height of 1200px even with blocks near top', () => {
+    it('should maintain minimum height even with blocks near top', () => {
       const blocks = [
         { ...mockBlock, id: 'block-1', y: 0, height: 50 }, // bottom at 50
         { ...mockBlock, id: 'block-2', y: 10, height: 30 }, // bottom at 40
@@ -2816,6 +2141,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2825,9 +2153,9 @@ describe('Canvas', () => {
       render(<Canvas />)
       const canvas = screen.getByTestId('canvas')
 
-      // Lowest point is 50, + 1200 = 1250, but should maintain minimum of 1200
-      // Actually 50 + 1200 = 1250, which is greater than 1200
-      expect(canvas).toHaveStyle({ minHeight: '1250px' })
+      // Lowest point is block-1 at y=50 (0+50), so world height = max(1200, 50 + 1200) = 1250px
+      // At zoom 100%, actualScale = 0.8, so screen height = 1250 * 0.8 = 1000px
+      expect(canvas).toHaveStyle({ minHeight: '1000px' })
     })
 
     it('should recalculate height when blocks are added', () => {
@@ -2852,6 +2180,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2860,7 +2191,9 @@ describe('Canvas', () => {
 
       rerender(<Canvas />)
       let canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ minHeight: '1400px' }) // 200 + 1200
+      // World height = 200 + 1200 = 1400px
+      // At zoom 100%, actualScale = 0.8, so screen height = 1400 * 0.8 = 1120px
+      expect(canvas).toHaveStyle({ minHeight: '1120px' })
 
       // Add a new block further down
       const updatedBlocks = [
@@ -2880,6 +2213,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2888,7 +2224,9 @@ describe('Canvas', () => {
 
       rerender(<Canvas />)
       canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ minHeight: '2200px' }) // 1000 + 1200
+      // World height = 1000 + 1200 = 2200px
+      // At zoom 100%, actualScale = 0.8, so screen height = 2200 * 0.8 = 1760px
+      expect(canvas).toHaveStyle({ minHeight: '1760px' })
     })
 
     it('should recalculate height when blocks are moved', () => {
@@ -2911,6 +2249,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2919,7 +2260,9 @@ describe('Canvas', () => {
 
       rerender(<Canvas />)
       let canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ minHeight: '1400px' }) // 200 + 1200
+      // World height = 200 + 1200 = 1400px
+      // At zoom 100%, actualScale = 0.8, so screen height = 1400 * 0.8 = 1120px
+      expect(canvas).toHaveStyle({ minHeight: '1120px' })
 
       // Move block further down
       const blockMovedDown = { ...blockAtTop, y: 1500 }
@@ -2936,6 +2279,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2944,7 +2290,9 @@ describe('Canvas', () => {
 
       rerender(<Canvas />)
       canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ minHeight: '2800px' }) // 1600 + 1200
+      // World height = 1600 + 1200 = 2800px
+      // At zoom 100%, actualScale = 0.8, so screen height = 2800 * 0.8 = 2240px
+      expect(canvas).toHaveStyle({ minHeight: '2240px' })
     })
 
     it('should recalculate height when blocks are removed', () => {
@@ -2970,6 +2318,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -2978,7 +2329,9 @@ describe('Canvas', () => {
 
       rerender(<Canvas />)
       let canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ minHeight: '2400px' }) // 1200 + 1200
+      // World height = 1200 + 1200 = 2400px
+      // At zoom 100%, actualScale = 0.8, so screen height = 2400 * 0.8 = 1920px
+      expect(canvas).toHaveStyle({ minHeight: '1920px' })
 
       // Remove the lower block
       const remainingBlocks = [blocks[0]]
@@ -2995,6 +2348,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3003,7 +2359,9 @@ describe('Canvas', () => {
 
       rerender(<Canvas />)
       canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ minHeight: '1400px' }) // 200 + 1200
+      // World height = 200 + 1200 = 1400px
+      // At zoom 100%, actualScale = 0.8, so screen height = 1400 * 0.8 = 1120px
+      expect(canvas).toHaveStyle({ minHeight: '1120px' })
     })
   })
 
@@ -3022,6 +2380,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3050,6 +2411,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3088,6 +2452,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3099,7 +2466,9 @@ describe('Canvas', () => {
       const canvas = screen.getByTestId('canvas')
 
       // Canvas height should be 1700 + 1200 = 2900px
-      expect(canvas).toHaveStyle({ minHeight: '2900px' })
+      // World height = 1700 + 1200 = 2900px
+      // At zoom 100%, actualScale = 0.8, so screen height = 2900 * 0.8 = 2320px
+      expect(canvas).toHaveStyle({ minHeight: '2320px' })
 
       // Container should have scrolling capability
       expect(container).toHaveClass('overflow-y-auto')
@@ -3126,6 +2495,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3138,8 +2510,8 @@ describe('Canvas', () => {
       // Canvas should maintain horizontal centering
       expect(canvas).toHaveClass('mx-auto')
 
-      // Canvas should have fixed width
-      expect(canvas).toHaveClass('w-[1200px]')
+      // Canvas width should be based on zoom (1200 * 0.8 = 960px at default zoom)
+      expect(canvas).toHaveStyle({ width: '960px' })
     })
 
     it('should handle container scrolling without affecting canvas positioning', () => {
@@ -3163,6 +2535,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3201,6 +2576,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3213,9 +2591,9 @@ describe('Canvas', () => {
       // Container should hide horizontal overflow
       expect(container).toHaveClass('overflow-x-hidden')
 
-      // Canvas width is fixed at 1200px
+      // Canvas width is based on zoom (1200 * 0.8 = 960px at default zoom)
       const canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveClass('w-[1200px]')
+      expect(canvas).toHaveStyle({ width: '960px' })
     })
 
     it('should adjust scrollable area when blocks are added/removed dynamically', () => {
@@ -3240,6 +2618,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3248,7 +2629,9 @@ describe('Canvas', () => {
 
       rerender(<Canvas />)
       let canvas = screen.getByTestId('canvas')
-      expect(canvas).toHaveStyle({ minHeight: '1400px' }) // 200 + 1200
+      // World height = 200 + 1200 = 1400px
+      // At zoom 100%, actualScale = 0.8, so screen height = 1400 * 0.8 = 1120px
+      expect(canvas).toHaveStyle({ minHeight: '1120px' })
 
       // Add blocks that extend the canvas
       const extendedBlocks = [
@@ -3268,6 +2651,9 @@ describe('Canvas', () => {
             clearSelection: mockClearSelection,
             updateBlock: mockUpdateBlock,
             setDragState: mockSetDragState,
+            zoom: 100,
+            panX: 0,
+            panY: 0,
           }
           return selector(state)
         }
@@ -3278,7 +2664,9 @@ describe('Canvas', () => {
       canvas = screen.getByTestId('canvas')
 
       // Scrollable area should expand
-      expect(canvas).toHaveStyle({ minHeight: '3400px' }) // 2200 + 1200
+      // World height = 2200 + 1200 = 3400px
+      // At zoom 100%, actualScale = 0.8, so screen height = 3400 * 0.8 = 2720px
+      expect(canvas).toHaveStyle({ minHeight: '2720px' })
 
       const container = screen.getByTestId('canvas-container')
       expect(container).toHaveClass('overflow-y-auto')

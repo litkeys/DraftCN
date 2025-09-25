@@ -63,6 +63,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -79,6 +82,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 10, y: 10 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -121,6 +127,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 200, y: 150 },
           getDragOffset: { x: 20, y: 15 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -137,14 +146,18 @@ describe('DropPreview', () => {
           getDragPosition: { x: 200, y: 150 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
 
       render(<DropPreview />)
       const preview = screen.getByTestId('drop-preview')
-      expect(preview.style.width).toBe('300px')
-      expect(preview.style.height).toBe('150px')
+      // At zoom 100%, actualScale = 0.8, so dimensions are scaled
+      expect(preview.style.width).toBe('240px') // 300 * 0.8
+      expect(preview.style.height).toBe('120px') // 150 * 0.8
     })
 
     it('should render fallback when template has no component', () => {
@@ -157,6 +170,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -180,14 +196,18 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
 
       render(<DropPreview />)
       const preview = screen.getByTestId('drop-preview')
-      expect(preview.style.width).toBe('200px') // Fallback width
-      expect(preview.style.height).toBe('100px') // Fallback height
+      // At zoom 100%, actualScale = 0.8, fallback dimensions scaled
+      expect(preview.style.width).toBe('160px') // 200 * 0.8 (fallback width)
+      expect(preview.style.height).toBe('80px') // 100 * 0.8 (fallback height)
     })
   })
 
@@ -201,6 +221,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 300, y: 200 },
           getDragOffset: { x: 50, y: 25 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -219,6 +242,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 150 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -237,6 +263,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 30, y: 20 },
           getDragOffset: { x: 50, y: 40 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -257,6 +286,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -274,6 +306,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -291,6 +326,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -308,6 +346,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
@@ -325,6 +366,9 @@ describe('DropPreview', () => {
           getDragPosition: { x: 100, y: 100 },
           getDragOffset: { x: 0, y: 0 },
           getDragSource: 'library',
+          zoom: 100,
+          panX: 0,
+          panY: 0,
         }
         return selector(state)
       })
