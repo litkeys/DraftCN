@@ -10,6 +10,13 @@ vi.mock('@/components/layout/ZoomControl', () => ({
   )),
 }))
 
+// Mock the ExportButton component
+vi.mock('@/components/layout/ExportButton', () => ({
+  ExportButton: vi.fn(() => (
+    <div data-testid="export-button">ExportButton</div>
+  )),
+}))
+
 describe('Header', () => {
   it('should render the DraftCN logo', () => {
     render(<Header />)
@@ -19,6 +26,11 @@ describe('Header', () => {
   it('should render the ZoomControl component', () => {
     render(<Header />)
     expect(screen.getByTestId('zoom-control')).toBeInTheDocument()
+  })
+
+  it('should render the ExportButton component', () => {
+    render(<Header />)
+    expect(screen.getByTestId('export-button')).toBeInTheDocument()
   })
 
   it('should position logo on the left', () => {
@@ -33,6 +45,13 @@ describe('Header', () => {
     const zoomControl = screen.getByTestId('zoom-control')
     const zoomContainer = zoomControl.parentElement
     expect(zoomContainer).toHaveClass('absolute', 'left-1/2', 'transform', '-translate-x-1/2')
+  })
+
+  it('should position ExportButton on the right', () => {
+    render(<Header />)
+    const exportButton = screen.getByTestId('export-button')
+    const exportContainer = exportButton.parentElement
+    expect(exportContainer).toHaveClass('flex', 'items-center', 'justify-end', 'flex-1')
   })
 
   it('should apply correct header styling', () => {
@@ -63,7 +82,7 @@ describe('Header', () => {
     // Second child: zoom control container (centered)
     expect(header?.children[1]).toHaveClass('absolute', 'left-1/2')
 
-    // Third child: spacer (flex-1)
-    expect(header?.children[2]).toHaveClass('flex-1')
+    // Third child: export button container (flex-1 with justify-end)
+    expect(header?.children[2]).toHaveClass('flex', 'items-center', 'justify-end', 'flex-1')
   })
 })
