@@ -1,24 +1,45 @@
-import type { Block } from '@/types';
-import type { ProjectData } from './export';
+import type { Block } from '@/types'
+import type { ProjectData } from './export'
+
+/**
+ * Project Import Validation
+ *
+ * JSON Schema:
+ *
+ * OPTIONAL:
+ *   - timestamp: string (ISO 8601 format)
+ *   - canvas: { width: number, height: number }
+ *
+ * REQUIRED:
+ *   - blocks: Block[] (array of blocks with all required Block fields)
+ *
+ * Block Schema (ALL REQUIRED):
+ *   - id: string (non-empty)
+ *   - typeId: string (non-empty)
+ *   - x, y, z: number (finite)
+ *   - width, height: number (positive, finite)
+ *   - selected: boolean
+ *   - props: any (optional, template-specific data)
+ */
 
 /**
  * Validation result for project data
  */
 export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
-  data?: ProjectData;
+  valid: boolean
+  errors: string[]
+  data?: ProjectData
 }
 
 /**
- * Type guard to check if a value is a valid Block
+ * Type guard: validates Block has all required fields with correct types and values
  */
 function isValidBlock(block: unknown): block is Block {
   if (typeof block !== 'object' || block === null) {
-    return false;
+    return false
   }
 
-  const b = block as Record<string, unknown>;
+  const b = block as Record<string, unknown>
 
   // Check required fields exist
   if (
@@ -31,7 +52,7 @@ function isValidBlock(block: unknown): block is Block {
     typeof b.z !== 'number' ||
     typeof b.selected !== 'boolean'
   ) {
-    return false;
+    return false
   }
 
   // Check for valid values
@@ -44,10 +65,10 @@ function isValidBlock(block: unknown): block is Block {
     !isFinite(b.y as number) ||
     !isFinite(b.z as number)
   ) {
-    return false;
+    return false
   }
 
-  return true;
+  return true
 }
 
 /**
@@ -56,99 +77,117 @@ function isValidBlock(block: unknown): block is Block {
  * @returns ValidationResult with validity status and any errors
  */
 export function validateProjectData(data: unknown): ValidationResult {
-  const errors: string[] = [];
+  const errors: string[] = []
 
   // Check if data is an object (arrays are objects in JS, so check explicitly)
   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
     return {
       valid: false,
       errors: ['Invalid file format: expected an object'],
-    };
+    }
   }
 
-  const projectData = data as Record<string, unknown>;
+  const projectData = data as Record<string, unknown>
 
-  // Check for required top-level fields
+  // REQUIRED: blocks array must exist
   if (!('blocks' in projectData)) {
-    errors.push('Missing required field: blocks');
+    errors.push('Incomplete project data')
   }
 
   // Validate blocks array
   if ('blocks' in projectData) {
     if (!Array.isArray(projectData.blocks)) {
-      errors.push('Invalid blocks field: expected an array');
+      errors.push('Invalid blocks field: expected an array')
     } else {
       // Validate each block
       projectData.blocks.forEach((block, index) => {
         if (!isValidBlock(block)) {
           // Check specific missing/invalid fields for better error messages
           if (typeof block !== 'object' || block === null) {
-            errors.push(`Block at index ${index} is not an object`);
+            errors.push(`Block at index ${index} is not an object`)
           } else {
-            const b = block as Record<string, unknown>;
+            const b = block as Record<string, unknown>
             if (typeof b.id !== 'string') {
-              errors.push(`Block at index ${index} missing or invalid id`);
+              errors.push(`Block at index ${index} missing or invalid id`)
             } else if (b.id === '') {
-              errors.push(`Block at index ${index} has empty id`);
+              errors.push(`Block at index ${index} has empty id`)
             }
             if (typeof b.typeId !== 'string') {
-              errors.push(`Block at index ${index} missing or invalid typeId`);
+              errors.push(`Block at index ${index} missing or invalid typeId`)
             } else if (b.typeId === '') {
-              errors.push(`Block at index ${index} has empty typeId`);
+              errors.push(`Block at index ${index} has empty typeId`)
             }
             if (typeof b.x !== 'number') {
-              errors.push(`Block at index ${index} missing or invalid x coordinate`);
+              errors.push(
+                `Block at index ${index} missing or invalid x coordinate`
+              )
             } else if (!isFinite(b.x as number)) {
-              errors.push(`Block at index ${index} has invalid x coordinate (infinite or NaN)`);
+              errors.push(
+                `Block at index ${index} has invalid x coordinate (infinite or NaN)`
+              )
             }
             if (typeof b.y !== 'number') {
-              errors.push(`Block at index ${index} missing or invalid y coordinate`);
+              errors.push(
+                `Block at index ${index} missing or invalid y coordinate`
+              )
             } else if (!isFinite(b.y as number)) {
-              errors.push(`Block at index ${index} has invalid y coordinate (infinite or NaN)`);
+              errors.push(
+                `Block at index ${index} has invalid y coordinate (infinite or NaN)`
+              )
             }
             if (typeof b.width !== 'number') {
-              errors.push(`Block at index ${index} missing or invalid width`);
+              errors.push(`Block at index ${index} missing or invalid width`)
             } else if ((b.width as number) <= 0) {
-              errors.push(`Block at index ${index} has invalid width (must be positive)`);
+              errors.push(
+                `Block at index ${index} has invalid width (must be positive)`
+              )
             } else if (!isFinite(b.width as number)) {
-              errors.push(`Block at index ${index} has invalid width (infinite or NaN)`);
+              errors.push(
+                `Block at index ${index} has invalid width (infinite or NaN)`
+              )
             }
             if (typeof b.height !== 'number') {
-              errors.push(`Block at index ${index} missing or invalid height`);
+              errors.push(`Block at index ${index} missing or invalid height`)
             } else if ((b.height as number) <= 0) {
-              errors.push(`Block at index ${index} has invalid height (must be positive)`);
+              errors.push(
+                `Block at index ${index} has invalid height (must be positive)`
+              )
             } else if (!isFinite(b.height as number)) {
-              errors.push(`Block at index ${index} has invalid height (infinite or NaN)`);
+              errors.push(
+                `Block at index ${index} has invalid height (infinite or NaN)`
+              )
             }
             if (typeof b.z !== 'number') {
-              errors.push(`Block at index ${index} missing or invalid z-index`);
+              errors.push(`Block at index ${index} missing or invalid z-index`)
             } else if (!isFinite(b.z as number)) {
-              errors.push(`Block at index ${index} has invalid z-index (infinite or NaN)`);
+              errors.push(
+                `Block at index ${index} has invalid z-index (infinite or NaN)`
+              )
             }
           }
         }
-      });
+      })
     }
   }
 
-  // Check optional canvas field if present
+  // OPTIONAL: canvas object validation (if present)
   if ('canvas' in projectData) {
     if (typeof projectData.canvas !== 'object' || projectData.canvas === null) {
-      errors.push('Invalid canvas field: expected an object');
+      errors.push('Invalid canvas field: expected an object')
     } else {
-      const canvas = projectData.canvas as Record<string, unknown>;
+      const canvas = projectData.canvas as Record<string, unknown>
       if ('width' in canvas && typeof canvas.width !== 'number') {
-        errors.push('Invalid canvas.width: expected a number');
+        errors.push('Invalid canvas.width: expected a number')
       }
       if ('height' in canvas && typeof canvas.height !== 'number') {
-        errors.push('Invalid canvas.height: expected a number');
+        errors.push('Invalid canvas.height: expected a number')
       }
     }
   }
 
-  // Check optional timestamp field if present
+  // OPTIONAL: timestamp validation (if present)
   if ('timestamp' in projectData && typeof projectData.timestamp !== 'string') {
-    errors.push('Invalid timestamp field: expected a string');
+    errors.push('Invalid timestamp field: expected a string')
   }
 
   // Return validation result
@@ -156,14 +195,14 @@ export function validateProjectData(data: unknown): ValidationResult {
     return {
       valid: false,
       errors,
-    };
+    }
   }
 
   return {
     valid: true,
     errors: [],
     data: projectData as unknown as ProjectData,
-  };
+  }
 }
 
 /**
@@ -173,12 +212,12 @@ export function validateProjectData(data: unknown): ValidationResult {
  */
 export function parseAndValidateJSON(jsonString: string): ValidationResult {
   try {
-    const parsed = JSON.parse(jsonString);
-    return validateProjectData(parsed);
+    const parsed = JSON.parse(jsonString)
+    return validateProjectData(parsed)
   } catch (error) {
     return {
       valid: false,
-      errors: ['Invalid JSON format: ' + (error as Error).message],
-    };
+      errors: ['Invalid file format'],
+    }
   }
 }

@@ -113,7 +113,7 @@ describe('validateProjectData', () => {
       const result = validateProjectData(data);
 
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain('Missing required field: blocks');
+      expect(result.errors).toContain('Incomplete project data');
     });
 
     it('should reject blocks that is not an array', () => {
@@ -441,7 +441,7 @@ describe('parseAndValidateJSON', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors.length).toBe(1);
-    expect(result.errors[0]).toContain('Invalid JSON format');
+    expect(result.errors[0]).toContain('Invalid file format');
   });
 
   it('should validate parsed JSON structure', () => {
@@ -453,14 +453,14 @@ describe('parseAndValidateJSON', () => {
     const result = parseAndValidateJSON(invalidDataJSON);
 
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain('Missing required field: blocks');
+    expect(result.errors).toContain('Incomplete project data');
   });
 
   it('should handle empty string', () => {
     const result = parseAndValidateJSON('');
 
     expect(result.valid).toBe(false);
-    expect(result.errors[0]).toContain('Invalid JSON format');
+    expect(result.errors[0]).toContain('Invalid file format');
   });
 
   it('should handle malformed JSON', () => {
@@ -469,6 +469,6 @@ describe('parseAndValidateJSON', () => {
     const result = parseAndValidateJSON(malformedJSON);
 
     expect(result.valid).toBe(false);
-    expect(result.errors[0]).toContain('Invalid JSON format');
+    expect(result.errors[0]).toContain('Invalid file format');
   });
 });
