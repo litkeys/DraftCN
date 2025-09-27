@@ -10,6 +10,13 @@ vi.mock('@/components/layout/ZoomControl', () => ({
   )),
 }))
 
+// Mock the ImportButton component
+vi.mock('@/components/layout/ImportButton', () => ({
+  ImportButton: vi.fn(() => (
+    <div data-testid="import-button">ImportButton</div>
+  )),
+}))
+
 // Mock the ExportButton component
 vi.mock('@/components/layout/ExportButton', () => ({
   ExportButton: vi.fn(() => (
@@ -26,6 +33,11 @@ describe('Header', () => {
   it('should render the ZoomControl component', () => {
     render(<Header />)
     expect(screen.getByTestId('zoom-control')).toBeInTheDocument()
+  })
+
+  it('should render the ImportButton component', () => {
+    render(<Header />)
+    expect(screen.getByTestId('import-button')).toBeInTheDocument()
   })
 
   it('should render the ExportButton component', () => {
@@ -47,11 +59,31 @@ describe('Header', () => {
     expect(zoomContainer).toHaveClass('absolute', 'left-1/2', 'transform', '-translate-x-1/2')
   })
 
-  it('should position ExportButton on the right', () => {
+  it('should position ImportButton and ExportButton on the right', () => {
     render(<Header />)
+    const importButton = screen.getByTestId('import-button')
     const exportButton = screen.getByTestId('export-button')
-    const exportContainer = exportButton.parentElement
-    expect(exportContainer).toHaveClass('flex', 'items-center', 'justify-end', 'flex-1')
+    const buttonsContainer = importButton.parentElement
+
+    // Both buttons should be in the same container
+    expect(buttonsContainer).toBe(exportButton.parentElement)
+
+    // Container should have proper classes including gap-2 for spacing
+    expect(buttonsContainer).toHaveClass('flex', 'items-center', 'justify-end', 'flex-1', 'gap-2')
+  })
+
+  it('should position ImportButton before ExportButton', () => {
+    render(<Header />)
+    const importButton = screen.getByTestId('import-button')
+    const exportButton = screen.getByTestId('export-button')
+    const buttonsContainer = importButton.parentElement
+
+    // ImportButton should come before ExportButton
+    const children = Array.from(buttonsContainer?.children || [])
+    const importIndex = children.indexOf(importButton)
+    const exportIndex = children.indexOf(exportButton)
+
+    expect(importIndex).toBeLessThan(exportIndex)
   })
 
   it('should apply correct header styling', () => {
@@ -82,7 +114,7 @@ describe('Header', () => {
     // Second child: zoom control container (centered)
     expect(header?.children[1]).toHaveClass('absolute', 'left-1/2')
 
-    // Third child: export button container (flex-1 with justify-end)
-    expect(header?.children[2]).toHaveClass('flex', 'items-center', 'justify-end', 'flex-1')
+    // Third child: import/export buttons container (flex-1 with justify-end and gap)
+    expect(header?.children[2]).toHaveClass('flex', 'items-center', 'justify-end', 'flex-1', 'gap-2')
   })
 })

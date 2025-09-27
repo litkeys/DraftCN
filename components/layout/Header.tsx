@@ -1,5 +1,6 @@
 import React from 'react'
 import { ZoomControl } from './ZoomControl'
+import { ImportButton } from './ImportButton'
 import { ExportButton } from './ExportButton'
 
 export function Header() {
@@ -11,7 +12,8 @@ export function Header() {
       <div className="absolute left-1/2 transform -translate-x-1/2">
         <ZoomControl />
       </div>
-      <div className="flex items-center justify-end flex-1">
+      <div className="flex items-center justify-end flex-1 gap-2">
+        <ImportButton />
         <ExportButton />
       </div>
     </header>
