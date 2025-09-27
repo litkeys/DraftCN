@@ -4,6 +4,20 @@ import { ImportButton } from '@/components/layout/ImportButton';
 import * as importUtils from '@/lib/project/import';
 import { toast } from 'sonner';
 
+// Mock store actions
+const mockClearBlocks = vi.fn();
+const mockAddBlock = vi.fn();
+
+vi.mock('@/store', () => ({
+  useAppStore: vi.fn((selector) => {
+    const state = {
+      clearBlocks: mockClearBlocks,
+      addBlock: mockAddBlock,
+    };
+    return selector(state);
+  }),
+}));
+
 vi.mock('@/lib/project/import', () => ({
   parseAndValidateJSON: vi.fn(),
 }));
@@ -370,14 +384,37 @@ describe('ImportButton', () => {
     });
   });
 
-  it('should handle confirmation dialog continue', async () => {
+  it('should handle confirmation dialog continue and import blocks', async () => {
+    const mockBlocks = [
+      {
+        id: 'block-1',
+        typeId: 'hero-1',
+        props: { title: 'Test Hero' },
+        x: 100,
+        y: 200,
+        width: 800,
+        height: 400,
+        z: 1,
+      },
+      {
+        id: 'block-2',
+        typeId: 'nav-1',
+        props: {},
+        x: 0,
+        y: 0,
+        width: 1200,
+        height: 80,
+        z: 2,
+      },
+    ];
+
     const mockValidationResult = {
       valid: true,
       errors: [],
       data: {
         timestamp: '2025-01-25T14:30:22Z',
         canvas: { width: 1200, height: 800 },
-        blocks: [],
+        blocks: mockBlocks,
       },
     };
 
@@ -407,8 +444,98 @@ describe('ImportButton', () => {
       writable: false,
     });
 
-    // Spy on console.log to verify import action
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    fireEvent.change(fileInput);
+
+    // Wait for dialog to appear
+    await waitFor(() => {
+      expect(screen.getByText('Replace Current Project?')).toBeInTheDocument();
+    });
+
+    // Click Continue button
+    const continueButton = screen.getByRole('button', { name: /continue/i });
+    fireEvent.click(continueButton);
+
+    // Dialog should close
+    await waitFor(() => {
+      expect(screen.queryByText('Replace Current Project?')).not.toBeInTheDocument();
+    });
+
+    // Should clear existing blocks
+    expect(mockClearBlocks).toHaveBeenCalled();
+
+    // Should add each imported block
+    expect(mockAddBlock).toHaveBeenCalledTimes(2);
+    expect(mockAddBlock).toHaveBeenNthCalledWith(1, {
+      id: 'block-1',
+      typeId: 'hero-1',
+      props: { title: 'Test Hero' },
+      x: 100,
+      y: 200,
+      width: 800,
+      height: 400,
+      z: 1,
+      selected: false,
+    });
+    expect(mockAddBlock).toHaveBeenNthCalledWith(2, {
+      id: 'block-2',
+      typeId: 'nav-1',
+      props: {},
+      x: 0,
+      y: 0,
+      width: 1200,
+      height: 80,
+      z: 2,
+      selected: false,
+    });
+
+    // Should show success toast
+    expect(toast.success).toHaveBeenCalledWith('Project imported successfully');
+  });
+
+  it('should handle import errors gracefully', async () => {
+    const mockValidationResult = {
+      valid: true,
+      errors: [],
+      data: {
+        timestamp: '2025-01-25T14:30:22Z',
+        canvas: { width: 1200, height: 800 },
+        blocks: [{ id: 'block-1', typeId: 'hero-1', x: 100, y: 200, width: 800, height: 400, z: 1 }],
+      },
+    };
+
+    (importUtils.parseAndValidateJSON as vi.Mock).mockReturnValue(mockValidationResult);
+
+    // Make addBlock throw an error
+    mockAddBlock.mockImplementation(() => {
+      throw new Error('Failed to add block');
+    });
+
+    const { container } = render(<ImportButton />);
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    const mockFile = new File(
+      ['{"blocks": []}'],
+      'test-project.json',
+      { type: 'application/json' }
+    );
+
+    // Mock file.text() method
+    if (!mockFile.text) {
+      Object.defineProperty(mockFile, 'text', {
+        value: vi.fn().mockResolvedValue('{"blocks": []}'),
+      });
+    } else {
+      vi.spyOn(mockFile, 'text').mockResolvedValue('{"blocks": []}');
+    }
+
+    Object.defineProperty(fileInput, 'files', {
+      value: [mockFile],
+      writable: false,
+    });
+
+    // Spy on console.error to suppress error output in tests
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     fireEvent.change(fileInput);
 
@@ -426,9 +553,15 @@ describe('ImportButton', () => {
       expect(screen.queryByText('Replace Current Project?')).not.toBeInTheDocument();
     });
 
-    // Should log the import action (Task 8 will implement actual import)
-    expect(consoleLogSpy).toHaveBeenCalledWith('Importing project data:', mockValidationResult.data);
+    // Should have attempted to clear blocks
+    expect(mockClearBlocks).toHaveBeenCalled();
 
-    consoleLogSpy.mockRestore();
+    // Should show error toast
+    expect(toast.error).toHaveBeenCalledWith('Failed to import project');
+
+    // Should have logged the error
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
   });
 });

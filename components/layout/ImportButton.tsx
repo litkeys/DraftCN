@@ -5,6 +5,7 @@ import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseAndValidateJSON } from '@/lib/project/import';
 import { toast } from 'sonner';
+import { useAppStore } from '@/store';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +22,10 @@ export function ImportButton() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingProjectData, setPendingProjectData] = useState<any>(null);
+
+  // Get store actions for clearing and adding blocks
+  const clearBlocks = useAppStore((state) => state.clearBlocks);
+  const addBlock = useAppStore((state) => state.addBlock);
 
   const handleButtonClick = () => {
     // Trigger the hidden file input
@@ -83,15 +88,44 @@ export function ImportButton() {
     // Close the dialog
     setShowConfirmDialog(false);
 
-    // Task 8 will implement the actual import logic here
-    // For now, we'll just log and show success
-    console.log('Importing project data:', pendingProjectData);
+    if (!pendingProjectData) {
+      return;
+    }
 
-    // Clear pending data
-    setPendingProjectData(null);
+    try {
+      // Clear all existing blocks
+      clearBlocks();
 
-    // TODO: Task 8 - Actually import the data
-    // Will call clearBlocks() and addBlock() for each imported block
+      // Add each imported block
+      if (pendingProjectData.blocks && Array.isArray(pendingProjectData.blocks)) {
+        pendingProjectData.blocks.forEach((block: any) => {
+          // Ensure all required properties are present
+          addBlock({
+            id: block.id,
+            typeId: block.typeId,
+            props: block.props || {},
+            x: block.x,
+            y: block.y,
+            width: block.width,
+            height: block.height,
+            z: block.z,
+            selected: false, // Always set to false on import
+          });
+        });
+      }
+
+      // Show success notification (Task 10 integration)
+      toast.success('Project imported successfully');
+
+      // Clear pending data
+      setPendingProjectData(null);
+    } catch (error) {
+      console.error('Error importing project:', error);
+      toast.error('Failed to import project');
+
+      // Clear pending data even on error
+      setPendingProjectData(null);
+    }
   };
 
   const handleCancelImport = () => {
