@@ -236,3 +236,60 @@ so that I can save my work externally and share or restore projects across sessi
 10. Import preserves all block properties including positions, dimensions, and z-ordering
 11. After successful import, success notification shown: "Project imported successfully"
 12. Export/Import operations do not affect zoom level or pan position (UI state remains separate from project data)
+
+### Story 1.13: Export to React Project
+
+As a user,
+I want to export my design as a minimal React project,
+so that I can have a working codebase that preserves my exact layout for further development.
+
+**Acceptance Criteria:**
+
+1. Export button in top navigation bar (right side) includes "Export to React" option in dropdown menu
+2. Selecting "Export to React" triggers the export process that generates a minimal React project structure
+3. Export process creates the following project structure in a ZIP file:
+   - `/src` folder containing:
+     - `/components` subfolder with all used block template components as individual React files
+     - `App.js` main application component that renders all blocks with absolute positioning
+     - `index.js` React entry point that renders the App component
+     - `globals.css` file (provided manually during implementation) containing all theming, fonts, and CSS custom properties
+   - `index.html` HTML shell with proper React mounting point (at project root)
+   - `package.json` with minimal required dependencies including:
+     - React and React-DOM (latest stable)
+     - Standard Tailwind CSS (no custom config needed)
+     - Vite build tools for fast development and optimized production builds
+4. Component generation process:
+   - Each block instance maps to its corresponding React component template
+   - Component files copied with exact template code and proper imports
+   - Props from block instances passed to components during rendering
+   - Block Y positioning preserved, X positioning ignored for full-width layout
+5. Layout assembly in App.js:
+   - Imports all used components from `/components` folder
+   - Sorts blocks by Z-index to maintain creation/layer order from canvas
+   - Renders each block in a positioned div with responsive width styling:
+     - `position: 'absolute'`, `top: '${block.y}px'`, `left: 0`, `right: 0`
+     - `width: '100%'` to span full viewport width (ignores block width)
+     - `height: '${block.height}px'` to preserve original block height
+   - Full-width responsive design replaces fixed 1200px canvas constraint
+6. Styling approach:
+   - No `tailwind.config.js` required - uses standard Tailwind classes
+   - `globals.css` (provided manually, copied to `/src/globals.css`) includes all CSS custom properties for theming (colors, fonts, shadows)
+   - `globals.css` imported in `index.js` for optimal loading order before component rendering
+   - shadcn/ui components work with standard Tailwind + CSS variables
+   - Google Fonts imports preserved in globals.css for typography
+7. README.md file included with:
+   - Quick start: "Run `npm install && npm run dev` to view your exported design"
+   - Project structure explanation:
+     - How components are organized in `/src/components`
+     - How positioning works in `App.js`
+     - How to customize styling via `/src/globals.css`
+     - Note that `globals.css` is imported in `index.js` for proper CSS loading order
+   - Notes about converting to responsive layout if desired
+8. Export generates a ZIP file with descriptive name: `draftcn-react-export-[YYYY-MM-DD-HHmmss].zip`
+9. ZIP file automatically downloads upon generation
+10. Export process shows loading indicator during generation
+11. Success notification displayed: "React project exported successfully"
+12. Error handling for:
+    - Missing template definitions with graceful fallback
+    - Component generation failures with detailed error messages
+    - ZIP creation errors with retry option
