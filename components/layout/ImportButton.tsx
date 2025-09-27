@@ -5,10 +5,22 @@ import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseAndValidateJSON } from '@/lib/project/import';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export function ImportButton() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingProjectData, setPendingProjectData] = useState<any>(null);
 
   const handleButtonClick = () => {
     // Trigger the hidden file input
@@ -50,10 +62,9 @@ export function ImportButton() {
         return;
       }
 
-      // If validation passes, we have valid project data in validationResult.data
-      // This will be used in Task 7 & 8 to show confirmation dialog and import
-      // For now, just show that validation succeeded
-      console.log('Valid project data:', validationResult.data);
+      // If validation passes, store the data and show confirmation dialog
+      setPendingProjectData(validationResult.data);
+      setShowConfirmDialog(true);
 
       // Reset the input for next import
       event.target.value = '';
@@ -66,6 +77,27 @@ export function ImportButton() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleConfirmImport = () => {
+    // Close the dialog
+    setShowConfirmDialog(false);
+
+    // Task 8 will implement the actual import logic here
+    // For now, we'll just log and show success
+    console.log('Importing project data:', pendingProjectData);
+
+    // Clear pending data
+    setPendingProjectData(null);
+
+    // TODO: Task 8 - Actually import the data
+    // Will call clearBlocks() and addBlock() for each imported block
+  };
+
+  const handleCancelImport = () => {
+    // Close dialog and clear pending data
+    setShowConfirmDialog(false);
+    setPendingProjectData(null);
   };
 
   return (
@@ -88,6 +120,21 @@ export function ImportButton() {
         <Upload className="h-4 w-4" />
         {isProcessing ? 'Processing...' : 'Import'}
       </Button>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace Current Project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will replace your current project. Continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelImport}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmImport}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

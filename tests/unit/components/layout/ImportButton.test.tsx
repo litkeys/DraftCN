@@ -64,7 +64,7 @@ describe('ImportButton', () => {
     expect(clickSpy).toHaveBeenCalled();
   });
 
-  it('should handle file selection with valid JSON', async () => {
+  it('should show confirmation dialog for valid JSON', async () => {
     const mockValidationResult = {
       valid: true,
       errors: [],
@@ -106,6 +106,12 @@ describe('ImportButton', () => {
 
     await waitFor(() => {
       expect(importUtils.parseAndValidateJSON).toHaveBeenCalledWith('{"blocks": []}');
+    });
+
+    // Should show confirmation dialog
+    await waitFor(() => {
+      expect(screen.getByText('Replace Current Project?')).toBeInTheDocument();
+      expect(screen.getByText('This will replace your current project. Continue?')).toBeInTheDocument();
     });
 
     // Should not show error for valid file
@@ -308,5 +314,121 @@ describe('ImportButton', () => {
     // Check for variant and size classes
     const classes = button.className;
     expect(classes).toContain('h-8'); // size="sm" adds h-8
+  });
+
+  it('should handle confirmation dialog cancel', async () => {
+    const mockValidationResult = {
+      valid: true,
+      errors: [],
+      data: {
+        timestamp: '2025-01-25T14:30:22Z',
+        canvas: { width: 1200, height: 800 },
+        blocks: [],
+      },
+    };
+
+    (importUtils.parseAndValidateJSON as vi.Mock).mockReturnValue(mockValidationResult);
+
+    const { container } = render(<ImportButton />);
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    const mockFile = new File(
+      ['{"blocks": []}'],
+      'test-project.json',
+      { type: 'application/json' }
+    );
+
+    // Mock file.text() method
+    if (!mockFile.text) {
+      Object.defineProperty(mockFile, 'text', {
+        value: vi.fn().mockResolvedValue('{"blocks": []}'),
+      });
+    } else {
+      vi.spyOn(mockFile, 'text').mockResolvedValue('{"blocks": []}');
+    }
+
+    Object.defineProperty(fileInput, 'files', {
+      value: [mockFile],
+      writable: false,
+    });
+
+    fireEvent.change(fileInput);
+
+    // Wait for dialog to appear
+    await waitFor(() => {
+      expect(screen.getByText('Replace Current Project?')).toBeInTheDocument();
+    });
+
+    // Click Cancel button
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelButton);
+
+    // Dialog should close
+    await waitFor(() => {
+      expect(screen.queryByText('Replace Current Project?')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should handle confirmation dialog continue', async () => {
+    const mockValidationResult = {
+      valid: true,
+      errors: [],
+      data: {
+        timestamp: '2025-01-25T14:30:22Z',
+        canvas: { width: 1200, height: 800 },
+        blocks: [],
+      },
+    };
+
+    (importUtils.parseAndValidateJSON as vi.Mock).mockReturnValue(mockValidationResult);
+
+    const { container } = render(<ImportButton />);
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    const mockFile = new File(
+      ['{"blocks": []}'],
+      'test-project.json',
+      { type: 'application/json' }
+    );
+
+    // Mock file.text() method
+    if (!mockFile.text) {
+      Object.defineProperty(mockFile, 'text', {
+        value: vi.fn().mockResolvedValue('{"blocks": []}'),
+      });
+    } else {
+      vi.spyOn(mockFile, 'text').mockResolvedValue('{"blocks": []}');
+    }
+
+    Object.defineProperty(fileInput, 'files', {
+      value: [mockFile],
+      writable: false,
+    });
+
+    // Spy on console.log to verify import action
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    fireEvent.change(fileInput);
+
+    // Wait for dialog to appear
+    await waitFor(() => {
+      expect(screen.getByText('Replace Current Project?')).toBeInTheDocument();
+    });
+
+    // Click Continue button
+    const continueButton = screen.getByRole('button', { name: /continue/i });
+    fireEvent.click(continueButton);
+
+    // Dialog should close
+    await waitFor(() => {
+      expect(screen.queryByText('Replace Current Project?')).not.toBeInTheDocument();
+    });
+
+    // Should log the import action (Task 8 will implement actual import)
+    expect(consoleLogSpy).toHaveBeenCalledWith('Importing project data:', mockValidationResult.data);
+
+    consoleLogSpy.mockRestore();
   });
 });
