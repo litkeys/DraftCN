@@ -114,7 +114,72 @@ const ctaTemplate: BlockTemplate = {
 blockRegistry.registerTemplate(ctaTemplate)
 ```
 
-### Step 4: Add Styles (Optional)
+### Step 4: Add Template Source for Export
+
+To enable your template to be exported as part of a React project, create a source file with pre-processed imports:
+
+1. Create a new file in `lib/blocks/template-sources/[template-name].source.ts`:
+
+```typescript
+// lib/blocks/template-sources/cta-1.source.ts
+export const cta1Source = `import { Button } from './ui/button'
+
+interface CTAProps {
+  heading: string
+  description: string
+  primaryButtonText: string
+  secondaryButtonText?: string
+  backgroundColor?: string
+}
+
+export const CTAComponent = ({
+  heading,
+  description,
+  primaryButtonText,
+  secondaryButtonText,
+  backgroundColor = '#f3f4f6',
+}: CTAProps) => {
+  return (
+    <div className="cta-section" style={{ backgroundColor }}>
+      <div className="cta-content">
+        <h2 className="cta-heading">{heading}</h2>
+        <p className="cta-description">{description}</p>
+        <div className="cta-buttons">
+          <Button variant="default">{primaryButtonText}</Button>
+          {secondaryButtonText && (
+            <Button variant="outline">{secondaryButtonText}</Button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export { CTAComponent }`;
+```
+
+**Important Notes:**
+- Convert all imports from `@/components/ui/*` to `./ui/*`
+- Convert `@/components/shadcnblocks/*` to `./shadcnblocks/*`
+- The source should be a complete, standalone TypeScript component
+- Store as a template string with backticks
+
+2. Update `lib/blocks/template-sources.ts` to include your new template:
+
+```typescript
+// lib/blocks/template-sources.ts
+import { cta1Source } from './template-sources/cta-1.source';
+
+// Add to the templateSources mapping
+export const templateSources: TemplateSourceMap = {
+  // ... existing templates
+  'cta-1': cta1Source,
+};
+```
+
+This ensures your template can be exported when users generate a React project from their designs.
+
+### Step 5: Add Styles (Optional)
 
 If your component needs custom styles, add them to `app/globals.css`:
 
@@ -153,7 +218,7 @@ If your component needs custom styles, add them to `app/globals.css`:
 }
 ```
 
-### Step 5: Test Your Template
+### Step 6: Test Your Template
 
 1. Start the development server: `npm run dev`
 2. Open the builder in your browser
