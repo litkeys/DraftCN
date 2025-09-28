@@ -11,9 +11,12 @@ import {
   eslintConfigTemplate,
   indexHtmlTemplate,
   indexTsxTemplate,
-  readmeTemplate,
   gitignoreTemplate
 } from './static-sources'
+import {
+  resolveAllDependencies,
+  generateReadmeWithDependencies
+} from './dependency-resolver'
 
 export interface ReactProjectFile {
   path: string
@@ -72,32 +75,18 @@ export function generateComponentFile(typeId: string): ReactProjectFile | null {
 }
 
 /**
- * Resolve dependencies from template imports
+ * Resolve dependencies from template imports (deprecated - use resolveAllDependencies)
  */
 export function resolveDependencies(blocks: Block[]): DependencyInfo {
-  const dependencies = new Set<string>([
-    'react',
-    'react-dom',
-    'lucide-react',
-    'clsx',
-    'tailwind-merge'
-  ])
+  // This function is maintained for backward compatibility
+  // but now delegates to the new dependency resolver
+  const uniqueTemplates = extractUniqueTemplates(blocks)
+  const resolvedDeps = resolveAllDependencies(Array.from(uniqueTemplates))
 
-  const devDependencies = new Set<string>([
-    '@types/react',
-    '@types/react-dom',
-    '@vitejs/plugin-react',
-    'autoprefixer',
-    'postcss',
-    'tailwindcss',
-    'typescript',
-    'vite'
-  ])
-
-  // Additional dependencies could be resolved by parsing template imports
-  // For now, we include the standard set
-
-  return { dependencies, devDependencies }
+  return {
+    dependencies: new Set(resolvedDeps.npmDependencies.dependencies.keys()),
+    devDependencies: new Set(resolvedDeps.npmDependencies.devDependencies.keys())
+  }
 }
 
 /**
@@ -396,8 +385,11 @@ export function generateProjectFiles(blocks: Block[]): ReactProjectFile[] {
     }
   }
 
-  // Generate shadcn/ui components
-  files.push(...generateShadcnComponents())
+  // Resolve dependencies from templates
+  const { npmDependencies, shadcnComponents } = resolveAllDependencies(Array.from(uniqueTemplates))
+
+  // Generate shadcn/ui components (no longer include these - user will install via CLI)
+  // files.push(...generateShadcnComponents())
 
   // Generate utility files
   files.push(...generateUtilityFiles())
@@ -420,10 +412,16 @@ export function generateProjectFiles(blocks: Block[]): ReactProjectFile[] {
     content: globalsCssSource
   })
 
-  // Generate config files
+  // Generate package.json with resolved dependencies
+  const packageJson = {
+    ...packageJsonTemplate,
+    dependencies: Object.fromEntries(npmDependencies.dependencies),
+    devDependencies: Object.fromEntries(npmDependencies.devDependencies)
+  }
+
   files.push({
     path: 'package.json',
-    content: JSON.stringify(packageJsonTemplate, null, 2)
+    content: JSON.stringify(packageJson, null, 2)
   })
 
   files.push({
@@ -456,9 +454,10 @@ export function generateProjectFiles(blocks: Block[]): ReactProjectFile[] {
     content: indexHtmlTemplate
   })
 
+  // Generate README with shadcn installation commands
   files.push({
     path: 'README.md',
-    content: readmeTemplate
+    content: generateReadmeWithDependencies(shadcnComponents, 'DraftCN React Export')
   })
 
   files.push({

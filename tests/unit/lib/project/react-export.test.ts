@@ -157,6 +157,25 @@ describe('React Export Utilities', () => {
 
   describe('resolveDependencies', () => {
     it('should return standard dependencies', () => {
+      // Mock template sources with lucide-react icons to ensure it's included
+      const mockGetTemplateSource = vi.mocked(templateSources.getTemplateSource)
+      mockGetTemplateSource.mockImplementation((id) => {
+        if (id === 'hero1') {
+          return `
+            import { Button } from './ui/button'
+            import { ArrowRight } from 'lucide-react'
+            export function Hero1() {}
+          `
+        }
+        if (id === 'navbar1') {
+          return `
+            import { Menu } from 'lucide-react'
+            export function Navbar1() {}
+          `
+        }
+        return null
+      })
+
       const result = resolveDependencies(mockBlocks)
 
       expect(result.dependencies).toContain('react')
