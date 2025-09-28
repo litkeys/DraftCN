@@ -245,51 +245,43 @@ so that I can have a working codebase that preserves my exact layout for further
 
 **Acceptance Criteria:**
 
-1. Export button in top navigation bar (right side) includes "Export to React" option in dropdown menu
-2. Selecting "Export to React" triggers the export process that generates a minimal React project structure
-3. Export process creates the following project structure in a ZIP file:
-   - `/src` folder containing:
-     - `/components` subfolder with all used block template components as individual React files
-     - `App.js` main application component that renders all blocks with absolute positioning
-     - `index.js` React entry point that renders the App component
-     - `globals.css` file (provided manually during implementation) containing all theming, fonts, and CSS custom properties
-   - `index.html` HTML shell with proper React mounting point (at project root)
-   - `package.json` with minimal required dependencies including:
-     - React and React-DOM (latest stable)
-     - Standard Tailwind CSS (no custom config needed)
-     - Vite build tools for fast development and optimized production builds
-4. Component generation process:
-   - Each block instance maps to its corresponding React component template
-   - Component files copied with exact template code and proper imports
-   - Props from block instances passed to components during rendering
-   - Block Y positioning preserved, X positioning ignored for full-width layout
-5. Layout assembly in App.js:
-   - Imports all used components from `/components` folder
-   - Sorts blocks by Z-index to maintain creation/layer order from canvas
-   - Renders each block in a positioned div with responsive width styling:
-     - `position: 'absolute'`, `top: '${block.y}px'`, `left: 0`, `right: 0`
-     - `width: '100%'` to span full viewport width (ignores block width)
-     - `height: '${block.height}px'` to preserve original block height
-   - Full-width responsive design replaces fixed 1200px canvas constraint
-6. Styling approach:
-   - No `tailwind.config.js` required - uses standard Tailwind classes
-   - `globals.css` (provided manually, copied to `/src/globals.css`) includes all CSS custom properties for theming (colors, fonts, shadows)
-   - `globals.css` imported in `index.js` for optimal loading order before component rendering
-   - shadcn/ui components work with standard Tailwind + CSS variables
-   - Google Fonts imports preserved in globals.css for typography
-7. README.md file included with:
-   - Quick start: "Run `npm install && npm run dev` to view your exported design"
-   - Project structure explanation:
-     - How components are organized in `/src/components`
-     - How positioning works in `App.js`
-     - How to customize styling via `/src/globals.css`
-     - Note that `globals.css` is imported in `index.js` for proper CSS loading order
-   - Notes about converting to responsive layout if desired
-8. Export generates a ZIP file with descriptive name: `draftcn-react-export-[YYYY-MM-DD-HHmmss].zip`
-9. ZIP file automatically downloads upon generation
-10. Export process shows loading indicator during generation
-11. Success notification displayed: "React project exported successfully"
-12. Error handling for:
-    - Missing template definitions with graceful fallback
-    - Component generation failures with detailed error messages
-    - ZIP creation errors with retry option
+1. Export Infrastructure: Export button in top navigation includes "Export to React" option that triggers React project generation with loading state and success notification
+2. Template Source Resolution: Template source code is retrieved from dedicated mapping system (`lib/blocks/template-sources.ts`) that stores pre-processed template code with proper import paths for export compatibility
+3. Static Asset Resolution: Application assets (globals.css) are retrieved from dedicated source files (`lib/project/globals.css.source.ts`) to avoid embedding large static content in export logic
+4. Component Generation: For each unique template used in canvas blocks:
+   - Template source code is retrieved from the mapping system using block typeId
+   - Component file is generated with proper TypeScript interfaces and exports
+   - Import paths are pre-processed for export structure (`@/components/ui/*` → `./ui/*`)
+   - shadcn/ui dependencies (Badge, Button, Card, etc.) are included as separate component files
+   - shadcnblocks dependencies (Logo components) are included with their utility dependencies
+5. Project Structure Assembly: Export generates a complete React project ZIP with:
+   - `/src/components/` containing all template components and their dependencies
+   - `/src/App.tsx` that imports and renders blocks with absolute positioning
+   - `/src/index.tsx` React 18+ entry point with proper CSS import order
+   - `/src/globals.css` generated from source file with all theming and fonts
+   - Root `index.html` with React mount point and responsive viewport
+   - `package.json` with React, TypeScript, Tailwind CSS, and Vite dependencies
+   - `README.md` with setup instructions and architecture explanation
+6. Block-to-Component Mapping: Canvas blocks are transformed to React components where:
+   - Each block maps to its template component using typeId lookup
+   - Block props are passed directly to component instances
+   - Y-positioning is preserved for absolute layout (`top: ${block.y}px`)
+   - X-positioning is ignored in favor of full-width responsive design
+   - Z-index determines rendering order for proper layering
+7. Export File Structure: Generated project uses clean architecture:
+   - Standard Tailwind CSS (no custom config required)
+   - CSS custom properties in globals.css for theming consistency
+   - TypeScript throughout for better developer experience
+   - Vite for fast development and optimized production builds
+   - Component dependencies resolved and included automatically
+8. User Experience: Export process provides:
+   - Descriptive ZIP filename: `draftcn-react-export-[YYYY-MM-DD-HHmmss].zip`
+   - Automatic download upon completion
+   - Loading indicator during generation
+   - Success notification: "React project exported successfully"
+   - Clear README with `npm install && npm run dev` quick start
+9. Error Handling: Robust error management for:
+   - Missing template source mappings with fallback placeholder components
+   - Component generation failures with specific error messages
+   - ZIP creation errors with user-friendly notifications
+   - Dependency resolution failures with graceful degradation
