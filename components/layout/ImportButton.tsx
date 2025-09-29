@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { parseAndValidateJSON } from '@/lib/project/import';
 import { toast } from 'sonner';
 import { useAppStore } from '@/store';
+import type { ProjectData } from '@/lib/project/export';
+import type { Block } from '@/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +23,7 @@ export function ImportButton() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [pendingProjectData, setPendingProjectData] = useState<any>(null);
+  const [pendingProjectData, setPendingProjectData] = useState<ProjectData | null>(null);
 
   // Get store actions for clearing and adding blocks
   const clearBlocks = useAppStore((state) => state.clearBlocks);
@@ -68,8 +70,10 @@ export function ImportButton() {
       }
 
       // If validation passes, store the data and show confirmation dialog
-      setPendingProjectData(validationResult.data);
-      setShowConfirmDialog(true);
+      if (validationResult.data) {
+        setPendingProjectData(validationResult.data);
+        setShowConfirmDialog(true);
+      }
 
       // Reset the input for next import
       event.target.value = '';
@@ -98,7 +102,7 @@ export function ImportButton() {
 
       // Add each imported block
       if (pendingProjectData.blocks && Array.isArray(pendingProjectData.blocks)) {
-        pendingProjectData.blocks.forEach((block: any) => {
+        pendingProjectData.blocks.forEach((block: Block) => {
           // Ensure all required properties are present
           addBlock({
             id: block.id,
