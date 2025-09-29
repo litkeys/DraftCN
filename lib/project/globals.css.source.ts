@@ -26,7 +26,6 @@ export const globalsCssSource = `@import url("https://fonts.googleapis.com/css2?
 
 @import "tailwindcss";
 
-@plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 
 @custom-variant dark (&:where(.dark, .dark *));

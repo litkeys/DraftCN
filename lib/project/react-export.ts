@@ -6,16 +6,15 @@ import {
   packageJsonTemplate,
   viteConfigTemplate,
   tsConfigTemplate,
-  tailwindConfigTemplate,
   postcssConfigTemplate,
   eslintConfigTemplate,
   indexHtmlTemplate,
   indexTsxTemplate,
-  gitignoreTemplate
+  gitignoreTemplate,
 } from './static-sources'
 import {
   resolveAllDependencies,
-  generateReadmeWithDependencies
+  generateReadmeWithDependencies,
 } from './dependency-resolver'
 
 export interface ReactProjectFile {
@@ -70,7 +69,7 @@ export function generateComponentFile(typeId: string): ReactProjectFile | null {
 
   return {
     path: componentPath,
-    content: source
+    content: source,
   }
 }
 
@@ -85,7 +84,9 @@ export function resolveDependencies(blocks: Block[]): DependencyInfo {
 
   return {
     dependencies: new Set(resolvedDeps.npmDependencies.dependencies.keys()),
-    devDependencies: new Set(resolvedDeps.npmDependencies.devDependencies.keys())
+    devDependencies: new Set(
+      resolvedDeps.npmDependencies.devDependencies.keys()
+    ),
   }
 }
 
@@ -99,7 +100,9 @@ export function generateAppComponent(blocks: Block[]): string {
   const imports: string[] = []
   for (const typeId of uniqueTemplates) {
     const componentName = typeIdToComponentName(typeId)
-    imports.push(`import { ${componentName} } from './components/${componentName}'`)
+    imports.push(
+      `import { ${componentName} } from './components/${componentName}'`
+    )
   }
 
   // Generate block rendering
@@ -113,7 +116,7 @@ export function generateAppComponent(blocks: Block[]): string {
         key="${block.id}"
         style={{
           position: 'absolute',
-          top: ${block.y}px,
+          top: ${block.y},
           left: 0,
           right: 0,
           zIndex: ${block.z || 0}
@@ -195,7 +198,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = "Button"
 
-export { Button, buttonVariants }`
+export { Button, buttonVariants }`,
   })
 
   // Badge component
@@ -235,7 +238,7 @@ function Badge({ className, variant, ...props }: BadgeProps) {
   )
 }
 
-export { Badge, badgeVariants }`
+export { Badge, badgeVariants }`,
   })
 
   // Card component
@@ -318,7 +321,7 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }`
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }`,
   })
 
   // Input component (used by some templates)
@@ -347,7 +350,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 )
 Input.displayName = "Input"
 
-export { Input }`
+export { Input }`,
   })
 
   return shadcnComponents
@@ -365,8 +368,8 @@ import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
-}`
-    }
+}`,
+    },
   ]
 }
 
@@ -386,7 +389,8 @@ export function generateProjectFiles(blocks: Block[]): ReactProjectFile[] {
   }
 
   // Resolve dependencies from templates
-  const { npmDependencies, shadcnComponents } = resolveAllDependencies(Array.from(uniqueTemplates))
+  const { npmDependencies, shadcnComponents, shadcnblocksComponents } =
+    resolveAllDependencies(Array.from(uniqueTemplates))
 
   // Generate shadcn/ui components (no longer include these - user will install via CLI)
   // files.push(...generateShadcnComponents())
@@ -397,72 +401,71 @@ export function generateProjectFiles(blocks: Block[]): ReactProjectFile[] {
   // Generate App.tsx
   files.push({
     path: 'src/App.tsx',
-    content: generateAppComponent(blocks)
+    content: generateAppComponent(blocks),
   })
 
   // Generate index.tsx
   files.push({
     path: 'src/index.tsx',
-    content: indexTsxTemplate
+    content: indexTsxTemplate,
   })
 
   // Generate globals.css
   files.push({
     path: 'src/globals.css',
-    content: globalsCssSource
+    content: globalsCssSource,
   })
 
   // Generate package.json with resolved dependencies
   const packageJson = {
     ...packageJsonTemplate,
     dependencies: Object.fromEntries(npmDependencies.dependencies),
-    devDependencies: Object.fromEntries(npmDependencies.devDependencies)
+    devDependencies: Object.fromEntries(npmDependencies.devDependencies),
   }
 
   files.push({
     path: 'package.json',
-    content: JSON.stringify(packageJson, null, 2)
+    content: JSON.stringify(packageJson, null, 2),
   })
 
   files.push({
     path: 'vite.config.ts',
-    content: viteConfigTemplate
+    content: viteConfigTemplate,
   })
 
   files.push({
     path: 'tsconfig.json',
-    content: JSON.stringify(tsConfigTemplate, null, 2)
-  })
-
-  files.push({
-    path: 'tailwind.config.js',
-    content: tailwindConfigTemplate
+    content: JSON.stringify(tsConfigTemplate, null, 2),
   })
 
   files.push({
     path: 'postcss.config.js',
-    content: postcssConfigTemplate
+    content: postcssConfigTemplate,
   })
 
   files.push({
     path: '.eslintrc.json',
-    content: JSON.stringify(eslintConfigTemplate, null, 2)
+    content: JSON.stringify(eslintConfigTemplate, null, 2),
   })
 
   files.push({
     path: 'index.html',
-    content: indexHtmlTemplate
+    content: indexHtmlTemplate,
   })
 
   // Generate README with shadcn installation commands
   files.push({
     path: 'README.md',
-    content: generateReadmeWithDependencies(shadcnComponents, 'DraftCN React Export')
+    content: generateReadmeWithDependencies(
+      shadcnComponents,
+      shadcnblocksComponents,
+      'DraftCN React Export'
+    ),
   })
 
   files.push({
     path: '.gitignore',
-    content: gitignoreTemplate
+    content: gitignoreTemplate,
   })
 
   return files
@@ -485,8 +488,8 @@ export async function generateReactProject(blocks: Block[]): Promise<Blob> {
     type: 'blob',
     compression: 'DEFLATE',
     compressionOptions: {
-      level: 9
-    }
+      level: 9,
+    },
   })
 
   return blob

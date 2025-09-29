@@ -10,17 +10,17 @@ import {
   generateProjectFiles,
   generateReactProject,
   downloadReactProject,
-  generateReactExportFilename
+  generateReactExportFilename,
 } from '@/lib/project/react-export'
 import { Block } from '@/types/block'
 import * as templateSources from '@/lib/blocks/template-sources'
 
 // Mock dependencies
 vi.mock('@/lib/blocks/template-sources', () => ({
-  getTemplateSource: vi.fn()
+  getTemplateSource: vi.fn(),
 }))
 vi.mock('@/lib/project/globals.css.source', () => ({
-  globalsCssSource: '/* mocked globals.css */'
+  globalsCssSource: '/* mocked globals.css */',
 }))
 vi.mock('@/lib/project/static-sources', () => ({
   packageJsonTemplate: { name: 'test-project', version: '1.0.0' },
@@ -32,7 +32,7 @@ vi.mock('@/lib/project/static-sources', () => ({
   indexHtmlTemplate: '<!DOCTYPE html>',
   indexTsxTemplate: 'import React from "react"',
   readmeTemplate: '# Test README',
-  gitignoreTemplate: 'node_modules'
+  gitignoreTemplate: 'node_modules',
 }))
 vi.mock('jszip')
 
@@ -47,7 +47,7 @@ describe('React Export Utilities', () => {
       width: 1200,
       height: 600,
       z: 1,
-      selected: false
+      selected: false,
     },
     {
       id: 'block2',
@@ -58,7 +58,7 @@ describe('React Export Utilities', () => {
       width: 1200,
       height: 80,
       z: 2,
-      selected: false
+      selected: false,
     },
     {
       id: 'block3',
@@ -69,8 +69,8 @@ describe('React Export Utilities', () => {
       width: 1200,
       height: 600,
       z: 3,
-      selected: false
-    }
+      selected: false,
+    },
   ]
 
   beforeEach(() => {
@@ -96,7 +96,7 @@ describe('React Export Utilities', () => {
 
     it('should handle blocks without typeId', () => {
       const blocksWithoutTypeId: Block[] = [
-        { ...mockBlocks[0], typeId: '' } as any
+        { ...mockBlocks[0], typeId: '' } as any,
       ]
 
       const result = extractUniqueTemplates(blocksWithoutTypeId)
@@ -141,7 +141,9 @@ describe('React Export Utilities', () => {
       const result = generateComponentFile('nonexistent')
 
       expect(result).toBeNull()
-      expect(templateSources.getTemplateSource).toHaveBeenCalledWith('nonexistent')
+      expect(templateSources.getTemplateSource).toHaveBeenCalledWith(
+        'nonexistent'
+      )
     })
 
     it('should log warning for missing source', () => {
@@ -150,7 +152,9 @@ describe('React Export Utilities', () => {
 
       generateComponentFile('missing')
 
-      expect(consoleSpy).toHaveBeenCalledWith('No source found for template: missing')
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'No source found for template: missing'
+      )
       consoleSpy.mockRestore()
     })
   })
@@ -213,7 +217,7 @@ describe('React Export Utilities', () => {
 
       // Check block rendering
       expect(result).toContain('key="block1"')
-      expect(result).toContain('top: 100px')
+      expect(result).toContain('top: 100,')
       expect(result).toContain('zIndex: 1')
       expect(result).toContain('<Hero1')
       expect(result).toContain('<Navbar1')
@@ -221,7 +225,7 @@ describe('React Export Utilities', () => {
 
     it('should handle blocks with no props', () => {
       const blocksWithoutProps: Block[] = [
-        { ...mockBlocks[0], props: undefined }
+        { ...mockBlocks[0], props: undefined },
       ]
 
       const result = generateAppComponent(blocksWithoutProps)
@@ -243,14 +247,16 @@ describe('React Export Utilities', () => {
 
       expect(result).toHaveLength(4)
 
-      const paths = result.map(f => f.path)
+      const paths = result.map((f) => f.path)
       expect(paths).toContain('src/components/ui/button.tsx')
       expect(paths).toContain('src/components/ui/badge.tsx')
       expect(paths).toContain('src/components/ui/card.tsx')
       expect(paths).toContain('src/components/ui/input.tsx')
 
       // Check button content
-      const button = result.find(f => f.path === 'src/components/ui/button.tsx')
+      const button = result.find(
+        (f) => f.path === 'src/components/ui/button.tsx'
+      )
       expect(button?.content).toContain('export interface ButtonProps')
       expect(button?.content).toContain('const Button = React.forwardRef')
     })
@@ -269,23 +275,30 @@ describe('React Export Utilities', () => {
 
   describe('generateProjectFiles', () => {
     beforeEach(() => {
-      vi.mocked(templateSources.getTemplateSource).mockImplementation((typeId) => {
-        if (typeId === 'hero1') return 'export function Hero1() {}'
-        if (typeId === 'navbar1') return 'export function Navbar1() {}'
-        return null
-      })
+      vi.mocked(templateSources.getTemplateSource).mockImplementation(
+        (typeId) => {
+          if (typeId === 'hero1') return 'export function Hero1() {}'
+          if (typeId === 'navbar1') return 'export function Navbar1() {}'
+          return null
+        }
+      )
     })
 
     it('should generate all project files', () => {
       const result = generateProjectFiles(mockBlocks)
 
       // Check for component files
-      const componentPaths = result.map(f => f.path).filter(p => p.includes('components/Hero') || p.includes('components/Navbar'))
+      const componentPaths = result
+        .map((f) => f.path)
+        .filter(
+          (p) =>
+            p.includes('components/Hero') || p.includes('components/Navbar')
+        )
       expect(componentPaths).toContain('src/components/Hero1.tsx')
       expect(componentPaths).toContain('src/components/Navbar1.tsx')
 
       // Check for main files
-      const paths = result.map(f => f.path)
+      const paths = result.map((f) => f.path)
       expect(paths).toContain('src/App.tsx')
       expect(paths).toContain('src/index.tsx')
       expect(paths).toContain('src/globals.css')
@@ -294,7 +307,7 @@ describe('React Export Utilities', () => {
       expect(paths).toContain('package.json')
       expect(paths).toContain('vite.config.ts')
       expect(paths).toContain('tsconfig.json')
-      expect(paths).toContain('tailwind.config.js')
+      expect(paths).toContain('postcss.config.js')
       expect(paths).toContain('index.html')
       expect(paths).toContain('README.md')
     })
@@ -305,7 +318,7 @@ describe('React Export Utilities', () => {
       const result = generateProjectFiles(mockBlocks)
 
       // Should still generate other files
-      const paths = result.map(f => f.path)
+      const paths = result.map((f) => f.path)
       expect(paths).toContain('src/App.tsx')
       expect(paths).toContain('package.json')
     })
@@ -317,12 +330,16 @@ describe('React Export Utilities', () => {
       const mockGenerateAsync = vi.fn().mockResolvedValue(new Blob(['test']))
       const mockFile = vi.fn()
 
-      vi.mocked(templateSources.getTemplateSource).mockReturnValue('export function Test() {}')
+      vi.mocked(templateSources.getTemplateSource).mockReturnValue(
+        'export function Test() {}'
+      )
 
       // Import JSZip and mock it directly
       const JSZip = (await import('jszip')).default
       vi.spyOn(JSZip.prototype, 'file').mockImplementation(mockFile)
-      vi.spyOn(JSZip.prototype, 'generateAsync').mockImplementation(mockGenerateAsync)
+      vi.spyOn(JSZip.prototype, 'generateAsync').mockImplementation(
+        mockGenerateAsync
+      )
 
       const result = await generateReactProject(mockBlocks)
 
@@ -330,7 +347,7 @@ describe('React Export Utilities', () => {
       expect(mockGenerateAsync).toHaveBeenCalledWith({
         type: 'blob',
         compression: 'DEFLATE',
-        compressionOptions: { level: 9 }
+        compressionOptions: { level: 9 },
       })
     })
   })
@@ -341,7 +358,7 @@ describe('React Export Utilities', () => {
       const mockCreateElement = vi.fn(() => ({
         href: '',
         download: '',
-        click: vi.fn()
+        click: vi.fn(),
       }))
       const mockCreateObjectURL = vi.fn(() => 'blob:url')
       const mockRevokeObjectURL = vi.fn()

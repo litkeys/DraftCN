@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,9 +15,16 @@ import {
   generateExportFilename,
   downloadJSON,
 } from '@/lib/project/export';
+import {
+  generateReactProject,
+  downloadReactProject,
+  generateReactExportFilename,
+} from '@/lib/project/react-export';
+import { toast } from 'sonner';
 
 export function ExportButton() {
   const blocks = useAppStore((state) => state.blocks);
+  const [isExporting, setIsExporting] = useState(false);
 
   /**
    * Calculate canvas dimensions based on blocks
@@ -55,6 +62,32 @@ export function ExportButton() {
     downloadJSON(projectData, filename);
   };
 
+  const handleExportReact = async () => {
+    try {
+      // Set loading state
+      setIsExporting(true);
+
+      // Generate the React project ZIP
+      const blob = await generateReactProject(blocks);
+
+      // Generate filename with timestamp
+      const filename = generateReactExportFilename();
+
+      // Trigger download
+      downloadReactProject(blob, filename);
+
+      // Show success notification
+      toast.success('React project exported successfully');
+    } catch (error) {
+      // Show error notification
+      toast.error('Failed to export React project');
+      console.error('React export error:', error);
+    } finally {
+      // Reset loading state
+      setIsExporting(false);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -62,14 +95,18 @@ export function ExportButton() {
           variant="outline"
           size="sm"
           className="gap-2"
+          disabled={isExporting}
         >
           <Download className="h-4 w-4" />
-          Export
+          {isExporting ? 'Exporting...' : 'Export'}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleExportJSON}>
           Export as JSON
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleExportReact}>
+          Export to React
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

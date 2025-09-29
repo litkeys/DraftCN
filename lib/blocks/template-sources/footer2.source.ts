@@ -1,4 +1,4 @@
-export const footer2Source = `import { Logo, LogoImage, LogoText } from './shadcnblocks/logo'
+export const footer2Source = `import { Logo, LogoImage, LogoText } from './logo'
 
 interface MenuItem {
   title: string
@@ -129,4 +129,4 @@ const Footer2 = ({
   )
 }
 
-export { Footer2 }`;
+export { Footer2 }`

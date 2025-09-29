@@ -6,6 +6,7 @@ export interface DependencyInfo {
     devDependencies: Map<string, string>
   }
   shadcnComponents: Set<string>
+  shadcnblocksComponents: Set<string>
   lucideIcons: Set<string>
 }
 
@@ -15,25 +16,43 @@ export interface DependencyInfo {
 export function parseTemplateDependencies(templateSource: string): {
   shadcnComponents: Set<string>
   lucideIcons: Set<string>
+  shadcnblocksComponents: Set<string>
   otherImports: Set<string>
 } {
   const shadcnComponents = new Set<string>()
   const lucideIcons = new Set<string>()
+  const shadcnblocksComponents = new Set<string>()
   const otherImports = new Set<string>()
 
   // Match import statements
-  const importRegex = /import\s+(?:{[^}]*}|\*\s+as\s+\w+|\w+)\s+from\s+['"]([^'"]+)['"]/g
+  const importRegex =
+    /import\s+(?:{[^}]*}|\*\s+as\s+\w+|\w+)\s+from\s+['"]([^'"]+)['"]/g
   let match
 
   while ((match = importRegex.exec(templateSource)) !== null) {
     const importPath = match[1]
 
     // Check for shadcn/ui components
-    if (importPath.startsWith('./ui/') || importPath.startsWith('@/components/ui/')) {
+    if (
+      importPath.startsWith('./ui/') ||
+      importPath.startsWith('@/components/ui/')
+    ) {
       // Extract component name from path
       const componentMatch = importPath.match(/ui\/([^/]+)$/)
       if (componentMatch) {
         shadcnComponents.add(componentMatch[1])
+      }
+    }
+    // Check for shadcnblocks components
+    else if (
+      importPath.startsWith('./') ||
+      importPath.startsWith('@/components/shadcnblocks/')
+    ) {
+      // Extract component name from path (logo -> logo, shadcnblocks/logo -> logo)
+      const componentMatch = importPath.match(/(?:shadcnblocks\/)?([^/]+)$/)
+      if (componentMatch && componentMatch[1] !== 'utils') {
+        // Exclude utils and only include actual components
+        shadcnblocksComponents.add(componentMatch[1])
       }
     }
     // Check for lucide-react icons
@@ -42,8 +61,8 @@ export function parseTemplateDependencies(templateSource: string): {
       const fullImport = match[0]
       const iconMatch = fullImport.match(/\{([^}]+)\}/)
       if (iconMatch) {
-        const icons = iconMatch[1].split(',').map(icon => icon.trim())
-        icons.forEach(icon => {
+        const icons = iconMatch[1].split(',').map((icon) => icon.trim())
+        icons.forEach((icon) => {
           // Remove 'as' aliases if present
           const cleanIcon = icon.split(' as ')[0].trim()
           if (cleanIcon) {
@@ -58,7 +77,7 @@ export function parseTemplateDependencies(templateSource: string): {
     }
   }
 
-  return { shadcnComponents, lucideIcons, otherImports }
+  return { shadcnComponents, lucideIcons, shadcnblocksComponents, otherImports }
 }
 
 /**
@@ -66,6 +85,7 @@ export function parseTemplateDependencies(templateSource: string): {
  */
 export function resolveAllDependencies(templateIds: string[]): DependencyInfo {
   const allShadcnComponents = new Set<string>()
+  const allShadcnblocksComponents = new Set<string>()
   const allLucideIcons = new Set<string>()
   const allOtherImports = new Set<string>()
 
@@ -73,11 +93,21 @@ export function resolveAllDependencies(templateIds: string[]): DependencyInfo {
   for (const templateId of templateIds) {
     const source = getTemplateSource(templateId)
     if (source) {
-      const { shadcnComponents, lucideIcons, otherImports } = parseTemplateDependencies(source)
+      const {
+        shadcnComponents,
+        shadcnblocksComponents,
+        lucideIcons,
+        otherImports,
+      } = parseTemplateDependencies(source)
 
-      shadcnComponents.forEach(component => allShadcnComponents.add(component))
-      lucideIcons.forEach(icon => allLucideIcons.add(icon))
-      otherImports.forEach(imp => allOtherImports.add(imp))
+      shadcnComponents.forEach((component) =>
+        allShadcnComponents.add(component)
+      )
+      shadcnblocksComponents.forEach((component) =>
+        allShadcnblocksComponents.add(component)
+      )
+      lucideIcons.forEach((icon) => allLucideIcons.add(icon))
+      otherImports.forEach((imp) => allOtherImports.add(imp))
     }
   }
 
@@ -103,26 +133,29 @@ export function resolveAllDependencies(templateIds: string[]): DependencyInfo {
   devDependencies.set('@types/react', '^18.0.0')
   devDependencies.set('@types/react-dom', '^18.0.0')
   devDependencies.set('@vitejs/plugin-react', '^4.0.0')
-  devDependencies.set('autoprefixer', '^10.0.0')
+  devDependencies.set('@tailwindcss/postcss', '^4.0.0')
   devDependencies.set('postcss', '^8.0.0')
-  devDependencies.set('tailwindcss', '^3.4.0')
+  devDependencies.set('tailwindcss', '^4.0.0')
   devDependencies.set('typescript', '^5.0.0')
   devDependencies.set('vite', '^5.0.0')
 
   return {
     npmDependencies: {
       dependencies,
-      devDependencies
+      devDependencies,
     },
     shadcnComponents: allShadcnComponents,
-    lucideIcons: allLucideIcons
+    shadcnblocksComponents: allShadcnblocksComponents,
+    lucideIcons: allLucideIcons,
   }
 }
 
 /**
  * Generate shadcn installation commands for README
  */
-export function generateShadcnInstallCommands(components: Set<string>): string[] {
+export function generateShadcnInstallCommands(
+  components: Set<string>
+): string[] {
   if (components.size === 0) return []
 
   const commands: string[] = []
@@ -140,13 +173,38 @@ export function generateShadcnInstallCommands(components: Set<string>): string[]
 }
 
 /**
+ * Generate shadcnblocks installation commands for README
+ */
+export function generateShadcnblocksInstallCommands(
+  components: Set<string>
+): string[] {
+  if (components.size === 0) return []
+
+  const commands: string[] = []
+
+  // Add command for each shadcnblocks component
+  const sortedComponents = Array.from(components).sort()
+  for (const component of sortedComponents) {
+    commands.push(
+      `npx shadcn@latest add https://shadcnblocks.com/r/${component}`
+    )
+  }
+
+  return commands
+}
+
+/**
  * Generate a comprehensive README with installation instructions
  */
 export function generateReadmeWithDependencies(
   shadcnComponents: Set<string>,
+  shadcnblocksComponents: Set<string> = new Set(),
   projectName: string = 'DraftCN React Export'
 ): string {
   const shadcnCommands = generateShadcnInstallCommands(shadcnComponents)
+  const shadcnblocksCommands = generateShadcnblocksInstallCommands(
+    shadcnblocksComponents
+  )
 
   let readme = `# ${projectName}
 
@@ -182,6 +240,16 @@ ${shadcnCommands.slice(1).join('\n')}
 `
   }
 
+  if (shadcnblocksCommands.length > 0) {
+    readme += `
+Additionally, install the required shadcnblocks components:
+
+\`\`\`bash
+${shadcnblocksCommands.join('\n')}
+\`\`\`
+`
+  }
+
   readme += `
 ### 3. Start Development Server
 
@@ -212,7 +280,7 @@ src/
 - **React 18** - UI library
 - **TypeScript** - Type safety
 - **Vite** - Build tool
-- **Tailwind CSS** - Utility-first CSS
+- **Tailwind CSS v4** - Utility-first CSS with CSS-first configuration
 - **shadcn/ui** - Component library
 
 ## Customization

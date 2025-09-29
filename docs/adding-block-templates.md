@@ -155,12 +155,13 @@ export const CTAComponent = ({
   )
 }
 
-export { CTAComponent }`;
+export { CTAComponent }`
 ```
 
 **Important Notes:**
+
 - Convert all imports from `@/components/ui/*` to `./ui/*`
-- Convert `@/components/shadcnblocks/*` to `./shadcnblocks/*`
+- Convert all imports from `@/components/shadcnblocks/*` to `./*` (e.g., `@/components/shadcnblocks/logo` becomes `./logo`)
 - The source should be a complete, standalone TypeScript component
 - Store as a template string with backticks
 
@@ -168,13 +169,13 @@ export { CTAComponent }`;
 
 ```typescript
 // lib/blocks/template-sources.ts
-import { cta1Source } from './template-sources/cta-1.source';
+import { cta1Source } from './template-sources/cta-1.source'
 
 // Add to the templateSources mapping
 export const templateSources: TemplateSourceMap = {
   // ... existing templates
   'cta-1': cta1Source,
-};
+}
 ```
 
 This ensures your template can be exported when users generate a React project from their designs.

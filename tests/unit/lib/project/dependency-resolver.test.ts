@@ -3,7 +3,8 @@ import {
   parseTemplateDependencies,
   resolveAllDependencies,
   generateShadcnInstallCommands,
-  generateReadmeWithDependencies
+  generateShadcnblocksInstallCommands,
+  generateReadmeWithDependencies,
 } from '@/lib/project/dependency-resolver'
 import * as templateSources from '@/lib/blocks/template-sources'
 
@@ -29,7 +30,9 @@ describe('dependency-resolver', () => {
 
       const result = parseTemplateDependencies(source)
 
-      expect(result.shadcnComponents).toEqual(new Set(['button', 'card', 'badge']))
+      expect(result.shadcnComponents).toEqual(
+        new Set(['button', 'card', 'badge'])
+      )
       expect(result.lucideIcons.size).toBe(0)
     })
 
@@ -70,6 +73,24 @@ describe('dependency-resolver', () => {
       expect(result.otherImports).toContain('next/link')
     })
 
+    it('should extract shadcnblocks components from imports', () => {
+      const source = `
+        import { Logo, LogoImage, LogoText } from './logo'
+        import { Button } from './ui/button'
+        import { ArrowRight } from 'lucide-react'
+
+        export function Component() {
+          return <div></div>
+        }
+      `
+
+      const result = parseTemplateDependencies(source)
+
+      expect(result.shadcnblocksComponents).toEqual(new Set(['logo']))
+      expect(result.shadcnComponents).toEqual(new Set(['button']))
+      expect(result.lucideIcons).toEqual(new Set(['ArrowRight']))
+    })
+
     it('should handle templates with no dependencies', () => {
       const source = `
         import React from 'react'
@@ -82,6 +103,7 @@ describe('dependency-resolver', () => {
       const result = parseTemplateDependencies(source)
 
       expect(result.shadcnComponents.size).toBe(0)
+      expect(result.shadcnblocksComponents.size).toBe(0)
       expect(result.lucideIcons.size).toBe(0)
     })
 
@@ -133,6 +155,7 @@ describe('dependency-resolver', () => {
 
       expect(result.shadcnComponents).toEqual(new Set(['button', 'badge']))
       expect(result.lucideIcons).toEqual(new Set(['ArrowRight', 'Menu']))
+      expect(result.shadcnblocksComponents.size).toBe(0)
 
       // Check npm dependencies
       expect(result.npmDependencies.dependencies.has('react')).toBe(true)
@@ -141,9 +164,19 @@ describe('dependency-resolver', () => {
       expect(result.npmDependencies.dependencies.has('clsx')).toBe(true)
 
       // Check dev dependencies
-      expect(result.npmDependencies.devDependencies.has('typescript')).toBe(true)
+      expect(result.npmDependencies.devDependencies.has('typescript')).toBe(
+        true
+      )
       expect(result.npmDependencies.devDependencies.has('vite')).toBe(true)
-      expect(result.npmDependencies.devDependencies.has('tailwindcss')).toBe(true)
+      expect(result.npmDependencies.devDependencies.has('tailwindcss')).toBe(
+        true
+      )
+      expect(
+        result.npmDependencies.devDependencies.has('@tailwindcss/postcss')
+      ).toBe(true)
+      expect(result.npmDependencies.devDependencies.has('autoprefixer')).toBe(
+        false
+      )
     })
 
     it('should handle missing templates gracefully', () => {
@@ -153,6 +186,7 @@ describe('dependency-resolver', () => {
       const result = resolveAllDependencies(['unknown1', 'unknown2'])
 
       expect(result.shadcnComponents.size).toBe(0)
+      expect(result.shadcnblocksComponents.size).toBe(0)
       expect(result.lucideIcons.size).toBe(0)
 
       // Core dependencies should still be included
@@ -171,9 +205,14 @@ describe('dependency-resolver', () => {
         `
       })
 
-      const result = resolveAllDependencies(['template1', 'template2', 'template3'])
+      const result = resolveAllDependencies([
+        'template1',
+        'template2',
+        'template3',
+      ])
 
       expect(result.shadcnComponents).toEqual(new Set(['button']))
+      expect(result.shadcnblocksComponents.size).toBe(0)
       expect(result.lucideIcons).toEqual(new Set(['ArrowRight']))
     })
 
@@ -189,7 +228,98 @@ describe('dependency-resolver', () => {
 
       const result = resolveAllDependencies(['template1'])
 
-      expect(result.npmDependencies.dependencies.has('lucide-react')).toBe(false)
+      expect(result.npmDependencies.dependencies.has('lucide-react')).toBe(
+        false
+      )
+    })
+
+    it('should include Tailwind CSS v4 dependencies with correct versions', () => {
+      const mockGetTemplateSource = vi.mocked(templateSources.getTemplateSource)
+
+      mockGetTemplateSource.mockImplementation(() => {
+        return `
+          import { Button } from './ui/button'
+          export function Component() {}
+        `
+      })
+
+      const result = resolveAllDependencies(['template1'])
+
+      // Check Tailwind v4 specific dependencies
+      expect(result.npmDependencies.devDependencies.get('tailwindcss')).toBe(
+        '^4.0.0'
+      )
+      expect(
+        result.npmDependencies.devDependencies.get('@tailwindcss/postcss')
+      ).toBe('^4.0.0')
+      expect(result.npmDependencies.devDependencies.has('autoprefixer')).toBe(
+        false
+      )
+      expect(result.npmDependencies.devDependencies.has('postcss')).toBe(true)
+    })
+
+    it('should resolve shadcnblocks dependencies', () => {
+      const mockGetTemplateSource = vi.mocked(templateSources.getTemplateSource)
+
+      mockGetTemplateSource.mockImplementation((id) => {
+        if (id === 'footer2') {
+          return `
+            import { Logo, LogoImage, LogoText } from './logo'
+            import { Button } from './ui/button'
+            export function Footer2() {}
+          `
+        }
+        return null
+      })
+
+      const result = resolveAllDependencies(['footer2'])
+
+      expect(result.shadcnComponents).toEqual(new Set(['button']))
+      expect(result.shadcnblocksComponents).toEqual(new Set(['logo']))
+      expect(result.lucideIcons.size).toBe(0)
+    })
+  })
+
+  describe('generateShadcnblocksInstallCommands', () => {
+    it('should generate commands for multiple shadcnblocks components', () => {
+      const components = new Set(['logo', 'button-group', 'navbar'])
+
+      const commands = generateShadcnblocksInstallCommands(components)
+
+      expect(commands).toContain(
+        'npx shadcn@latest add https://shadcnblocks.com/r/button-group'
+      )
+      expect(commands).toContain(
+        'npx shadcn@latest add https://shadcnblocks.com/r/logo'
+      )
+      expect(commands).toContain(
+        'npx shadcn@latest add https://shadcnblocks.com/r/navbar'
+      )
+      expect(commands.length).toBe(3)
+    })
+
+    it('should return empty array for no components', () => {
+      const components = new Set<string>()
+
+      const commands = generateShadcnblocksInstallCommands(components)
+
+      expect(commands).toEqual([])
+    })
+
+    it('should sort components alphabetically', () => {
+      const components = new Set(['navbar', 'logo', 'button-group'])
+
+      const commands = generateShadcnblocksInstallCommands(components)
+
+      expect(commands[0]).toBe(
+        'npx shadcn@latest add https://shadcnblocks.com/r/button-group'
+      )
+      expect(commands[1]).toBe(
+        'npx shadcn@latest add https://shadcnblocks.com/r/logo'
+      )
+      expect(commands[2]).toBe(
+        'npx shadcn@latest add https://shadcnblocks.com/r/navbar'
+      )
     })
   })
 
@@ -231,7 +361,11 @@ describe('dependency-resolver', () => {
     it('should generate README with shadcn components', () => {
       const components = new Set(['button', 'card'])
 
-      const readme = generateReadmeWithDependencies(components, 'Test Project')
+      const readme = generateReadmeWithDependencies(
+        components,
+        new Set(),
+        'Test Project'
+      )
 
       expect(readme).toContain('# Test Project')
       expect(readme).toContain('npx shadcn@latest init -d')
@@ -252,6 +386,31 @@ describe('dependency-resolver', () => {
       expect(readme).not.toContain('npx shadcn@latest add')
     })
 
+    it('should generate README with both shadcn and shadcnblocks components', () => {
+      const shadcnComponents = new Set(['button', 'card'])
+      const shadcnblocksComponents = new Set(['logo', 'navbar'])
+
+      const readme = generateReadmeWithDependencies(
+        shadcnComponents,
+        shadcnblocksComponents,
+        'Test Project'
+      )
+
+      expect(readme).toContain('# Test Project')
+      expect(readme).toContain('npx shadcn@latest init -d')
+      expect(readme).toContain('npx shadcn@latest add button')
+      expect(readme).toContain('npx shadcn@latest add card')
+      expect(readme).toContain(
+        'npx shadcn@latest add https://shadcnblocks.com/r/logo'
+      )
+      expect(readme).toContain(
+        'npx shadcn@latest add https://shadcnblocks.com/r/navbar'
+      )
+      expect(readme).toContain(
+        'Additionally, install the required shadcnblocks components:'
+      )
+    })
+
     it('should include project structure and technologies', () => {
       const components = new Set(['button'])
 
@@ -265,7 +424,7 @@ describe('dependency-resolver', () => {
       expect(readme).toContain('React 18')
       expect(readme).toContain('TypeScript')
       expect(readme).toContain('Vite')
-      expect(readme).toContain('Tailwind CSS')
+      expect(readme).toContain('Tailwind CSS v4')
     })
 
     it('should include customization and next steps sections', () => {
