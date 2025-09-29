@@ -135,25 +135,33 @@ describe('React Export Utilities', () => {
       expect(templateSources.getTemplateSource).toHaveBeenCalledWith('hero1')
     })
 
-    it('should return null when source does not exist', () => {
+    it('should generate fallback placeholder component when source does not exist', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       vi.mocked(templateSources.getTemplateSource).mockReturnValue(null)
 
       const result = generateComponentFile('nonexistent')
 
-      expect(result).toBeNull()
+      expect(result).not.toBeNull()
+      expect(result?.path).toBe('src/components/Nonexistent.tsx')
+      expect(result?.content).toContain('interface NonexistentProps')
+      expect(result?.content).toContain('export function Nonexistent')
+      expect(result?.content).toContain('Template source not found for: nonexistent')
+      expect(result?.content).toContain('This is a placeholder component')
       expect(templateSources.getTemplateSource).toHaveBeenCalledWith(
         'nonexistent'
       )
+
+      consoleSpy.mockRestore()
     })
 
-    it('should log warning for missing source', () => {
+    it('should log warning for missing source with placeholder message', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       vi.mocked(templateSources.getTemplateSource).mockReturnValue(null)
 
       generateComponentFile('missing')
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'No source found for template: missing'
+        'No source found for template: missing, generating placeholder component'
       )
       consoleSpy.mockRestore()
     })

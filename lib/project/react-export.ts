@@ -58,14 +58,43 @@ export function typeIdToComponentName(typeId: string): string {
  */
 export function generateComponentFile(typeId: string): ReactProjectFile | null {
   const source = getTemplateSource(typeId)
-
-  if (!source) {
-    console.warn(`No source found for template: ${typeId}`)
-    return null
-  }
-
   const componentName = typeIdToComponentName(typeId)
   const componentPath = `src/components/${componentName}.tsx`
+
+  if (!source) {
+    console.warn(`No source found for template: ${typeId}, generating placeholder component`)
+
+    // Generate a fallback placeholder component
+    const placeholderContent = `import React from 'react'
+
+interface ${componentName}Props {
+  [key: string]: any
+}
+
+export function ${componentName}(props: ${componentName}Props) {
+  return (
+    <div className="p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-gray-900">
+          ${componentName} Component
+        </h3>
+        <p className="mt-2 text-sm text-gray-500">
+          Template source not found for: ${typeId}
+        </p>
+        <p className="mt-1 text-xs text-gray-400">
+          This is a placeholder component. The original template implementation was not available during export.
+        </p>
+      </div>
+    </div>
+  )
+}
+`
+
+    return {
+      path: componentPath,
+      content: placeholderContent,
+    }
+  }
 
   return {
     path: componentPath,

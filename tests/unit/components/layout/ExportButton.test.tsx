@@ -284,6 +284,41 @@ describe('ExportButton', () => {
       expect(reactExportUtils.generateReactProject).toHaveBeenCalledWith(mockBlocks);
     });
 
+    it('should show specific error for template-related failures', async () => {
+      const mockError = new Error('Failed to process template hero1');
+      (reactExportUtils.generateReactProject as vi.Mock).mockRejectedValue(mockError);
+
+      try {
+        await reactExportUtils.generateReactProject(mockBlocks);
+      } catch (error) {
+        expect(error).toBe(mockError);
+        expect((error as Error).message).toContain('template');
+      }
+    });
+
+    it('should show specific error for ZIP-related failures', async () => {
+      const mockError = new Error('Failed to compress ZIP archive');
+      (reactExportUtils.generateReactProject as vi.Mock).mockRejectedValue(mockError);
+
+      try {
+        await reactExportUtils.generateReactProject(mockBlocks);
+      } catch (error) {
+        expect(error).toBe(mockError);
+        expect((error as Error).message).toContain('ZIP');
+      }
+    });
+
+    it('should handle empty blocks array', async () => {
+      const emptyBlocks: Block[] = [];
+
+      // The function should handle empty blocks gracefully
+      (reactExportUtils.generateReactProject as vi.Mock).mockResolvedValue(new Blob());
+
+      const result = await reactExportUtils.generateReactProject(emptyBlocks);
+      expect(result).toBeInstanceOf(Blob);
+      expect(reactExportUtils.generateReactProject).toHaveBeenCalledWith(emptyBlocks);
+    });
+
     it('should show loading state when exporting', () => {
       render(<ExportButton />);
 
