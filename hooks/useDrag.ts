@@ -10,14 +10,14 @@ export interface UseDragOptions {
   sourceType: 'library' | 'canvas';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   item: any;
-  onDragStart?: (e: MouseEvent, offset: { x: number; y: number }) => void;
-  onDragMove?: (e: MouseEvent) => void;
+  onDragStart?: (e: PointerEvent, offset: { x: number; y: number }) => void;
+  onDragMove?: (e: PointerEvent) => void;
   onDragEnd?: () => void;
 }
 
 export interface UseDragReturn {
   isDragging: boolean;
-  handleMouseDown: (e: React.MouseEvent) => void;
+  handlePointerDown: (e: React.PointerEvent) => void;
 }
 
 export const useDrag = (options: UseDragOptions): UseDragReturn => {
@@ -28,70 +28,79 @@ export const useDrag = (options: UseDragOptions): UseDragReturn => {
   
   // Refs to store current values without re-renders
   const isDraggingRef = useRef(false);
-  const mouseHandlersRef = useRef<{
-    handleMouseMove: (e: MouseEvent) => void;
-    handleMouseUp: (e: MouseEvent) => void;
+  const pointerHandlersRef = useRef<{
+    handlePointerMove: (e: PointerEvent) => void;
+    handlePointerUp: (e: PointerEvent) => void;
   } | null>(null);
+  const pointerIdRef = useRef<number | null>(null);
 
   /**
-   * Handle mouse move during drag
+   * Handle pointer move during drag
    */
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    // Only handle the original pointer
+    if (pointerIdRef.current !== null && e.pointerId !== pointerIdRef.current) return;
     if (!isDraggingRef.current) return;
-    
+
     // Update position in store
     setDragState({
       position: { x: e.clientX, y: e.clientY }
     });
-    
+
     // Call custom move handler if provided
     onDragMove?.(e);
   }, [setDragState, onDragMove]);
 
   /**
-   * Handle mouse up to end drag
+   * Handle pointer up to end drag
    */
-  const handleMouseUp = useCallback((e: MouseEvent) => {
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+    // Only handle the original pointer
+    if (pointerIdRef.current !== null && e.pointerId !== pointerIdRef.current) return;
     if (!isDraggingRef.current) return;
-    
+
     // Clean up
     isDraggingRef.current = false;
-    
+    pointerIdRef.current = null;
+
     // Remove global event listeners
-    if (mouseHandlersRef.current) {
-      document.removeEventListener('mousemove', mouseHandlersRef.current.handleMouseMove);
-      document.removeEventListener('mouseup', mouseHandlersRef.current.handleMouseUp);
-      mouseHandlersRef.current = null;
+    if (pointerHandlersRef.current) {
+      document.removeEventListener('pointermove', pointerHandlersRef.current.handlePointerMove);
+      document.removeEventListener('pointerup', pointerHandlersRef.current.handlePointerUp);
+      pointerHandlersRef.current = null;
     }
-    
+
     // End drag will be handled by Canvas drop handler
     // For now, just clean up if not dropped on valid target
     if (dragManager.isDragging()) {
       dragManager.endDrag();
       clearDragState();
     }
-    
+
     // Call custom end handler if provided
     onDragEnd?.();
   }, [clearDragState, onDragEnd]);
 
   /**
-   * Handle mouse down to start drag
+   * Handle pointer down to start drag
    */
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     // Prevent text selection during drag
     e.preventDefault();
-    
+
+    // Store the pointer ID for this drag operation
+    pointerIdRef.current = e.pointerId;
+
     // Calculate initial offset from click position
     const rect = e.currentTarget.getBoundingClientRect();
     const offset = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
     };
-    
+
     // Start drag operation
     dragManager.startDrag(sourceType, item, offset);
-    
+
     // Update store with drag state
     setDragState({
       isActive: true,
@@ -100,23 +109,23 @@ export const useDrag = (options: UseDragOptions): UseDragReturn => {
       offset,
       position: { x: e.clientX, y: e.clientY }
     });
-    
+
     // Set dragging flag
     isDraggingRef.current = true;
-    
+
     // Store handlers for cleanup
-    mouseHandlersRef.current = {
-      handleMouseMove,
-      handleMouseUp
+    pointerHandlersRef.current = {
+      handlePointerMove,
+      handlePointerUp
     };
-    
+
     // Add global event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+
     // Call custom start handler if provided
     onDragStart?.(e.nativeEvent, offset);
-  }, [sourceType, item, setDragState, handleMouseMove, handleMouseUp, onDragStart]);
+  }, [sourceType, item, setDragState, handlePointerMove, handlePointerUp, onDragStart]);
 
   /**
    * Clean up on unmount
@@ -124,10 +133,10 @@ export const useDrag = (options: UseDragOptions): UseDragReturn => {
   useEffect(() => {
     return () => {
       // Clean up any active drag on unmount
-      if (isDraggingRef.current && mouseHandlersRef.current) {
-        document.removeEventListener('mousemove', mouseHandlersRef.current.handleMouseMove);
-        document.removeEventListener('mouseup', mouseHandlersRef.current.handleMouseUp);
-        
+      if (isDraggingRef.current && pointerHandlersRef.current) {
+        document.removeEventListener('pointermove', pointerHandlersRef.current.handlePointerMove);
+        document.removeEventListener('pointerup', pointerHandlersRef.current.handlePointerUp);
+
         if (dragManager.isDragging()) {
           dragManager.cancelDrag();
           clearDragState();
@@ -138,6 +147,6 @@ export const useDrag = (options: UseDragOptions): UseDragReturn => {
 
   return {
     isDragging,
-    handleMouseDown
+    handlePointerDown
   };
 };

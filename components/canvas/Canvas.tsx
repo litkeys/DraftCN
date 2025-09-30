@@ -76,10 +76,10 @@ export const Canvas: React.FC = () => {
   }, [blocks, zoom])
 
   /**
-   * Handle mouse down on block (for drag initiation)
+   * Handle pointer down on block (for drag initiation)
    */
-  const handleBlockMouseDown = useCallback(
-    (blockId: string, e: React.MouseEvent) => {
+  const handleBlockPointerDown = useCallback(
+    (blockId: string, e: React.PointerEvent) => {
       e.stopPropagation() // Prevent canvas deselection
 
       // Check if already dragging
@@ -97,17 +97,17 @@ export const Canvas: React.FC = () => {
       if (!canvasRef.current) return
       const rect = canvasRef.current.getBoundingClientRect()
 
-      // Convert mouse position to canvas-relative screen coordinates
-      const canvasMouseX = e.clientX - rect.left
-      const canvasMouseY = e.clientY - rect.top
+      // Convert pointer position to canvas-relative screen coordinates
+      const canvasPointerX = e.clientX - rect.left
+      const canvasPointerY = e.clientY - rect.top
 
-      // Convert mouse to world coordinates
-      const worldMouse = screenToWorld(canvasMouseX, canvasMouseY, zoom, panX, panY)
+      // Convert pointer to world coordinates
+      const worldPointer = screenToWorld(canvasPointerX, canvasPointerY, zoom, panX, panY)
 
-      // Calculate offset from mouse to block origin (in world coordinates)
-      const mouseOffset = {
-        x: worldMouse.x - block.x,
-        y: worldMouse.y - block.y,
+      // Calculate offset from pointer to block origin (in world coordinates)
+      const pointerOffset = {
+        x: worldPointer.x - block.x,
+        y: worldPointer.y - block.y,
       }
 
       // Start drag
@@ -115,7 +115,7 @@ export const Canvas: React.FC = () => {
 
       // Store offset and complete drag state in Zustand store for accurate dragging
       setDragState({
-        offset: mouseOffset,
+        offset: pointerOffset,
         isActive: true,
         sourceType: 'canvas',
         draggedItem: block,
@@ -170,7 +170,7 @@ export const Canvas: React.FC = () => {
    * Handle drop from library
    */
   const handleLibraryDrop = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent) => {
       // Only handle drop if actively dragging
       if (!isDragging || !draggedItem) {
         return
@@ -255,10 +255,10 @@ export const Canvas: React.FC = () => {
   )
 
   /**
-   * Handle mouse up on canvas - routes between drop types
+   * Handle pointer up on canvas - routes between drop types
    */
-  const handleMouseUp = useCallback(
-    (e: React.MouseEvent) => {
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
       // Check if we're dragging
       if (!dragManager.isDragging()) return
 
@@ -297,10 +297,10 @@ export const Canvas: React.FC = () => {
   )
 
   /**
-   * Handle mouse move for drag tracking
+   * Handle pointer move for drag tracking
    */
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
       // Check if dragging and source is canvas
       if (dragManager.isDragging() && sourceType === 'canvas') {
         // Get canvas bounds for relative positioning
@@ -327,16 +327,16 @@ export const Canvas: React.FC = () => {
   )
 
   /**
-   * Handle mouse enter to track when cursor enters canvas
+   * Handle pointer enter to track when cursor enters canvas
    */
-  const handleMouseEnter = useCallback(() => {
+  const handlePointerEnter = useCallback(() => {
     // Removed drag-over class to prevent background color change
   }, [])
 
   /**
-   * Handle mouse leave to track when cursor leaves canvas
+   * Handle pointer leave to track when cursor leaves canvas
    */
-  const handleMouseLeave = useCallback(() => {
+  const handlePointerLeave = useCallback(() => {
     // Clear drag state if dragging when mouse leaves canvas
     if (dragManager.isDragging()) {
       const { sourceType } = dragManager.getDragState()
@@ -378,15 +378,16 @@ export const Canvas: React.FC = () => {
         ref={canvasRef}
         className="relative bg-white shadow-md outline outline-1 outline-gray-200 mx-auto"
         onClick={handleCanvasClick}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onPointerUp={handlePointerUp}
+        onPointerMove={handlePointerMove}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
         data-testid="canvas"
         style={{
           width: `${calculateCanvasDimensions.width}px`,
           minHeight: `${calculateCanvasDimensions.height}px`,
           transformOrigin: 'top left',
+          touchAction: 'none', // Prevent default touch behaviors
         }}
       >
         {/* Render dropped blocks */}
@@ -427,7 +428,7 @@ export const Canvas: React.FC = () => {
                 overflow: 'hidden', // Prevent content from overflowing scaled container
               }}
               onClick={(e) => handleBlockClick(block.id, e)}
-              onMouseDown={(e) => handleBlockMouseDown(block.id, e)}
+              onPointerDown={(e) => handleBlockPointerDown(block.id, e)}
               data-block-id={block.id}
               data-selected={block.selected}
               data-testid={`block-${block.id}`}

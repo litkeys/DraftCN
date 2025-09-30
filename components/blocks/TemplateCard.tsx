@@ -13,7 +13,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
   const [imageError, setImageError] = useState(false)
   
   // Use the custom drag hook for cleaner code
-  const { handleMouseDown } = useDrag({
+  const { handlePointerDown } = useDrag({
     sourceType: 'library',
     item: template
   })
@@ -22,8 +22,9 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
     <div
       className="border rounded-lg p-3 cursor-grab hover:shadow-md hover:scale-[1.02] transition-all duration-200"
       data-template-id={template.typeId}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
       draggable={false}
+      style={{ touchAction: 'none' }} // Prevent default touch behaviors
     >
       <div className="space-y-2">
         {template.thumbnail && !imageError ? (
