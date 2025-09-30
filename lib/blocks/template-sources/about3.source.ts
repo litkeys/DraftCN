@@ -93,7 +93,7 @@ const About3 = ({
   achievements = defaultAchievements,
 }: About3Props = {}) => {
   return (
-    <section className="py-32">
+    <section className="py-8">
       <div className="container">
         <div className="mb-14 grid gap-5 text-center md:grid-cols-2 md:text-left">
           <h1 className="text-5xl font-semibold">{title}</h1>
@@ -167,4 +167,4 @@ const About3 = ({
   );
 };
 
-export { About3 };`;
+export { About3 };`

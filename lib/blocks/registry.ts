@@ -117,7 +117,7 @@ const hero1Template: BlockTemplate = {
   } as any,
   component: Hero1,
   defaultWidth: 1200, // 40px × 30
-  defaultHeight: 600, // 40px × 15
+  defaultHeight: 440, // 40px × 11
   minimumWidth: 320, // 40px × 8
   minimumHeight: 240, // 40px × 6
 }
@@ -222,7 +222,7 @@ const footer2Template: BlockTemplate = {
   } as any,
   component: Footer2,
   defaultWidth: 1200, // 40px × 30
-  defaultHeight: 480, // 40px × 12
+  defaultHeight: 360, // 40px × 9
   minimumWidth: 320, // 40px × 8
   minimumHeight: 240, // 40px × 6
 }
@@ -298,7 +298,7 @@ const about3Template: BlockTemplate = {
   } as any,
   component: About3,
   defaultWidth: 1200, // 40px × 30
-  defaultHeight: 1600, // 40px × 40 (larger for content-rich section)
+  defaultHeight: 1520, // 40px × 38 (larger for content-rich section)
   minimumWidth: 320, // 40px × 8
   minimumHeight: 1200, // 40px × 30
 }
@@ -367,7 +367,7 @@ const blog7Template: BlockTemplate = {
   } as any,
   component: Blog7,
   defaultWidth: 1200, // 40px × 30
-  defaultHeight: 1000, // 40px × 25
+  defaultHeight: 920, // 40px × 23
   minimumWidth: 320, // 40px × 8
   minimumHeight: 1000, // 40px × 25
 }
@@ -426,7 +426,7 @@ const feature43Template: BlockTemplate = {
   } as any,
   component: Feature43,
   defaultWidth: 1200, // 40px × 30
-  defaultHeight: 800, // 40px × 20
+  defaultHeight: 640, // 40px × 16
   minimumWidth: 320, // 40px × 8
   minimumHeight: 600, // 40px × 15
 }

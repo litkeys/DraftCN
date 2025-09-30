@@ -72,7 +72,7 @@ const Blog7 = ({
   ],
 }: Blog7Props) => {
   return (
-    <section className="py-32">
+    <section className="py-8">
       <div className="container mx-auto flex flex-col items-center gap-16 lg:px-16">
         <div className="text-center">
           <Badge variant="secondary" className="mb-6">
@@ -138,4 +138,4 @@ const Blog7 = ({
   );
 };
 
-export { Blog7 };`;
+export { Blog7 };`

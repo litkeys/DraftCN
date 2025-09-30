@@ -164,6 +164,7 @@ export { CTAComponent }`
 - Convert all imports from `@/components/shadcnblocks/*` to `./*` (e.g., `@/components/shadcnblocks/logo` becomes `./logo`)
 - The source should be a complete, standalone TypeScript component
 - Store as a template string with backticks
+- If the source component is contained within `<section className="py-32">`, change only that top level instance to `<section className="py-8">`, do not change the code inside
 
 2. Update `lib/blocks/template-sources.ts` to include your new template:
 

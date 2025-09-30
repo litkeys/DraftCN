@@ -1,99 +1,99 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 
 interface About3Props {
-  title?: string;
-  description?: string;
+  title?: string
+  description?: string
   mainImage?: {
-    src: string;
-    alt: string;
-  };
+    src: string
+    alt: string
+  }
   secondaryImage?: {
-    src: string;
-    alt: string;
-  };
+    src: string
+    alt: string
+  }
   breakout?: {
-    src: string;
-    alt: string;
-    title?: string;
-    description?: string;
-    buttonText?: string;
-    buttonUrl?: string;
-  };
-  companiesTitle?: string;
+    src: string
+    alt: string
+    title?: string
+    description?: string
+    buttonText?: string
+    buttonUrl?: string
+  }
+  companiesTitle?: string
   companies?: Array<{
-    src: string;
-    alt: string;
-  }>;
-  achievementsTitle?: string;
-  achievementsDescription?: string;
+    src: string
+    alt: string
+  }>
+  achievementsTitle?: string
+  achievementsDescription?: string
   achievements?: Array<{
-    label: string;
-    value: string;
-  }>;
+    label: string
+    value: string
+  }>
 }
 
 const defaultCompanies = [
   {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-1.svg",
-    alt: "Arc",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-1.svg',
+    alt: 'Arc',
   },
   {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-2.svg",
-    alt: "Descript",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-2.svg',
+    alt: 'Descript',
   },
   {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-3.svg",
-    alt: "Mercury",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-3.svg',
+    alt: 'Mercury',
   },
   {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-4.svg",
-    alt: "Ramp",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-4.svg',
+    alt: 'Ramp',
   },
   {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-5.svg",
-    alt: "Retool",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-5.svg',
+    alt: 'Retool',
   },
   {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-6.svg",
-    alt: "Watershed",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-6.svg',
+    alt: 'Watershed',
   },
-];
+]
 
 const defaultAchievements = [
-  { label: "Companies Supported", value: "300+" },
-  { label: "Projects Finalized", value: "800+" },
-  { label: "Happy Customers", value: "99%" },
-  { label: "Recognized Awards", value: "10+" },
-];
+  { label: 'Companies Supported', value: '300+' },
+  { label: 'Projects Finalized', value: '800+' },
+  { label: 'Happy Customers', value: '99%' },
+  { label: 'Recognized Awards', value: '10+' },
+]
 
 const About3 = ({
-  title = "About Us",
-  description = "Shadcnblocks is a passionate team dedicated to creating innovative solutions that empower businesses to thrive in the digital age.",
+  title = 'About Us',
+  description = 'Shadcnblocks is a passionate team dedicated to creating innovative solutions that empower businesses to thrive in the digital age.',
   mainImage = {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg",
-    alt: "placeholder",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg',
+    alt: 'placeholder',
   },
   secondaryImage = {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg",
-    alt: "placeholder",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg',
+    alt: 'placeholder',
   },
   breakout = {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg",
-    alt: "logo",
-    title: "Hundreds of blocks at Shadcnblocks.com",
+    src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg',
+    alt: 'logo',
+    title: 'Hundreds of blocks at Shadcnblocks.com',
     description:
-      "Providing businesses with effective tools to improve workflows, boost efficiency, and encourage growth.",
-    buttonText: "Discover more",
-    buttonUrl: "https://shadcnblocks.com",
+      'Providing businesses with effective tools to improve workflows, boost efficiency, and encourage growth.',
+    buttonText: 'Discover more',
+    buttonUrl: 'https://shadcnblocks.com',
   },
-  companiesTitle = "Valued by clients worldwide",
+  companiesTitle = 'Valued by clients worldwide',
   companies = defaultCompanies,
-  achievementsTitle = "Our Achievements in Numbers",
-  achievementsDescription = "Providing businesses with effective tools to improve workflows, boost efficiency, and encourage growth.",
+  achievementsTitle = 'Our Achievements in Numbers',
+  achievementsDescription = 'Providing businesses with effective tools to improve workflows, boost efficiency, and encourage growth.',
   achievements = defaultAchievements,
 }: About3Props = {}) => {
   return (
-    <section className="py-32">
+    <section className="py-8">
       <div className="container">
         <div className="mb-14 grid gap-5 text-center md:grid-cols-2 md:text-left">
           <h1 className="text-5xl font-semibold">{title}</h1>
@@ -164,7 +164,7 @@ const About3 = ({
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export { About3 };
+export { About3 }
