@@ -74,7 +74,7 @@ export const useDrag = (options: UseDragOptions): UseDragReturn => {
     const elementUnderPointer = document.elementFromPoint(e.clientX, e.clientY);
     if (elementUnderPointer) {
       // Find the canvas element (either the element itself or a parent)
-      let canvasElement = elementUnderPointer;
+      let canvasElement: Element | null = elementUnderPointer;
       while (canvasElement && canvasElement !== document.body) {
         if (canvasElement.getAttribute('data-testid') === 'canvas') {
           // We found the canvas! Dispatch a pointerup event on it
