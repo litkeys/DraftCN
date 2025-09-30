@@ -70,8 +70,37 @@ export const useDrag = (options: UseDragOptions): UseDragReturn => {
       pointerHandlersRef.current = null;
     }
 
-    // End drag will be handled by Canvas drop handler
-    // For now, just clean up if not dropped on valid target
+    // Check if we're dropping on the canvas using elementFromPoint
+    const elementUnderPointer = document.elementFromPoint(e.clientX, e.clientY);
+    if (elementUnderPointer) {
+      // Find the canvas element (either the element itself or a parent)
+      let canvasElement = elementUnderPointer;
+      while (canvasElement && canvasElement !== document.body) {
+        if (canvasElement.getAttribute('data-testid') === 'canvas') {
+          // We found the canvas! Dispatch a pointerup event on it
+          // This ensures Canvas's onPointerUp handler receives the event
+          const pointerUpEvent = new PointerEvent('pointerup', {
+            bubbles: true,
+            cancelable: true,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            pointerId: e.pointerId,
+            pointerType: e.pointerType,
+            isPrimary: e.isPrimary,
+            button: e.button,
+            buttons: e.buttons,
+          });
+          canvasElement.dispatchEvent(pointerUpEvent);
+
+          // Call custom end handler if provided
+          onDragEnd?.();
+          return;
+        }
+        canvasElement = canvasElement.parentElement;
+      }
+    }
+
+    // Not dropped on canvas, clean up drag state
     if (dragManager.isDragging()) {
       dragManager.endDrag();
       clearDragState();
