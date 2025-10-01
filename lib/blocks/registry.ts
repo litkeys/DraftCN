@@ -56,9 +56,26 @@ export class BlockRegistry {
   }
 
   getCategories(): string[] {
-    const categories = new Set<string>()
-    this.templates.forEach((template) => categories.add(template.category))
-    return Array.from(categories)
+    // Define the desired category display order
+    const categoryOrder = [
+      'navigation',
+      'hero',
+      'features',
+      'footer',
+      'blog',
+      'about',
+    ]
+
+    // Collect all unique categories from templates
+    const availableCategories = new Set<string>()
+    this.templates.forEach((template) =>
+      availableCategories.add(template.category)
+    )
+
+    // Return categories in the defined order, only including those that exist
+    return categoryOrder.filter((category) =>
+      availableCategories.has(category)
+    )
   }
 
   hasTemplate(typeId: string): boolean {
