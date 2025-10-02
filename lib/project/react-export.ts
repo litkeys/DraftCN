@@ -418,7 +418,7 @@ export function generateProjectFiles(blocks: Block[]): ReactProjectFile[] {
   }
 
   // Resolve dependencies from templates
-  const { npmDependencies, shadcnComponents, shadcnblocksComponents } =
+  const { npmDependencies, shadcnComponents, shadcnblocksComponents, kiboComponents } =
     resolveAllDependencies(Array.from(uniqueTemplates))
 
   // Generate shadcn/ui components (no longer include these - user will install via CLI)
@@ -488,6 +488,7 @@ export function generateProjectFiles(blocks: Block[]): ReactProjectFile[] {
     content: generateReadmeWithDependencies(
       shadcnComponents,
       shadcnblocksComponents,
+      kiboComponents,
       'DraftCN React Export'
     ),
   })

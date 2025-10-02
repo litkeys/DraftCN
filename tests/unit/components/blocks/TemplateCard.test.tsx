@@ -10,16 +10,16 @@ vi.mock('@/hooks/useDrag', () => ({
 }))
 
 describe('TemplateCard', () => {
-  const mockHandleMouseDown = vi.fn()
+  const mockHandlePointerDown = vi.fn()
 
   beforeEach(() => {
     // Reset mocks before each test
     vi.clearAllMocks()
-    
+
     // Setup useDrag mock
     ;(useDrag as any).mockReturnValue({
       isDragging: false,
-      handleMouseDown: mockHandleMouseDown,
+      handlePointerDown: mockHandlePointerDown,
     })
   })
 
@@ -155,14 +155,14 @@ describe('TemplateCard', () => {
       })
     })
 
-    it('should call handleMouseDown on mouse down', () => {
+    it('should call handlePointerDown on pointer down', () => {
       const { container } = render(<TemplateCard template={mockTemplate} />)
       const card = container.firstChild as HTMLElement
-      
-      fireEvent.mouseDown(card)
-      
-      // Should call the handleMouseDown from useDrag hook
-      expect(mockHandleMouseDown).toHaveBeenCalled()
+
+      fireEvent.pointerDown(card)
+
+      // Should call the handlePointerDown from useDrag hook
+      expect(mockHandlePointerDown).toHaveBeenCalled()
     })
 
 

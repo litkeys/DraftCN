@@ -5,6 +5,7 @@ import { Footer2 } from '@/templates/footer2'
 import { About3 } from '@/templates/about3'
 import { Blog7 } from '@/templates/blog7'
 import { Feature43 } from '@/templates/feature43'
+import { Codeexample1 } from '@/templates/codeexample1'
 
 export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map()
@@ -73,9 +74,7 @@ export class BlockRegistry {
     )
 
     // Return categories in the defined order, only including those that exist
-    return categoryOrder.filter((category) =>
-      availableCategories.has(category)
-    )
+    return categoryOrder.filter((category) => availableCategories.has(category))
   }
 
   hasTemplate(typeId: string): boolean {
@@ -448,6 +447,30 @@ const feature43Template: BlockTemplate = {
   minimumHeight: 600, // 40px × 15
 }
 
+/**
+ * Codeexample1 Template Registration
+ * Code example section with tabbed language selection and syntax highlighting
+ */
+const codeexample1Template: BlockTemplate = {
+  typeId: 'codeexample1',
+  name: 'Code Example Section',
+  category: 'features',
+  thumbnail: '/thumbnails/codeexample1.webp',
+  dependencies: [
+    'lucide-react',
+    '@/components/ui/kibo-ui/code-block',
+    '@/components/ui/button',
+    '@/components/ui/scroll-area',
+    '@/components/ui/tabs',
+  ],
+  defaultProps: {},
+  component: Codeexample1,
+  defaultWidth: 1200, // 40px × 30
+  defaultHeight: 560, // 40px × 14
+  minimumWidth: 800, // 40px × 20
+  minimumHeight: 480, // 40px × 12
+}
+
 // Register all templates with the singleton registry
 blockRegistry.registerTemplate(hero1Template)
 blockRegistry.registerTemplate(navbar1Template)
@@ -455,3 +478,4 @@ blockRegistry.registerTemplate(footer2Template)
 blockRegistry.registerTemplate(about3Template)
 blockRegistry.registerTemplate(blog7Template)
 blockRegistry.registerTemplate(feature43Template)
+blockRegistry.registerTemplate(codeexample1Template)

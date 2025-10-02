@@ -7,6 +7,7 @@ export interface DependencyInfo {
   }
   shadcnComponents: Set<string>
   shadcnblocksComponents: Set<string>
+  kiboComponents: Set<string>
   lucideIcons: Set<string>
 }
 
@@ -17,11 +18,13 @@ export function parseTemplateDependencies(templateSource: string): {
   shadcnComponents: Set<string>
   lucideIcons: Set<string>
   shadcnblocksComponents: Set<string>
+  kiboComponents: Set<string>
   otherImports: Set<string>
 } {
   const shadcnComponents = new Set<string>()
   const lucideIcons = new Set<string>()
   const shadcnblocksComponents = new Set<string>()
+  const kiboComponents = new Set<string>()
   const otherImports = new Set<string>()
 
   // Match import statements
@@ -32,8 +35,19 @@ export function parseTemplateDependencies(templateSource: string): {
   while ((match = importRegex.exec(templateSource)) !== null) {
     const importPath = match[1]
 
-    // Check for shadcn/ui components
+    // Check for kibo-ui components first (more specific path)
     if (
+      importPath.startsWith('./ui/kibo-ui/') ||
+      importPath.startsWith('@/components/ui/kibo-ui/')
+    ) {
+      // Extract component name from path
+      const componentMatch = importPath.match(/kibo-ui\/([^/]+)$/)
+      if (componentMatch) {
+        kiboComponents.add(componentMatch[1])
+      }
+    }
+    // Check for shadcn/ui components
+    else if (
       importPath.startsWith('./ui/') ||
       importPath.startsWith('@/components/ui/')
     ) {
@@ -77,7 +91,7 @@ export function parseTemplateDependencies(templateSource: string): {
     }
   }
 
-  return { shadcnComponents, lucideIcons, shadcnblocksComponents, otherImports }
+  return { shadcnComponents, lucideIcons, shadcnblocksComponents, kiboComponents, otherImports }
 }
 
 /**
@@ -86,6 +100,7 @@ export function parseTemplateDependencies(templateSource: string): {
 export function resolveAllDependencies(templateIds: string[]): DependencyInfo {
   const allShadcnComponents = new Set<string>()
   const allShadcnblocksComponents = new Set<string>()
+  const allKiboComponents = new Set<string>()
   const allLucideIcons = new Set<string>()
   const allOtherImports = new Set<string>()
 
@@ -96,6 +111,7 @@ export function resolveAllDependencies(templateIds: string[]): DependencyInfo {
       const {
         shadcnComponents,
         shadcnblocksComponents,
+        kiboComponents,
         lucideIcons,
         otherImports,
       } = parseTemplateDependencies(source)
@@ -105,6 +121,9 @@ export function resolveAllDependencies(templateIds: string[]): DependencyInfo {
       )
       shadcnblocksComponents.forEach((component) =>
         allShadcnblocksComponents.add(component)
+      )
+      kiboComponents.forEach((component) =>
+        allKiboComponents.add(component)
       )
       lucideIcons.forEach((icon) => allLucideIcons.add(icon))
       otherImports.forEach((imp) => allOtherImports.add(imp))
@@ -146,6 +165,7 @@ export function resolveAllDependencies(templateIds: string[]): DependencyInfo {
     },
     shadcnComponents: allShadcnComponents,
     shadcnblocksComponents: allShadcnblocksComponents,
+    kiboComponents: allKiboComponents,
     lucideIcons: allLucideIcons,
   }
 }
@@ -194,17 +214,38 @@ export function generateShadcnblocksInstallCommands(
 }
 
 /**
+ * Generate kibo-ui installation commands for README
+ */
+export function generateKiboInstallCommands(
+  components: Set<string>
+): string[] {
+  if (components.size === 0) return []
+
+  const commands: string[] = []
+
+  // Add command for each kibo-ui component
+  const sortedComponents = Array.from(components).sort()
+  for (const component of sortedComponents) {
+    commands.push(`npx kibo-ui@latest add ${component}`)
+  }
+
+  return commands
+}
+
+/**
  * Generate a comprehensive README with installation instructions
  */
 export function generateReadmeWithDependencies(
   shadcnComponents: Set<string>,
   shadcnblocksComponents: Set<string> = new Set(),
+  kiboComponents: Set<string> = new Set(),
   projectName: string = 'DraftCN React Export'
 ): string {
   const shadcnCommands = generateShadcnInstallCommands(shadcnComponents)
   const shadcnblocksCommands = generateShadcnblocksInstallCommands(
     shadcnblocksComponents
   )
+  const kiboCommands = generateKiboInstallCommands(kiboComponents)
 
   let readme = `# ${projectName}
 
@@ -246,6 +287,16 @@ Additionally, install the required shadcnblocks components:
 
 \`\`\`bash
 ${shadcnblocksCommands.join('\n')}
+\`\`\`
+`
+  }
+
+  if (kiboCommands.length > 0) {
+    readme += `
+Additionally, install the required kibo-ui components:
+
+\`\`\`bash
+${kiboCommands.join('\n')}
 \`\`\`
 `
   }

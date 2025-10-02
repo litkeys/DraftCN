@@ -161,12 +161,12 @@ export { CTAComponent }`
 **Important Notes:**
 
 - Convert all imports from `@/components/ui/*` to `./ui/*`
-- Convert all imports from `@/components/shadcnblocks/*` to `./*` (e.g., `@/components/shadcnblocks/logo` becomes `./logo`)
+- Convert all imports from `@/components/shadcnblocks/*` to `./*`
+- Convert all imports from `@/components/ui/kibo-ui/*` to `./ui/kibo-ui/*`
 - The source should be a complete, standalone TypeScript component
 - Store as a template string with backticks
-- If the source component is contained within `<section className="py-32">`, change only that top level instance to `<section className="py-8">`, do not change the code inside
 
-2. Update `lib/blocks/template-sources.ts` to include your new template:
+1. Update `lib/blocks/template-sources.ts` to include your new template:
 
 ```typescript
 // lib/blocks/template-sources.ts

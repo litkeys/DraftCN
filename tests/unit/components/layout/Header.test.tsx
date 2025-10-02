@@ -27,7 +27,7 @@ vi.mock('@/components/layout/ExportButton', () => ({
 describe('Header', () => {
   it('should render the DraftCN logo', () => {
     render(<Header />)
-    expect(screen.getByText('DraftCN')).toBeInTheDocument()
+    expect(screen.getByAltText('DraftCN Logo')).toBeInTheDocument()
   })
 
   it('should render the ZoomControl component', () => {
@@ -47,7 +47,7 @@ describe('Header', () => {
 
   it('should position logo on the left', () => {
     render(<Header />)
-    const logo = screen.getByText('DraftCN')
+    const logo = screen.getByAltText('DraftCN Logo')
     const logoContainer = logo.parentElement
     expect(logoContainer).toHaveClass('flex', 'items-center', 'flex-1')
   })

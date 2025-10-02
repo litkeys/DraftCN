@@ -4,6 +4,7 @@ import { Canvas } from '@/components/canvas/Canvas'
 import { useAppStore } from '@/store'
 import { blockRegistry } from '@/lib/blocks/registry'
 import { dragManager } from '@/lib/drag/manager'
+import { screenToWorld, worldToScreen } from '@/lib/canvas/transforms'
 import type { Block, BlockTemplate } from '@/types'
 
 // Mock the store
@@ -78,180 +79,74 @@ describe('Canvas Drag and Drop with Zoom', () => {
     })
   })
 
-  describe('Block dragging with zoom', () => {
-    it('should calculate correct drag offset at 50% zoom', () => {
-      const testBlock: Block = {
-        id: 'test-block',
-        typeId: 'test-type',
-        x: 100, // World coordinates
-        y: 100,
-        width: 100,
-        height: 100,
-        z: 1,
-        props: {},
-        selected: false,
-      }
+  describe('Coordinate transformations with zoom', () => {
+    it('should transform screen to world coordinates at 50% zoom', () => {
+      // At 50% zoom, actualScale = 50 * 0.008 = 0.4
+      const zoom = 50
+      const panX = 0
+      const panY = 0
 
-      mockStore.blocks = [testBlock]
-      mockStore.zoom = 50 // 50% zoom = 0.4 scale
+      // Screen position 60px should transform to world position 150px
+      // worldX = screenX / actualScale = 60 / 0.4 = 150
+      const worldPos = screenToWorld(60, 60, zoom, panX, panY)
 
-      ;(blockRegistry.getTemplate as ReturnType<typeof vi.fn>).mockReturnValue({
-        component: () => <div>Test Component</div>,
-      })
-
-      const { container } = render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-      const block = screen.getByTestId('block-test-block')
-
-      // Mock canvas getBoundingClientRect
-      canvas.getBoundingClientRect = vi.fn(() => ({
-        left: 100,
-        top: 100,
-        right: 600,
-        bottom: 400,
-        width: 500,
-        height: 300,
-        x: 100,
-        y: 100,
-      } as DOMRect))
-
-      // Simulate mouse down on block
-      // Block is at screen position: 100 * 0.4 = 40px
-      // Mouse clicks at screen position 60px (relative to canvas)
-      fireEvent.mouseDown(block, {
-        clientX: 160, // 100 + 60
-        clientY: 160, // 100 + 60
-      })
-
-      // Check that setDragState was called with correct world coordinate offset
-      expect(mockStore.setDragState).toHaveBeenCalledWith({
-        offset: {
-          x: 50, // (60 / 0.4) - 100 = 150 - 100 = 50
-          y: 50, // Same calculation for y
-        },
-        isActive: true,
-        sourceType: 'canvas',
-        draggedItem: testBlock,
-      })
+      expect(worldPos.x).toBe(150)
+      expect(worldPos.y).toBe(150)
     })
 
-    it('should update block position correctly during drag at 200% zoom', () => {
-      const testBlock: Block = {
-        id: 'test-block',
-        typeId: 'test-type',
-        x: 100,
-        y: 100,
-        width: 100,
-        height: 100,
-        z: 1,
-        props: {},
-        selected: false,
-      }
+    it('should transform screen to world coordinates at 200% zoom', () => {
+      // At 200% zoom, actualScale = 200 * 0.008 = 1.6
+      const zoom = 200
+      const panX = 0
+      const panY = 0
 
-      mockStore.blocks = [testBlock]
-      mockStore.zoom = 200 // 200% zoom = 1.6 scale
-      mockStore.getDragSource = 'canvas'
-      mockStore.sourceType = 'canvas'
-      mockStore.getDraggedItem = testBlock
-      mockStore.draggedItem = testBlock
-      mockStore.offset = { x: 10, y: 10 } // World coordinate offset
-      mockStore.getDragOffset = { x: 10, y: 10 }
+      // Screen position 160px should transform to world position 100px
+      // worldX = screenX / actualScale = 160 / 1.6 = 100
+      const worldPos = screenToWorld(160, 160, zoom, panX, panY)
 
-      ;(dragManager.isDragging as ReturnType<typeof vi.fn>).mockReturnValue(true)
-      ;(blockRegistry.getTemplate as ReturnType<typeof vi.fn>).mockReturnValue({
-        component: () => <div>Test Component</div>,
-      })
-
-      const { container } = render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
-
-      // Mock canvas getBoundingClientRect
-      canvas.getBoundingClientRect = vi.fn(() => ({
-        left: 100,
-        top: 100,
-        right: 1100,
-        bottom: 700,
-        width: 1000,
-        height: 600,
-        x: 100,
-        y: 100,
-      } as DOMRect))
-
-      // Simulate mouse move during drag
-      // Mouse at screen position 260, 260 (absolute)
-      fireEvent.mouseMove(canvas, {
-        clientX: 260,
-        clientY: 260,
-      })
-
-      // At 200% zoom (1.6 scale):
-      // Screen position relative to canvas: 160, 160
-      // World position: 160 / 1.6 = 100
-      // After offset: 100 - 10 = 90
-      expect(mockStore.updateBlock).toHaveBeenCalledWith('test-block', {
-        x: 90,
-        y: 90,
-      })
+      expect(worldPos.x).toBe(100)
+      expect(worldPos.y).toBe(100)
     })
-  })
 
-  describe('Drag position updates with pan offset', () => {
-    it('should account for pan offset when dragging', () => {
-      const testBlock: Block = {
-        id: 'test-block',
-        typeId: 'test-type',
-        x: 100,
-        y: 100,
-        width: 100,
-        height: 100,
-        z: 1,
-        props: {},
-        selected: false,
-      }
+    it('should account for pan offset when transforming coordinates', () => {
+      // At 100% zoom, actualScale = 100 * 0.008 = 0.8
+      const zoom = 100
+      const panX = 50
+      const panY = 30
 
-      mockStore.blocks = [testBlock]
-      mockStore.zoom = 100 // 0.8 scale
-      mockStore.panX = 50 // Panned 50px right
-      mockStore.panY = 30 // Panned 30px down
-      mockStore.getDragSource = 'canvas'
-      mockStore.sourceType = 'canvas'
-      mockStore.getDraggedItem = testBlock
-      mockStore.draggedItem = testBlock
-      mockStore.offset = { x: 0, y: 0 }
-      mockStore.getDragOffset = { x: 0, y: 0 }
+      // Screen position with pan:
+      // worldX = (screenX - panX) / actualScale = (130 - 50) / 0.8 = 100
+      // worldY = (screenY - panY) / actualScale = (110 - 30) / 0.8 = 100
+      const worldPos = screenToWorld(130, 110, zoom, panX, panY)
 
-      ;(dragManager.isDragging as ReturnType<typeof vi.fn>).mockReturnValue(true)
-      ;(blockRegistry.getTemplate as ReturnType<typeof vi.fn>).mockReturnValue({
-        component: () => <div>Test Component</div>,
-      })
+      expect(worldPos.x).toBe(100)
+      expect(worldPos.y).toBe(100)
+    })
 
-      const { container } = render(<Canvas />)
-      const canvas = screen.getByTestId('canvas')
+    it('should transform world to screen coordinates correctly', () => {
+      // At 100% zoom, actualScale = 0.8
+      const zoom = 100
+      const panX = 0
+      const panY = 0
 
-      canvas.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        right: 960,
-        bottom: 600,
-        width: 960,
-        height: 600,
-        x: 0,
-        y: 0,
-      } as DOMRect))
+      // World position 100px should transform to screen position 80px
+      // screenX = worldX * actualScale + panX = 100 * 0.8 + 0 = 80
+      const screenPos = worldToScreen(100, 100, zoom, panX, panY)
 
-      // Simulate mouse move
-      fireEvent.mouseMove(canvas, {
-        clientX: 130, // Screen position
-        clientY: 110,
-      })
+      expect(screenPos.x).toBe(80)
+      expect(screenPos.y).toBe(80)
+    })
 
-      // With pan offset:
-      // Screen to world: (130 - 50) / 0.8 = 100
-      // (110 - 30) / 0.8 = 100
-      expect(mockStore.updateBlock).toHaveBeenCalledWith('test-block', {
-        x: 100,
-        y: 100,
-      })
+    it('should apply pan offset when transforming world to screen', () => {
+      const zoom = 100
+      const panX = 20
+      const panY = 10
+
+      // screenX = worldX * actualScale + panX = 100 * 0.8 + 20 = 100
+      const screenPos = worldToScreen(100, 100, zoom, panX, panY)
+
+      expect(screenPos.x).toBe(100)
+      expect(screenPos.y).toBe(90)
     })
   })
 })

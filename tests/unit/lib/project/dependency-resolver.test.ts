@@ -4,6 +4,7 @@ import {
   resolveAllDependencies,
   generateShadcnInstallCommands,
   generateShadcnblocksInstallCommands,
+  generateKiboInstallCommands,
   generateReadmeWithDependencies,
 } from '@/lib/project/dependency-resolver'
 import * as templateSources from '@/lib/blocks/template-sources'
@@ -89,6 +90,45 @@ describe('dependency-resolver', () => {
       expect(result.shadcnblocksComponents).toEqual(new Set(['logo']))
       expect(result.shadcnComponents).toEqual(new Set(['button']))
       expect(result.lucideIcons).toEqual(new Set(['ArrowRight']))
+    })
+
+    it('should extract kibo-ui components from imports', () => {
+      const source = `
+        import type { BundledLanguage } from './ui/kibo-ui/code-block'
+        import {
+          CodeBlock,
+          CodeBlockBody,
+          CodeBlockContent
+        } from './ui/kibo-ui/code-block'
+        import { Button } from './ui/button'
+        import { ArrowRight } from 'lucide-react'
+
+        export function Component() {
+          return <div></div>
+        }
+      `
+
+      const result = parseTemplateDependencies(source)
+
+      expect(result.kiboComponents).toEqual(new Set(['code-block']))
+      expect(result.shadcnComponents).toEqual(new Set(['button']))
+      expect(result.lucideIcons).toEqual(new Set(['ArrowRight']))
+    })
+
+    it('should extract kibo-ui components with absolute paths', () => {
+      const source = `
+        import { CodeBlock } from '@/components/ui/kibo-ui/code-block'
+        import { DataTable } from '@/components/ui/kibo-ui/data-table'
+
+        export function Component() {
+          return <div></div>
+        }
+      `
+
+      const result = parseTemplateDependencies(source)
+
+      expect(result.kiboComponents).toEqual(new Set(['code-block', 'data-table']))
+      expect(result.shadcnComponents.size).toBe(0)
     })
 
     it('should handle templates with no dependencies', () => {
@@ -323,6 +363,37 @@ describe('dependency-resolver', () => {
     })
   })
 
+  describe('generateKiboInstallCommands', () => {
+    it('should generate commands for multiple kibo-ui components', () => {
+      const components = new Set(['code-block', 'data-table', 'chart'])
+
+      const commands = generateKiboInstallCommands(components)
+
+      expect(commands).toContain('npx kibo-ui@latest add chart')
+      expect(commands).toContain('npx kibo-ui@latest add code-block')
+      expect(commands).toContain('npx kibo-ui@latest add data-table')
+      expect(commands.length).toBe(3)
+    })
+
+    it('should return empty array for no components', () => {
+      const components = new Set<string>()
+
+      const commands = generateKiboInstallCommands(components)
+
+      expect(commands).toEqual([])
+    })
+
+    it('should sort components alphabetically', () => {
+      const components = new Set(['data-table', 'chart', 'code-block'])
+
+      const commands = generateKiboInstallCommands(components)
+
+      expect(commands[0]).toBe('npx kibo-ui@latest add chart')
+      expect(commands[1]).toBe('npx kibo-ui@latest add code-block')
+      expect(commands[2]).toBe('npx kibo-ui@latest add data-table')
+    })
+  })
+
   describe('generateShadcnInstallCommands', () => {
     it('should generate commands for multiple components', () => {
       const components = new Set(['button', 'card', 'badge', 'input'])
@@ -364,6 +435,7 @@ describe('dependency-resolver', () => {
       const readme = generateReadmeWithDependencies(
         components,
         new Set(),
+        new Set(),
         'Test Project'
       )
 
@@ -393,6 +465,7 @@ describe('dependency-resolver', () => {
       const readme = generateReadmeWithDependencies(
         shadcnComponents,
         shadcnblocksComponents,
+        new Set(),
         'Test Project'
       )
 
@@ -409,6 +482,46 @@ describe('dependency-resolver', () => {
       expect(readme).toContain(
         'Additionally, install the required shadcnblocks components:'
       )
+    })
+
+    it('should generate README with kibo-ui components', () => {
+      const shadcnComponents = new Set(['button'])
+      const kiboComponents = new Set(['code-block', 'data-table'])
+
+      const readme = generateReadmeWithDependencies(
+        shadcnComponents,
+        new Set(),
+        kiboComponents,
+        'Test Project'
+      )
+
+      expect(readme).toContain('# Test Project')
+      expect(readme).toContain('npx kibo-ui@latest add code-block')
+      expect(readme).toContain('npx kibo-ui@latest add data-table')
+      expect(readme).toContain(
+        'Additionally, install the required kibo-ui components:'
+      )
+    })
+
+    it('should generate README with shadcn, shadcnblocks, and kibo-ui components', () => {
+      const shadcnComponents = new Set(['button', 'card'])
+      const shadcnblocksComponents = new Set(['logo'])
+      const kiboComponents = new Set(['code-block'])
+
+      const readme = generateReadmeWithDependencies(
+        shadcnComponents,
+        shadcnblocksComponents,
+        kiboComponents,
+        'Test Project'
+      )
+
+      expect(readme).toContain('npx shadcn@latest add button')
+      expect(readme).toContain(
+        'npx shadcn@latest add https://shadcnblocks.com/r/logo'
+      )
+      expect(readme).toContain('npx kibo-ui@latest add code-block')
+      expect(readme).toContain('Additionally, install the required shadcnblocks')
+      expect(readme).toContain('Additionally, install the required kibo-ui')
     })
 
     it('should include project structure and technologies', () => {
