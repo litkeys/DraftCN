@@ -22,7 +22,7 @@ const code = [
   {
     language: 'javascript',
     filename: 'database-query.js',
-    code: \\\`// Node.js database query using Prisma ORM
+    code: \`// Node.js database query using Prisma ORM
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -48,12 +48,12 @@ const connection = await mysql.createConnection(config);
 const [rows] = await connection.execute(
   'SELECT * FROM users WHERE age > ? AND active = ?',
   [25, true]
-);\\\`,
+);\`,
   },
   {
     language: 'python',
     filename: 'database_query.py',
-    code: \\\`# Python database query using SQLAlchemy ORM
+    code: \`# Python database query using SQLAlchemy ORM
 from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -79,12 +79,12 @@ import psycopg2
 conn = psycopg2.connect(database="mydb", user="user", password="pass")
 cur = conn.cursor()
 cur.execute("SELECT * FROM users WHERE age > %s AND active = %s", (25, True))
-results = cur.fetchall()\\\`,
+results = cur.fetchall()\`,
   },
   {
     language: 'go',
     filename: 'database_query.go',
-    code: \\\`package main
+    code: \`package main
 
 import (
     "database/sql"
@@ -93,11 +93,11 @@ import (
 )
 
 type User struct {
-    ID     int    \\\\\\\`db:"id"\\\\\\\`
-    Name   string \\\\\\\`db:"name"\\\\\\\`
-    Email  string \\\\\\\`db:"email"\\\\\\\`
-    Age    int    \\\\\\\`db:"age"\\\\\\\`
-    Active bool   \\\\\\\`db:"active"\\\\\\\`
+    ID     int    \\\`db:"id"\\\`
+    Name   string \\\`db:"name"\\\`
+    Email  string \\\`db:"email"\\\`
+    Age    int    \\\`db:"age"\\\`
+    Active bool   \\\`db:"active"\\\`
 }
 
 func main() {
@@ -106,31 +106,31 @@ func main() {
         panic(err)
     }
     defer db.Close()
-
+    
     // Insert user
-    _, err = db.Exec(\\\\\\\`
-        INSERT INTO users (name, email, age, active)
-        VALUES ($1, $2, $3, $4)\\\\\\\`,
+    _, err = db.Exec(\\\`
+        INSERT INTO users (name, email, age, active) 
+        VALUES ($1, $2, $3, $4)\\\`,
         "Jane Smith", "jane@example.com", 28, true)
-
+    
     // Query users
-    rows, err := db.Query(\\\\\\\`
-        SELECT id, name, email, age, active
-        FROM users WHERE age > $1 AND active = $2\\\\\\\`,
+    rows, err := db.Query(\\\`
+        SELECT id, name, email, age, active 
+        FROM users WHERE age > $1 AND active = $2\\\`,
         25, true)
     defer rows.Close()
-
+    
     for rows.Next() {
         var user User
         rows.Scan(&user.ID, &user.Name, &user.Email, &user.Age, &user.Active)
-        fmt.Printf("User: %+v\\\\\\\\n", user)
+        fmt.Printf("User: %+v\\\\n", user)
     }
-}\\\`,
+}\`,
   },
   {
     language: 'ruby',
     filename: 'database_query.rb',
-    code: \\\`# Ruby database query using ActiveRecord ORM
+    code: \`# Ruby database query using ActiveRecord ORM
 class User < ApplicationRecord
   has_one :profile
   validates :email, presence: true, uniqueness: true
@@ -152,8 +152,8 @@ active_adults = User.active_adults.includes(:profile)
 
 # Alternative using raw SQL with ActiveRecord
 users = User.find_by_sql([
-  'SELECT u.*, p.bio FROM users u
-   LEFT JOIN profiles p ON u.id = p.user_id
+  'SELECT u.*, p.bio FROM users u 
+   LEFT JOIN profiles p ON u.id = p.user_id 
    WHERE u.age > ? AND u.active = ?',
   25, true
 ])
@@ -162,7 +162,7 @@ users = User.find_by_sql([
 User.joins(:profile)
     .where(User.arel_table[:age].gt(25))
     .where(active: true)
-    .select('users.*, profiles.bio')\\\`,
+    .select('users.*, profiles.bio')\`,
   },
 ]
 
