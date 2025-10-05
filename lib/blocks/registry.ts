@@ -6,6 +6,7 @@ import { About3 } from '@/templates/about3'
 import { Blog7 } from '@/templates/blog7'
 import { Feature43 } from '@/templates/feature43'
 import { Codeexample1 } from '@/templates/codeexample1'
+import { Casestudies2 } from '@/templates/casestudies2'
 
 export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map()
@@ -62,6 +63,7 @@ export class BlockRegistry {
       'navigation',
       'hero',
       'features',
+      'marketing',
       'footer',
       'blog',
       'about',
@@ -471,6 +473,26 @@ const codeexample1Template: BlockTemplate = {
   minimumHeight: 480, // 40px × 12
 }
 
+/**
+ * Casestudies2 Template Registration
+ * Case studies section with testimonials and metrics
+ */
+const casestudies2Template: BlockTemplate = {
+  typeId: 'casestudies2',
+  name: 'Case Studies 2',
+  category: 'marketing',
+  thumbnail: '/thumbnails/casestudies2.webp',
+  dependencies: ['@/components/ui/separator'],
+  defaultProps: {
+    // No props needed as all content is hardcoded in the component
+  },
+  component: Casestudies2,
+  defaultWidth: 1200, // 40px × 30
+  defaultHeight: 1000, // 40px × 25
+  minimumWidth: 320, // 40px × 8
+  minimumHeight: 800, // 40px × 20
+}
+
 // Register all templates with the singleton registry
 blockRegistry.registerTemplate(hero1Template)
 blockRegistry.registerTemplate(navbar1Template)
@@ -479,3 +501,4 @@ blockRegistry.registerTemplate(about3Template)
 blockRegistry.registerTemplate(blog7Template)
 blockRegistry.registerTemplate(feature43Template)
 blockRegistry.registerTemplate(codeexample1Template)
+blockRegistry.registerTemplate(casestudies2Template)
