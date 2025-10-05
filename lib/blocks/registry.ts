@@ -7,6 +7,7 @@ import { Blog7 } from '@/templates/blog7'
 import { Feature43 } from '@/templates/feature43'
 import { Codeexample1 } from '@/templates/codeexample1'
 import { Casestudies2 } from '@/templates/casestudies2'
+import { Gallery6 } from '@/templates/gallery6'
 
 export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map()
@@ -63,6 +64,7 @@ export class BlockRegistry {
       'navigation',
       'hero',
       'features',
+      'media',
       'marketing',
       'footer',
       'blog',
@@ -493,6 +495,79 @@ const casestudies2Template: BlockTemplate = {
   minimumHeight: 800, // 40px × 20
 }
 
+/**
+ * Gallery6 Template Registration
+ * Gallery carousel section with navigation controls
+ */
+const gallery6Template: BlockTemplate = {
+  typeId: 'gallery6',
+  name: 'Gallery Carousel 6',
+  category: 'media',
+  thumbnail: '/thumbnails/gallery6.webp',
+  dependencies: [
+    'lucide-react',
+    '@/components/ui/button',
+    '@/components/ui/carousel',
+  ],
+  defaultProps: {
+    heading: 'Gallery',
+    demoUrl: 'https://www.shadcnblocks.com',
+    items: [
+      {
+        id: 'item-1',
+        title: 'Build Modern UIs',
+        summary:
+          'Create stunning user interfaces with our comprehensive design system.',
+        url: '#',
+        image:
+          'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-dark-1.svg',
+      },
+      {
+        id: 'item-2',
+        title: 'Computer Vision Technology',
+        summary:
+          'Powerful image recognition and processing capabilities that allow AI systems to analyze, understand, and interpret visual information from the world.',
+        url: '#',
+        image:
+          'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-dark-1.svg',
+      },
+      {
+        id: 'item-3',
+        title: 'Machine Learning Automation',
+        summary:
+          'Self-improving algorithms that learn from data patterns to automate complex tasks and make intelligent decisions with minimal human intervention.',
+        url: '#',
+        image:
+          'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-dark-1.svg',
+      },
+      {
+        id: 'item-4',
+        title: 'Predictive Analytics',
+        summary:
+          'Advanced forecasting capabilities that analyze historical data to predict future trends and outcomes, helping businesses make data-driven decisions.',
+        url: '#',
+        image:
+          'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-dark-1.svg',
+      },
+      {
+        id: 'item-5',
+        title: 'Neural Network Architecture',
+        summary:
+          'Sophisticated AI models inspired by human brain structure, capable of solving complex problems through deep learning and pattern recognition.',
+        url: '#',
+        image:
+          'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-dark-1.svg',
+      },
+    ],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any,
+  component: Gallery6,
+  defaultWidth: 1200, // 40px × 30
+  defaultHeight: 720, // 40px × 18
+  minimumWidth: 320, // 40px × 8
+  minimumHeight: 600, // 40px × 15
+}
+
 // Register all templates with the singleton registry
 blockRegistry.registerTemplate(hero1Template)
 blockRegistry.registerTemplate(navbar1Template)
@@ -502,3 +577,4 @@ blockRegistry.registerTemplate(blog7Template)
 blockRegistry.registerTemplate(feature43Template)
 blockRegistry.registerTemplate(codeexample1Template)
 blockRegistry.registerTemplate(casestudies2Template)
+blockRegistry.registerTemplate(gallery6Template)
