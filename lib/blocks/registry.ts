@@ -8,6 +8,7 @@ import { Feature43 } from '@/templates/feature43'
 import { Codeexample1 } from '@/templates/codeexample1'
 import { Casestudies2 } from '@/templates/casestudies2'
 import { Gallery6 } from '@/templates/gallery6'
+import { Pricing2 } from '@/templates/pricing2'
 
 export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map()
@@ -568,6 +569,70 @@ const gallery6Template: BlockTemplate = {
   minimumHeight: 600, // 40px × 15
 }
 
+/**
+ * Pricing2 Template Registration
+ * Pricing section with toggle between monthly/yearly plans
+ */
+const pricing2Template: BlockTemplate = {
+  typeId: 'pricing2',
+  name: 'Pricing Plans 2',
+  category: 'marketing',
+  thumbnail: '/thumbnails/pricing2.webp',
+  dependencies: [
+    'lucide-react',
+    '@/components/ui/button',
+    '@/components/ui/card',
+    '@/components/ui/separator',
+    '@/components/ui/switch',
+  ],
+  defaultProps: {
+    heading: 'Pricing',
+    description: 'Check out our affordable pricing plans',
+    plans: [
+      {
+        id: 'plus',
+        name: 'Plus',
+        description: 'For personal use',
+        monthlyPrice: '$19',
+        yearlyPrice: '$179',
+        features: [
+          { text: 'Up to 5 team members' },
+          { text: 'Basic components library' },
+          { text: 'Community support' },
+          { text: '1GB storage space' },
+        ],
+        button: {
+          text: 'Purchase',
+          url: 'https://shadcnblocks.com',
+        },
+      },
+      {
+        id: 'pro',
+        name: 'Pro',
+        description: 'For professionals',
+        monthlyPrice: '$49',
+        yearlyPrice: '$359',
+        features: [
+          { text: 'Unlimited team members' },
+          { text: 'Advanced components' },
+          { text: 'Priority support' },
+          { text: 'Unlimited storage' },
+        ],
+        button: {
+          text: 'Purchase',
+          url: 'https://shadcnblocks.com',
+        },
+      },
+    ],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any,
+  component: Pricing2,
+  defaultWidth: 1200, // 40px × 30
+  defaultHeight: 680, // 40px × 17
+  minimumWidth: 320, // 40px × 8
+  minimumHeight: 500, // 40px × 12.5
+}
+
 // Register all templates with the singleton registry
 blockRegistry.registerTemplate(hero1Template)
 blockRegistry.registerTemplate(navbar1Template)
@@ -578,3 +643,4 @@ blockRegistry.registerTemplate(feature43Template)
 blockRegistry.registerTemplate(codeexample1Template)
 blockRegistry.registerTemplate(casestudies2Template)
 blockRegistry.registerTemplate(gallery6Template)
+blockRegistry.registerTemplate(pricing2Template)
