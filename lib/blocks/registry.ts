@@ -10,6 +10,7 @@ import { Casestudies2 } from '@/templates/casestudies2'
 import { Gallery6 } from '@/templates/gallery6'
 import { Pricing2 } from '@/templates/pricing2'
 import { Download2 } from '@/templates/download2'
+import { Faq1 } from '@/templates/faq1'
 
 export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map()
@@ -68,6 +69,7 @@ export class BlockRegistry {
       'features',
       'media',
       'marketing',
+      'support',
       'footer',
       'blog',
       'about',
@@ -643,13 +645,11 @@ const download2Template: BlockTemplate = {
   name: 'Download Section 2',
   category: 'marketing',
   thumbnail: '/thumbnails/download2.webp',
-  dependencies: [
-    'lucide-react',
-    '@/components/ui/button',
-  ],
+  dependencies: ['lucide-react', '@/components/ui/button'],
   defaultProps: {
     heading: 'Available Everywhere',
-    description: 'Choose your platform and start using our app right away. Available on all major devices and operating systems.',
+    description:
+      'Choose your platform and start using our app right away. Available on all major devices and operating systems.',
     platforms: {
       desktop: {
         title: 'Desktop',
@@ -680,6 +680,71 @@ const download2Template: BlockTemplate = {
   minimumHeight: 400, // 40px × 10
 }
 
+/**
+ * Faq1 Template Registration
+ * FAQ section with collapsible accordion items
+ */
+const faq1Template: BlockTemplate = {
+  typeId: 'faq1',
+  name: 'FAQ Section 1',
+  category: 'support',
+  thumbnail: '/thumbnails/faq1.webp',
+  dependencies: ['@/components/ui/accordion'],
+  defaultProps: {
+    heading: 'Frequently asked questions',
+    items: [
+      {
+        id: 'faq-1',
+        question: 'What is a FAQ?',
+        answer:
+          'A FAQ is a list of frequently asked questions and answers on a particular topic.',
+      },
+      {
+        id: 'faq-2',
+        question: 'What is the purpose of a FAQ?',
+        answer:
+          'The purpose of a FAQ is to provide answers to common questions and help users find the information they need quickly and easily.',
+      },
+      {
+        id: 'faq-3',
+        question: 'How do I create a FAQ?',
+        answer:
+          'To create a FAQ, you need to compile a list of common questions and answers on a particular topic and organize them in a clear and easy-to-navigate format.',
+      },
+      {
+        id: 'faq-4',
+        question: 'What are the benefits of a FAQ?',
+        answer:
+          'The benefits of a FAQ include providing quick and easy access to information, reducing the number of support requests, and improving the overall user experience.',
+      },
+      {
+        id: 'faq-5',
+        question: 'How should I organize my FAQ?',
+        answer:
+          'You should organize your FAQ in a logical manner, grouping related questions together and ordering them from most basic to more advanced topics.',
+      },
+      {
+        id: 'faq-6',
+        question: 'How long should FAQ answers be?',
+        answer:
+          'FAQ answers should be concise and to the point, typically a few sentences or a short paragraph is sufficient for most questions.',
+      },
+      {
+        id: 'faq-7',
+        question: 'Should I include links in my FAQ?',
+        answer:
+          'Yes, including links to more detailed information or related resources can be very helpful for users who want to learn more about a particular topic.',
+      },
+    ],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any,
+  component: Faq1,
+  defaultWidth: 1200, // 40px × 30
+  defaultHeight: 560, // 40px × 14
+  minimumWidth: 320, // 40px × 8
+  minimumHeight: 400, // 40px × 10
+}
+
 // Register all templates with the singleton registry
 blockRegistry.registerTemplate(hero1Template)
 blockRegistry.registerTemplate(navbar1Template)
@@ -692,3 +757,4 @@ blockRegistry.registerTemplate(casestudies2Template)
 blockRegistry.registerTemplate(gallery6Template)
 blockRegistry.registerTemplate(pricing2Template)
 blockRegistry.registerTemplate(download2Template)
+blockRegistry.registerTemplate(faq1Template)

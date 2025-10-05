@@ -20,6 +20,7 @@ import { casestudies2Source } from './template-sources/casestudies2.source';
 import { gallery6Source } from './template-sources/gallery6.source';
 import { pricing2Source } from './template-sources/pricing2.source';
 import { download2Source } from './template-sources/download2.source';
+import { faq1Source } from './template-sources/faq1.source';
 
 export interface TemplateSourceMap {
   [typeId: string]: string;
@@ -41,6 +42,7 @@ export const templateSources: TemplateSourceMap = {
   gallery6: gallery6Source,
   pricing2: pricing2Source,
   download2: download2Source,
+  faq1: faq1Source,
 };
 
 /**
