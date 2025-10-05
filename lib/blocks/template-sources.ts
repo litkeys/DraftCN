@@ -19,6 +19,7 @@ import { codeexample1Source } from './template-sources/codeexample1.source';
 import { casestudies2Source } from './template-sources/casestudies2.source';
 import { gallery6Source } from './template-sources/gallery6.source';
 import { pricing2Source } from './template-sources/pricing2.source';
+import { download2Source } from './template-sources/download2.source';
 
 export interface TemplateSourceMap {
   [typeId: string]: string;
@@ -39,6 +40,7 @@ export const templateSources: TemplateSourceMap = {
   casestudies2: casestudies2Source,
   gallery6: gallery6Source,
   pricing2: pricing2Source,
+  download2: download2Source,
 };
 
 /**

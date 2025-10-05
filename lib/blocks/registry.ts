@@ -9,6 +9,7 @@ import { Codeexample1 } from '@/templates/codeexample1'
 import { Casestudies2 } from '@/templates/casestudies2'
 import { Gallery6 } from '@/templates/gallery6'
 import { Pricing2 } from '@/templates/pricing2'
+import { Download2 } from '@/templates/download2'
 
 export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map()
@@ -633,6 +634,52 @@ const pricing2Template: BlockTemplate = {
   minimumHeight: 500, // 40px × 12.5
 }
 
+/**
+ * Download2 Template Registration
+ * Download section with platform options for desktop, iOS, and Android
+ */
+const download2Template: BlockTemplate = {
+  typeId: 'download2',
+  name: 'Download Section 2',
+  category: 'marketing',
+  thumbnail: '/thumbnails/download2.webp',
+  dependencies: [
+    'lucide-react',
+    '@/components/ui/button',
+  ],
+  defaultProps: {
+    heading: 'Available Everywhere',
+    description: 'Choose your platform and start using our app right away. Available on all major devices and operating systems.',
+    platforms: {
+      desktop: {
+        title: 'Desktop',
+        subtitle: 'PC/Mac',
+        description: 'Complete desktop solution.',
+        buttonText: 'Download',
+        url: '#',
+      },
+      ios: {
+        title: 'Mobile Phone',
+        subtitle: 'iOS',
+        description: 'Designed specifically for iOS devices.',
+        url: '#',
+      },
+      android: {
+        title: 'Mobile Phone / Tablet',
+        subtitle: 'Android',
+        description: 'Optimized for Android ecosystem.',
+        url: '#',
+      },
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any,
+  component: Download2,
+  defaultWidth: 1200, // 40px × 30
+  defaultHeight: 520, // 40px × 13
+  minimumWidth: 320, // 40px × 8
+  minimumHeight: 400, // 40px × 10
+}
+
 // Register all templates with the singleton registry
 blockRegistry.registerTemplate(hero1Template)
 blockRegistry.registerTemplate(navbar1Template)
@@ -644,3 +691,4 @@ blockRegistry.registerTemplate(codeexample1Template)
 blockRegistry.registerTemplate(casestudies2Template)
 blockRegistry.registerTemplate(gallery6Template)
 blockRegistry.registerTemplate(pricing2Template)
+blockRegistry.registerTemplate(download2Template)
