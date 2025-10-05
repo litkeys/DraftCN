@@ -147,9 +147,9 @@ const Gallery6 = ({
           }}
           className="relative w-full max-w-full md:left-[-1rem]"
         >
-          <CarouselContent className="hide-scrollbar w-full max-w-full md:-mr-4 md:ml-8 2xl:ml-[max(8rem,calc(50vw-700px+1rem))] 2xl:mr-[max(0rem,calc(50vw-700px-1rem))]">
-            {items.map((item) => (
-              <CarouselItem key={item.id} className="ml-8 md:max-w-[452px]">
+          <CarouselContent className="hide-scrollbar w-full max-w-full md:ml-8 2xl:ml-[max(8rem,calc(50vw-700px+1rem))]">
+            {items.map((item, index) => (
+              <CarouselItem key={item.id} className={`ml-8 md:max-w-[452px] ${index === items.length - 1 ? 'mr-8 md:mr-12 2xl:mr-[max(8rem,calc(50vw-700px+1rem))]' : ''}`}>
                 <a
                   href={item.url}
                   className="group flex flex-col justify-between"
