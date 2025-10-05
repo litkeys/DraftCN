@@ -12,6 +12,7 @@ import { Pricing2 } from '@/templates/pricing2'
 import { Download2 } from '@/templates/download2'
 import { Faq1 } from '@/templates/faq1'
 import { Services4 } from '@/templates/services4'
+import { Compare7 } from '@/templates/compare7'
 
 export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map()
@@ -766,6 +767,26 @@ const services4Template: BlockTemplate = {
   minimumHeight: 480, // 40px × 12
 }
 
+/**
+ * Compare7 Template Registration
+ * Comparison table section with tooltips for additional information
+ */
+const compare7Template: BlockTemplate = {
+  typeId: 'compare7',
+  name: 'Comparison Table 7',
+  category: 'marketing',
+  thumbnail: '/thumbnails/compare7.webp',
+  dependencies: ['@/components/ui/table', '@/components/ui/tooltip'],
+  defaultProps: {
+    // No props needed as all content is hardcoded in the component
+  },
+  component: Compare7,
+  defaultWidth: 1200, // 40px × 30
+  defaultHeight: 720, // 40px × 18
+  minimumWidth: 600, // 40px × 15
+  minimumHeight: 600, // 40px × 15
+}
+
 // Register all templates with the singleton registry
 blockRegistry.registerTemplate(hero1Template)
 blockRegistry.registerTemplate(navbar1Template)
@@ -780,3 +801,4 @@ blockRegistry.registerTemplate(pricing2Template)
 blockRegistry.registerTemplate(download2Template)
 blockRegistry.registerTemplate(faq1Template)
 blockRegistry.registerTemplate(services4Template)
+blockRegistry.registerTemplate(compare7Template)
