@@ -11,6 +11,7 @@ import { Gallery6 } from '@/templates/gallery6'
 import { Pricing2 } from '@/templates/pricing2'
 import { Download2 } from '@/templates/download2'
 import { Faq1 } from '@/templates/faq1'
+import { Services4 } from '@/templates/services4'
 
 export class BlockRegistry {
   private templates: Map<string, BlockTemplate> = new Map()
@@ -745,6 +746,26 @@ const faq1Template: BlockTemplate = {
   minimumHeight: 400, // 40px × 10
 }
 
+/**
+ * Services4 Template Registration
+ * Services section with 4 service cards in a grid layout
+ */
+const services4Template: BlockTemplate = {
+  typeId: 'services4',
+  name: 'Services Grid 4',
+  category: 'features',
+  thumbnail: '/thumbnails/services4.webp',
+  dependencies: ['lucide-react'],
+  defaultProps: {
+    // No props needed as all content is hardcoded in the component
+  },
+  component: Services4,
+  defaultWidth: 1200, // 40px × 30
+  defaultHeight: 840, // 40px × 21
+  minimumWidth: 320, // 40px × 8
+  minimumHeight: 480, // 40px × 12
+}
+
 // Register all templates with the singleton registry
 blockRegistry.registerTemplate(hero1Template)
 blockRegistry.registerTemplate(navbar1Template)
@@ -758,3 +779,4 @@ blockRegistry.registerTemplate(gallery6Template)
 blockRegistry.registerTemplate(pricing2Template)
 blockRegistry.registerTemplate(download2Template)
 blockRegistry.registerTemplate(faq1Template)
+blockRegistry.registerTemplate(services4Template)
