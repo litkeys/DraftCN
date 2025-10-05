@@ -3,7 +3,7 @@ export const codeexample1Source = `'use client'
 import { ArrowUpRight } from 'lucide-react'
 import { useState } from 'react'
 
-import type { BundledLanguage } from './ui/kibo-ui/code-block'
+import type { BundledLanguage } from './kibo-ui/code-block'
 import {
   CodeBlock,
   CodeBlockBody,
@@ -13,7 +13,7 @@ import {
   CodeBlockFiles,
   CodeBlockHeader,
   CodeBlockItem,
-} from './ui/kibo-ui/code-block'
+} from './kibo-ui/code-block'
 import { Button } from './ui/button'
 import { ScrollArea, ScrollBar } from './ui/scroll-area'
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs'

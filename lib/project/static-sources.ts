@@ -85,7 +85,6 @@ export const tsConfigTemplate = {
     noFallthroughCasesInSwitch: true,
 
     /* Path mapping */
-    baseUrl: '.',
     paths: {
       '@/*': ['./src/*'],
     },
